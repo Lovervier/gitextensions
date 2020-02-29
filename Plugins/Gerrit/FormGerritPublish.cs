@@ -1,17 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
+using Gerrit.Server;
 using GitCommands;
+using GitExtUtils;
+using GitExtUtils.GitUI.Theming;
+using GitUI.Properties;
 using GitUIPluginInterfaces;
+using JetBrains.Annotations;
 using ResourceManager;
 
 namespace Gerrit
 {
     public partial class FormGerritPublish : FormGerritBase
     {
-        private string _currentBranchRemote;
-
         #region Translation
         private readonly TranslationString _publishGerritChangeCaption = new TranslationString("Publish Gerrit Change");
 
@@ -21,34 +25,43 @@ namespace Gerrit
         private readonly TranslationString _selectBranch = new TranslationString("Please enter a branch");
         #endregion
 
-        public FormGerritPublish(IGitUICommands uiCommand)
+        private string _currentBranchRemote;
+        private GerritCapabilities _capabilities;
+
+        public FormGerritPublish(IGitUICommands uiCommand, GerritCapabilities capabilities)
             : base(uiCommand)
         {
+            _capabilities = capabilities;
             InitializeComponent();
-            Translate();
+            Publish.Image = Images.Push.AdaptLightness();
+            InitializeComplete();
+        }
+
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+
+            _capabilities.PublishTypes.ForEach(
+                item => PublishType.Items.Add(item));
+            PublishType.SelectedIndex = 0;
         }
 
         private void PublishClick(object sender, EventArgs e)
         {
             if (PublishChange(this))
+            {
                 Close();
+            }
         }
 
-        private string PushCmd(string remote, string toBranch)
+        private static ArgumentString PushCmd(string remote, string toBranch)
         {
-            remote = remote.ToPosixPath();
-
-            toBranch = GitCommandHelpers.GetFullBranchName(toBranch);
-
-            const string fromBranch = "HEAD";
-
-            if (toBranch != null) toBranch = toBranch.Replace(" ", "");
-
-            var sprogressOption = "";
-            if (GitCommandHelpers.VersionInUse.PushCanAskForProgress)
-                sprogressOption = "--progress ";
-
-            return String.Format("push {0}\"{1}\" {2}:{3}", sprogressOption, remote.Trim(), fromBranch, toBranch);
+            return new GitArgumentBuilder("push")
+            {
+                { GitVersion.Current.PushCanAskForProgress, "--progress" },
+                remote.ToPosixPath().Trim().Quote(),
+                $"HEAD:{GitRefName.GetFullBranchName(toBranch)?.Replace(" ", "")}"
+            };
         }
 
         private bool PublishChange(IWin32Window owner)
@@ -57,31 +70,30 @@ namespace Gerrit
 
             if (string.IsNullOrEmpty(_NO_TRANSLATE_Remotes.Text))
             {
-                MessageBox.Show(owner, _selectRemote.Text);
+                MessageBox.Show(owner, _selectRemote.Text, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
+
             if (string.IsNullOrEmpty(branch))
             {
-                MessageBox.Show(owner, _selectBranch.Text);
+                MessageBox.Show(owner, _selectBranch.Text, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
 
             GerritUtil.StartAgent(owner, Module, _NO_TRANSLATE_Remotes.Text);
 
-            string targetRef = PublishDraft.Checked ? "drafts" : "publish";
+            var builder = _capabilities.NewBuilder()
+                .WithReviewers(_NO_TRANSLATE_Reviewers.Text)
+                .WithCC(_NO_TRANSLATE_Cc.Text)
+                .WithTopic(_NO_TRANSLATE_Topic.Text)
+                .WithHashTag(_NO_TRANSLATE_Hashtag.Text)
+                .WithPublishType(((KeyValuePair<string, string>)PublishType.SelectedItem).Value);
 
             var pushCommand = UICommands.CreateRemoteCommand();
-
-            string targetBranch = "refs/" + targetRef + "/" + branch;
-            string topic = _NO_TRANSLATE_Topic.Text.Trim();
-
-            if (!string.IsNullOrEmpty(topic))
-                targetBranch += "/" + topic;
-
             pushCommand.CommandText = PushCmd(
                 _NO_TRANSLATE_Remotes.Text,
-                targetBranch
-            );
+                builder.Build(branch));
+
             pushCommand.Remote = _NO_TRANSLATE_Remotes.Text;
             pushCommand.Title = _publishCaption.Text;
 
@@ -96,22 +108,12 @@ namespace Gerrit
                 {
                     if (hadNewChanges)
                     {
-                        change = line;
-                        const string remotePrefix = "remote:";
-
-                        if (change.StartsWith(remotePrefix))
-                            change = change.Substring(remotePrefix.Length);
-
-                        int escapePos = change.LastIndexOf((char)27);
-                        if (escapePos != -1)
-                            change = change.Substring(0, escapePos);
-
-                        change = change.Trim();
-
-                        int spacePos = change.IndexOf(' ');
-                        if (spacePos != -1)
-                            change = change.Substring(0, spacePos);
-
+                        const char esc = (char)27;
+                        change = line
+                            .RemovePrefix("remote:")
+                            .SubstringUntilLast(esc)
+                            .Trim()
+                            .SubstringUntil(' ');
                         break;
                     }
                     else if (line.Contains("New Changes"))
@@ -121,12 +123,15 @@ namespace Gerrit
                 }
 
                 if (change != null)
+                {
                     FormGerritChangeSubmitted.ShowSubmitted(owner, change);
+                }
             }
 
-            return true;
+            return !pushCommand.ErrorOccurred;
         }
 
+        [CanBeNull]
         private string GetTopic(string targetBranch)
         {
             string branchName = GetBranchName(targetBranch);
@@ -135,13 +140,14 @@ namespace Gerrit
 
             if (branchParts.Length >= 3 && branchParts[0] == "review")
             {
-                branchName = String.Join("/", branchParts.Skip(2));
+                branchName = string.Join("/", branchParts.Skip(2));
 
                 // Don't use the Gerrit change number as a topic branch.
 
-                int unused;
-                if (int.TryParse(branchName, out unused))
+                if (int.TryParse(branchName, out _))
+                {
                     branchName = null;
+                }
             }
 
             return branchName;
@@ -152,28 +158,34 @@ namespace Gerrit
             string branch = Module.GetSelectedBranch();
 
             if (branch.StartsWith("(no"))
+            {
                 return targetBranch;
+            }
 
             return branch;
         }
 
         private void FormGerritPublishLoad(object sender, EventArgs e)
         {
-            _NO_TRANSLATE_Remotes.DataSource = Module.GetRemotes(true);
+            _NO_TRANSLATE_Remotes.DataSource = Module.GetRemoteNames();
 
             _currentBranchRemote = Settings.DefaultRemote;
 
-            IList<string> remotes = (IList<string>)_NO_TRANSLATE_Remotes.DataSource;
+            var remotes = (IList<string>)_NO_TRANSLATE_Remotes.DataSource;
             int i = remotes.IndexOf(_currentBranchRemote);
             _NO_TRANSLATE_Remotes.SelectedIndex = i >= 0 ? i : 0;
 
             _NO_TRANSLATE_Branch.Text = Settings.DefaultBranch;
 
             if (!string.IsNullOrEmpty(_NO_TRANSLATE_Branch.Text))
+            {
                 _NO_TRANSLATE_Topic.Text = GetTopic(_NO_TRANSLATE_Branch.Text);
+            }
 
             if (_NO_TRANSLATE_Topic.Text == _NO_TRANSLATE_Branch.Text)
+            {
                 _NO_TRANSLATE_Topic.Text = null;
+            }
 
             _NO_TRANSLATE_Branch.Select();
 
@@ -183,7 +195,7 @@ namespace Gerrit
         private void AddRemoteClick(object sender, EventArgs e)
         {
             UICommands.StartRemotesDialog();
-            _NO_TRANSLATE_Remotes.DataSource = Module.GetRemotes(true);
+            _NO_TRANSLATE_Remotes.DataSource = Module.GetRemoteNames();
         }
     }
 }

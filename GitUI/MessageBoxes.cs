@@ -1,5 +1,6 @@
 ﻿using System.Windows.Forms;
 using GitCommands;
+using JetBrains.Annotations;
 using ResourceManager;
 
 namespace GitUI
@@ -8,8 +9,6 @@ namespace GitUI
     {
         private readonly TranslationString _error = new TranslationString("Error");
         private readonly TranslationString _notValidGitDirectory = new TranslationString("The current directory is not a valid git repository.");
-        private readonly TranslationString _notValidGitSVNDirectory = new TranslationString("The current directory is not a valid git-svn repository.");
-        private readonly TranslationString _unableGetSVNInformation = new TranslationString("Unable to determine upstream SVN information.");
 
         private readonly TranslationString _unresolvedMergeConflictsCaption = new TranslationString("Merge conflicts");
         private readonly TranslationString _unresolvedMergeConflicts = new TranslationString("There are unresolved merge conflicts, solve conflicts now?");
@@ -25,11 +24,12 @@ namespace GitUI
 
         private readonly TranslationString _serverHostkeyNotCachedText =
             new TranslationString("The server's host key is not cached in the registry.\n\nDo you want to trust this host key and then try again?");
- 
+
         private readonly TranslationString _updateSubmodules = new TranslationString("Update submodules");
         private readonly TranslationString _theRepositorySubmodules = new TranslationString("Update submodules on checkout?");
         private readonly TranslationString _updateSubmodulesToo = new TranslationString("Since this repository has submodules, it's necessary to update them on every checkout.\r\n\r\nThis will just checkout on the submodule the commit determined by the superproject.");
         private readonly TranslationString _rememberChoice = new TranslationString("Remember choice");
+        private readonly TranslationString _confirmDeleteRemoteBranch = new TranslationString("Do you want to delete the branch {0} from {1}?");
 
         // internal for FormTranslate
         internal MessageBoxes()
@@ -37,58 +37,38 @@ namespace GitUI
             Translator.Translate(this, AppSettings.CurrentTranslation);
         }
 
-        private static MessageBoxes instance;
+        [CanBeNull] private static MessageBoxes instance;
 
-        private static MessageBoxes Instance
-        {
-            get
-            {
-                if (instance == null)
-                {
-                    instance = new MessageBoxes();
-                }
-                return instance;
-            }
-        }
-        
-        public static void NotValidGitDirectory(IWin32Window owner)
+        private static MessageBoxes Instance => instance ?? (instance = new MessageBoxes());
+
+        public static void NotValidGitDirectory([CanBeNull] IWin32Window owner)
         {
             MessageBox.Show(owner, Instance._notValidGitDirectory.Text, Instance._error.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
-        public static void NotValidGitSVNDirectory(IWin32Window owner)
-        {
-            MessageBox.Show(owner, Instance._notValidGitSVNDirectory.Text, Instance._error.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-
-        public static void UnableGetSVNInformation(IWin32Window owner)
-        {
-            MessageBox.Show(owner, Instance._unableGetSVNInformation.Text, Instance._error.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-
         public static bool UnresolvedMergeConflicts(IWin32Window owner)
         {
-            return MessageBox.Show(owner, Instance._unresolvedMergeConflicts.Text, Instance._unresolvedMergeConflictsCaption.Text, MessageBoxButtons.YesNo) == DialogResult.Yes;
+            return MessageBox.Show(owner, Instance._unresolvedMergeConflicts.Text, Instance._unresolvedMergeConflictsCaption.Text, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
         }
 
         public static bool MiddleOfRebase(IWin32Window owner)
         {
-            return MessageBox.Show(owner, Instance._middleOfRebase.Text, Instance._middleOfRebaseCaption.Text, MessageBoxButtons.YesNo) == DialogResult.Yes;
+            return MessageBox.Show(owner, Instance._middleOfRebase.Text, Instance._middleOfRebaseCaption.Text, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
         }
 
         public static bool MiddleOfPatchApply(IWin32Window owner)
         {
-            return MessageBox.Show(owner, Instance._middleOfPatchApply.Text, Instance._middleOfPatchApplyCaption.Text, MessageBoxButtons.YesNo) == DialogResult.Yes;
+            return MessageBox.Show(owner, Instance._middleOfPatchApply.Text, Instance._middleOfPatchApplyCaption.Text, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
         }
 
         public static void PAgentNotFound(IWin32Window owner)
         {
-            MessageBox.Show(owner, Instance._pageantNotFound.Text, _putty);
+            MessageBox.Show(owner, Instance._pageantNotFound.Text, _putty, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         public static bool CacheHostkey(IWin32Window owner)
         {
-            return MessageBox.Show(owner, Instance._serverHostkeyNotCachedText.Text, "SSH", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == System.Windows.Forms.DialogResult.Yes;
+            return MessageBox.Show(owner, Instance._serverHostkeyNotCachedText.Text, "SSH", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
         }
 
         public static bool ConfirmUpdateSubmodules(IWin32Window win)
@@ -108,9 +88,18 @@ namespace GitUI
                 FooterIcon: PSTaskDialog.eSysIcons.Information) == DialogResult.Yes;
 
             if (PSTaskDialog.cTaskDialog.VerificationChecked)
+            {
+                AppSettings.DontConfirmUpdateSubmodulesOnCheckout = result;
                 AppSettings.UpdateSubmodulesOnCheckout = result;
+            }
 
             return result;
+        }
+
+        public static bool ConfirmDeleteRemoteBranch(IWin32Window owner, string branchName, string remote)
+        {
+            return MessageBox.Show(owner, string.Format(Instance._confirmDeleteRemoteBranch.Text, branchName, remote),
+                "", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
         }
     }
 }

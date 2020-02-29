@@ -1,148 +1,134 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Text.RegularExpressions;
-using PatchApply;
+using GitCommands;
+using GitCommands.Patches;
+using JetBrains.Annotations;
 
 namespace GitUI.Editor.Diff
 {
     public class DiffLineNumAnalyzer
     {
-        public delegate void EvLineNumAnalyzed(DiffLineNum diffLineNum);
+        private static readonly Regex regex = new Regex(
+            @"\-(?<leftStart>\d{1,})\,{0,}(?<leftCount>\d{0,})\s\+(?<rightStart>\d{1,})\,{0,}(?<rightCount>\d{0,})",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        public event EvLineNumAnalyzed OnLineNumAnalyzed;
-
-        private void BgWorkerOnDoWork(object sender, DoWorkEventArgs doWorkEventArgs)
+        [NotNull]
+        public DiffLinesInfo Analyze([NotNull] string diffContent)
         {
-            Start(doWorkEventArgs.Argument as string);
-        }
-
-        protected void FireLineAnalyzedEvent(DiffLineNum diffline)
-        {
-            var handler = OnLineNumAnalyzed;
-            if (handler != null) handler(diffline);
-        }
-
-        BackgroundWorker _bgWorker = new BackgroundWorker();
-        public void StartAsync(string diffContent, Action onCompleted)
-        {
-            if (_bgWorker.IsBusy)
-            {
-                _bgWorker.CancelAsync();
-            }
-
-            _bgWorker = new BackgroundWorker();
-            _bgWorker.DoWork += BgWorkerOnDoWork;
-            _bgWorker.WorkerSupportsCancellation = true;
-
-            _bgWorker.RunWorkerCompleted += (sender, args) => onCompleted();
-
-            _bgWorker.RunWorkerAsync(diffContent);
-        }
-
-        public void Start(string diffContent)
-        {
+            var ret = new DiffLinesInfo();
             var isCombinedDiff = PatchProcessor.IsCombinedDiff(diffContent);
             var lineNumInDiff = 0;
-            var leftLineNum = DiffLineNum.NotApplicableLineNum;
-            var rightLineNum = DiffLineNum.NotApplicableLineNum;
+            var leftLineNum = DiffLineInfo.NotApplicableLineNum;
+            var rightLineNum = DiffLineInfo.NotApplicableLineNum;
             var isHeaderLineLocated = false;
-            foreach (var line in diffContent.Split('\n'))
+            string[] lines = diffContent.Split('\n');
+            for (int i = 0; i < lines.Length; i++)
             {
-                if (_bgWorker.CancellationPending)
+                string line = lines[i];
+                if (i == lines.Length - 1 && line.IsNullOrEmpty())
                 {
-                    return;
+                    break;
                 }
+
                 lineNumInDiff++;
                 if (line.StartsWith("@"))
                 {
-                    var meta = new DiffLineNum
+                    var meta = new DiffLineInfo
                     {
                         LineNumInDiff = lineNumInDiff,
-                        LeftLineNum = DiffLineNum.NotApplicableLineNum,
-                        RightLineNum = DiffLineNum.NotApplicableLineNum,
-                        Style = DiffLineNum.DiffLineStyle.Header
+                        LeftLineNumber = DiffLineInfo.NotApplicableLineNum,
+                        RightLineNumber = DiffLineInfo.NotApplicableLineNum,
+                        LineType = DiffLineType.Header
                     };
-                    var regex =
-                        new Regex(
-                            @"\-(?<leftStart>\d{1,})\,{0,}(?<leftCount>\d{0,})\s\+(?<rightStart>\d{1,})\,{0,}(?<rightCount>\d{0,})",
-                            RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
                     var lineNumbers = regex.Match(line);
                     leftLineNum = int.Parse(lineNumbers.Groups["leftStart"].Value);
                     rightLineNum = int.Parse(lineNumbers.Groups["rightStart"].Value);
 
-                    FireLineAnalyzedEvent(meta);
+                    ret.Add(meta);
                     isHeaderLineLocated = true;
                 }
                 else if (isHeaderLineLocated && isCombinedDiff)
                 {
-                    var meta = new DiffLineNum
+                    var meta = new DiffLineInfo
                     {
                         LineNumInDiff = lineNumInDiff,
-                        LeftLineNum = DiffLineNum.NotApplicableLineNum,
-                        RightLineNum = DiffLineNum.NotApplicableLineNum,
+                        LeftLineNumber = DiffLineInfo.NotApplicableLineNum,
+                        RightLineNumber = DiffLineInfo.NotApplicableLineNum,
                     };
 
                     if (IsMinusLineInCombinedDiff(line))
                     {
-                        meta.Style = DiffLineNum.DiffLineStyle.Minus;
+                        meta.LineType = DiffLineType.Minus;
                     }
                     else if (IsPlusLineInCombinedDiff(line))
                     {
-                        meta.Style = DiffLineNum.DiffLineStyle.Plus;
-                        meta.RightLineNum = rightLineNum;
+                        meta.LineType = DiffLineType.Plus;
+                        meta.RightLineNumber = rightLineNum;
                         rightLineNum++;
                     }
                     else
                     {
-                        meta.Style = DiffLineNum.DiffLineStyle.Context;
-                        meta.RightLineNum = rightLineNum;
+                        meta.LineType = DiffLineType.Context;
+                        meta.RightLineNumber = rightLineNum;
                         rightLineNum++;
                     }
 
-                    FireLineAnalyzedEvent(meta);
+                    ret.Add(meta);
                 }
-
                 else if (isHeaderLineLocated && IsMinusLine(line))
                 {
-                    var meta = new DiffLineNum
+                    var meta = new DiffLineInfo
                     {
                         LineNumInDiff = lineNumInDiff,
-                        LeftLineNum = leftLineNum,
-                        RightLineNum = DiffLineNum.NotApplicableLineNum,
-                        Style = DiffLineNum.DiffLineStyle.Minus
+                        LeftLineNumber = leftLineNum,
+                        RightLineNumber = DiffLineInfo.NotApplicableLineNum,
+                        LineType = DiffLineType.Minus
                     };
-                    FireLineAnalyzedEvent(meta);
+                    ret.Add(meta);
 
                     leftLineNum++;
                 }
                 else if (isHeaderLineLocated && IsPlusLine(line))
                 {
-                    var meta = new DiffLineNum
+                    var meta = new DiffLineInfo
                     {
                         LineNumInDiff = lineNumInDiff,
-                        LeftLineNum = DiffLineNum.NotApplicableLineNum,
-                        RightLineNum = rightLineNum,
-                        Style = DiffLineNum.DiffLineStyle.Plus,
+                        LeftLineNumber = DiffLineInfo.NotApplicableLineNum,
+                        RightLineNumber = rightLineNum,
+                        LineType = DiffLineType.Plus,
                     };
-                    FireLineAnalyzedEvent(meta);
+                    ret.Add(meta);
                     rightLineNum++;
+                }
+                else if (line.StartsWith(GitModule.NoNewLineAtTheEnd))
+                {
+                    var meta = new DiffLineInfo
+                    {
+                        LineNumInDiff = lineNumInDiff,
+                        LeftLineNumber = DiffLineInfo.NotApplicableLineNum,
+                        RightLineNumber = DiffLineInfo.NotApplicableLineNum,
+                        LineType = DiffLineType.Header
+                    };
+                    ret.Add(meta);
                 }
                 else if (isHeaderLineLocated)
                 {
-                    var meta = new DiffLineNum
+                    var meta = new DiffLineInfo
                     {
                         LineNumInDiff = lineNumInDiff,
-                        LeftLineNum = leftLineNum,
-                        RightLineNum = rightLineNum,
-                        Style = DiffLineNum.DiffLineStyle.Context,
+                        LeftLineNumber = leftLineNum,
+                        RightLineNumber = rightLineNum,
+                        LineType = DiffLineType.Context,
                     };
-                    FireLineAnalyzedEvent(meta);
+                    ret.Add(meta);
 
                     leftLineNum++;
                     rightLineNum++;
                 }
             }
+
+            return ret;
         }
 
         private static bool IsMinusLine(string line)
@@ -164,22 +150,5 @@ namespace GitUI.Editor.Diff
         {
             return line.StartsWith("--") || line.StartsWith("- ") || line.StartsWith(" -");
         }
-    }
-
-    public class DiffLineNum
-    {
-        public enum DiffLineStyle
-        {
-            Header,
-            Plus,
-            Minus,
-            Context
-        }
-
-        public static readonly int NotApplicableLineNum = -1;
-        public int LineNumInDiff { get; set; }
-        public int LeftLineNum { get; set; }
-        public int RightLineNum { get; set; }
-        public DiffLineStyle Style { get; set; }
     }
 }

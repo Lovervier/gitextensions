@@ -1,73 +1,78 @@
 ﻿using System.Windows.Forms;
 
-namespace GitUIPluginInterfaces.Settings
+namespace GitUIPluginInterfaces
 {
     public class PasswordSetting : ISetting
     {
-        public PasswordSetting(string aName, string aDefaultValue)
-            : this(aName, aName, aDefaultValue)
+        public PasswordSetting(string name, string defaultValue)
+            : this(name, name, defaultValue)
         {
         }
 
-        public PasswordSetting(string aName, string aCaption, string aDefaultValue)
+        public PasswordSetting(string name, string caption, string defaultValue)
         {
-            Name = aName;
-            Caption = aCaption;
-            DefaultValue = aDefaultValue;
-            _controlBinding = new TextBoxBinding(this);
+            Name = name;
+            Caption = caption;
+            DefaultValue = defaultValue;
         }
 
-        public string Name { get; private set; }
-        public string Caption { get; private set; }
+        public string Name { get; }
+        public string Caption { get; }
         public string DefaultValue { get; set; }
+        public TextBox CustomControl { get; set; }
 
-        private ISettingControlBinding _controlBinding;
-        public ISettingControlBinding ControlBinding
+        public ISettingControlBinding CreateControlBinding()
         {
-            get { return _controlBinding; }
+            return new TextBoxBinding(this, CustomControl);
         }
 
-        private class TextBoxBinding : SettingControlBinding<TextBox>
+        private class TextBoxBinding : SettingControlBinding<PasswordSetting, TextBox>
         {
-            PasswordSetting Setting;
-
-            public TextBoxBinding(PasswordSetting aSetting)
+            public TextBoxBinding(PasswordSetting setting, TextBox customControl)
+                : base(setting, customControl)
             {
-                Setting = aSetting;
             }
 
             public override TextBox CreateControl()
             {
-                return new TextBox {PasswordChar = '\u25CF'};
+                Setting.CustomControl = new TextBox { PasswordChar = '\u25CF' };
+                return Setting.CustomControl;
             }
 
             public override void LoadSetting(ISettingsSource settings, TextBox control)
             {
-                control.Text = Setting[settings];
+                string settingVal = settings.SettingLevel == SettingLevel.Effective
+                    ? Setting.ValueOrDefault(settings)
+                    : Setting[settings];
+
+                control.Text = settingVal;
             }
 
             public override void SaveSetting(ISettingsSource settings, TextBox control)
             {
-                Setting[settings] = control.Text;
+                var controlValue = control.Text;
+                if (settings.SettingLevel == SettingLevel.Effective)
+                {
+                    if (Setting.ValueOrDefault(settings) == controlValue)
+                    {
+                        return;
+                    }
+                }
+
+                Setting[settings] = controlValue;
             }
         }
 
         public string this[ISettingsSource settings]
         {
-            get
-            {
-                return settings.GetValue(Name, DefaultValue, s =>
-                {
-                    if (string.IsNullOrEmpty(s))
-                        return DefaultValue;
-                    return s;
-                });
-            }
+            get => settings.GetString(Name, null);
 
-            set
-            {
-                settings.SetValue(Name, value, s => { return s; });
-            }
+            set => settings.SetString(Name, value);
+        }
+
+        public string ValueOrDefault(ISettingsSource settings)
+        {
+            return this[settings] ?? DefaultValue;
         }
     }
 }

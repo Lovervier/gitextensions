@@ -1,68 +1,66 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using GitCommands;
-using Gravatar;
+using GitCommands.Utils;
+using GitExtUtils.GitUI;
+using GitUI.Avatars;
 using ResourceManager;
 
 namespace GitUI.CommandsDialogs.SettingsDialog.Pages
 {
     public partial class AppearanceSettingsPage : SettingsPageWithHeader
     {
-        private readonly TranslationString _noDictFile =
-            new TranslationString("None");
-        private readonly TranslationString _noDictFilesFound =
-            new TranslationString("No dictionary files found in: {0}");
-
-        private Font _diffFont;
-        private Font _applicationFont;
-        private Font commitFont;
+        private readonly TranslationString _noDictFile = new TranslationString("None");
+        private readonly TranslationString _noDictFilesFound = new TranslationString("No dictionary files found in: {0}");
+        private readonly TranslationString _noImageServiceTooltip = new TranslationString("A default image, if an email address has no matching Gravatar image.\r\nSee http://en.gravatar.com/site/implement/images#default-image for more details.");
+        private readonly TranslationString _authorDateSortWarningTooltip = new TranslationString("Sorting by author date may delay rendering of the revision graph.");
 
         public AppearanceSettingsPage()
         {
             InitializeComponent();
-            Text = "Appearance";
-            Translate();
+            InitializeComplete();
 
-            NoImageService.Items.AddRange(GravatarService.DynamicServices.Cast<object>().ToArray());
+            FillComboBoxWithEnumValues<AvatarProvider>(AvatarProvider);
+            FillComboBoxWithEnumValues<GravatarFallbackAvatarType>(_NO_TRANSLATE_NoImageService);
         }
 
-        protected override string GetCommaSeparatedKeywordList()
+        private void FillComboBoxWithEnumValues<T>(ComboBox comboBox) where T : Enum
         {
-            return "graph,visual studio,author,image,font,lang,language,spell,spelling";
+            comboBox.DisplayMember = nameof(ComboBoxItem<T>.Text);
+            comboBox.ValueMember = nameof(ComboBoxItem<T>.Value);
+            comboBox.DataSource = EnumHelper.GetValues<T>()
+                .Select(e => new ComboBoxItem<T> { Text = e.GetDescription(), Value = e })
+                .ToArray();
         }
 
-        private int GetTruncatePathMethodIndex(string text)
+        protected override void OnRuntimeLoad()
         {
-            switch (text.ToLowerInvariant())
-            {
-                case "compact":
-                    return 1;
-                case "trimstart":
-                    return 2;
-                case "fileNameOnly":
-                    return 3;
-                default:
-                    return 0;
-            }
+            base.OnRuntimeLoad();
+
+            ToolTip.SetToolTip(_NO_TRANSLATE_NoImageService, _noImageServiceTooltip.Text);
+            ToolTip.SetToolTip(pictureAvatarHelp, _noImageServiceTooltip.Text);
+            ToolTip.SetToolTip(chkSortByAuthorDate, _authorDateSortWarningTooltip.Text);
+            pictureAvatarHelp.Size = DpiUtil.Scale(pictureAvatarHelp.Size);
+
+            // align 1st columns across all tables
+            tlpnlGeneral.AdjustWidthToSize(0, truncateLongFilenames, lblCacheDays, lblNoImageService, lblLanguage, lblSpellingDictionary);
+            tlpnlAuthor.AdjustWidthToSize(0, truncateLongFilenames, lblCacheDays, lblNoImageService, lblLanguage, lblSpellingDictionary);
+            tlpnlLanguage.AdjustWidthToSize(0, truncateLongFilenames, lblCacheDays, lblNoImageService, lblLanguage, lblSpellingDictionary);
+
+            // align 2nd columns across all tables
+            truncatePathMethod.AdjustWidthToFitContent();
+            Language.AdjustWidthToFitContent();
+            tlpnlGeneral.AdjustWidthToSize(1, truncatePathMethod, _NO_TRANSLATE_NoImageService, Language);
+            tlpnlAuthor.AdjustWidthToSize(1, truncatePathMethod, _NO_TRANSLATE_NoImageService, Language);
+            tlpnlLanguage.AdjustWidthToSize(1, truncatePathMethod, _NO_TRANSLATE_NoImageService, Language);
         }
 
-        private string GetTruncatePathMethodString(int index)
+        public static SettingsPageReference GetPageReference()
         {
-            switch (index)
-            {
-                case 1:
-                    return "compact";
-                case 2:
-                    return "trimstart";
-                case 3:
-                    return "fileNameOnly";
-                default:
-                    return "none";
-            }
+            return new SettingsPageReferenceByType(typeof(AppearanceSettingsPage));
         }
 
         protected override void SettingsToPage()
@@ -70,17 +68,13 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
             chkEnableAutoScale.Checked = AppSettings.EnableAutoScale;
 
             chkShowCurrentBranchInVisualStudio.Checked = AppSettings.ShowCurrentBranchInVisualStudio;
-            _NO_TRANSLATE_DaysToCacheImages.Value = AppSettings.AuthorImageCacheDays;
-            if (AppSettings.AuthorImageSize <= 120)
-                AuthorImageSize.SelectedIndex = 0;
-            else if (AppSettings.AuthorImageSize <= 200)
-                AuthorImageSize.SelectedIndex = 1;
-            else if (AppSettings.AuthorImageSize <= 280)
-                AuthorImageSize.SelectedIndex = 2;
-            else
-                AuthorImageSize.SelectedIndex = 3;
-            ShowAuthorGravatar.Checked = AppSettings.ShowAuthorGravatar;
-            NoImageService.Text = AppSettings.GravatarFallbackService;
+            _NO_TRANSLATE_DaysToCacheImages.Value = AppSettings.AvatarImageCacheDays;
+            ShowAuthorAvatarInCommitInfo.Checked = AppSettings.ShowAuthorAvatarInCommitInfo;
+            ShowAuthorAvatarInCommitGraph.Checked = AppSettings.ShowAuthorAvatarColumn;
+            chkSortByAuthorDate.Checked = AppSettings.SortByAuthorDate;
+            AvatarProvider.SelectedValue = AppSettings.AvatarProvider;
+            _NO_TRANSLATE_NoImageService.SelectedValue = AppSettings.GravatarFallbackAvatarType;
+            ManageGravatarOptionsDisplay();
 
             Language.Items.Clear();
             Language.Items.Add("English");
@@ -89,17 +83,44 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
 
             truncatePathMethod.SelectedIndex = GetTruncatePathMethodIndex(AppSettings.TruncatePathMethod);
 
+            Dictionary.Items.Clear();
+            Dictionary.Items.Add(_noDictFile.Text);
             if (AppSettings.Dictionary.Equals("none", StringComparison.InvariantCultureIgnoreCase))
+            {
                 Dictionary.SelectedIndex = 0;
+            }
             else
-                Dictionary.Text = AppSettings.Dictionary;
+            {
+                string dictionaryFile = string.Concat(Path.Combine(AppSettings.GetDictionaryDir(), AppSettings.Dictionary), ".dic");
+                if (File.Exists(dictionaryFile))
+                {
+                    Dictionary.Items.Add(AppSettings.Dictionary);
+                    Dictionary.Text = AppSettings.Dictionary;
+                }
+                else
+                {
+                    Dictionary.SelectedIndex = 0;
+                }
+            }
 
             chkShowRelativeDate.Checked = AppSettings.RelativeDate;
 
-            SetCurrentApplicationFont(AppSettings.Font);
-            SetCurrentDiffFont(AppSettings.DiffFont);
-            SetCurrentCommitFont(AppSettings.CommitFont);
+            return;
 
+            int GetTruncatePathMethodIndex(TruncatePathMethod method)
+            {
+                switch (method)
+                {
+                    case TruncatePathMethod.Compact:
+                        return 1;
+                    case TruncatePathMethod.TrimStart:
+                        return 2;
+                    case TruncatePathMethod.FileNameOnly:
+                        return 3;
+                    default:
+                        return 0;
+                }
+            }
         }
 
         protected override void PageToSettings()
@@ -107,50 +128,59 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
             AppSettings.EnableAutoScale = chkEnableAutoScale.Checked;
             AppSettings.TruncatePathMethod = GetTruncatePathMethodString(truncatePathMethod.SelectedIndex);
             AppSettings.ShowCurrentBranchInVisualStudio = chkShowCurrentBranchInVisualStudio.Checked;
-
-            int authorImageSize;
-            switch (AuthorImageSize.SelectedIndex)
-            {
-                case 1:
-                    authorImageSize = 160;
-                    break;
-                case 2:
-                    authorImageSize = 240;
-                    break;
-                case 3:
-                    authorImageSize = 320;
-                    break;
-                default:
-                    authorImageSize = 80;
-                    break;
-            }
-            if (authorImageSize != AppSettings.AuthorImageSize)
-            {
-                AppSettings.AuthorImageSize = authorImageSize;
-                GravatarService.ClearImageCache();
-            }
+            AppSettings.ShowAuthorAvatarColumn = ShowAuthorAvatarInCommitGraph.Checked;
+            AppSettings.ShowAuthorAvatarInCommitInfo = ShowAuthorAvatarInCommitInfo.Checked;
+            AppSettings.AvatarImageCacheDays = (int)_NO_TRANSLATE_DaysToCacheImages.Value;
+            AppSettings.SortByAuthorDate = chkSortByAuthorDate.Checked;
 
             AppSettings.Translation = Language.Text;
-            Strings.Reinit();
+            ResourceManager.Strings.Reinitialize();
+            Strings.Reinitialize();
 
-            AppSettings.AuthorImageCacheDays = (int)_NO_TRANSLATE_DaysToCacheImages.Value;
+            var shouldClearCache =
+                AppSettings.AvatarProvider != (AvatarProvider)AvatarProvider.SelectedValue
+                || AppSettings.GravatarFallbackAvatarType != (GravatarFallbackAvatarType)_NO_TRANSLATE_NoImageService.SelectedValue;
 
-            AppSettings.ShowAuthorGravatar = ShowAuthorGravatar.Checked;
-            AppSettings.GravatarFallbackService = NoImageService.Text;
+            AppSettings.AvatarProvider = (AvatarProvider)AvatarProvider.SelectedValue;
+
+            if (_NO_TRANSLATE_NoImageService.SelectedValue is GravatarFallbackAvatarType imageType)
+            {
+                AppSettings.GravatarFallbackAvatarType = imageType;
+            }
+
+            if (shouldClearCache)
+            {
+                new AvatarControl().ClearCache();
+            }
 
             AppSettings.RelativeDate = chkShowRelativeDate.Checked;
 
             AppSettings.Dictionary = Dictionary.SelectedIndex == 0 ? "none" : Dictionary.Text;
 
-            AppSettings.DiffFont = _diffFont;
-            AppSettings.Font = _applicationFont;
-            AppSettings.CommitFont = commitFont;
+            return;
+
+            TruncatePathMethod GetTruncatePathMethodString(int index)
+            {
+                switch (index)
+                {
+                    case 1:
+                        return TruncatePathMethod.Compact;
+                    case 2:
+                        return TruncatePathMethod.TrimStart;
+                    case 3:
+                        return TruncatePathMethod.FileNameOnly;
+                    default:
+                        return TruncatePathMethod.None;
+                }
+            }
         }
 
         private void Dictionary_DropDown(object sender, EventArgs e)
         {
             try
             {
+                string currentDictionary = Dictionary.Text;
+
                 Dictionary.Items.Clear();
                 Dictionary.Items.Add(_noDictFile.Text);
                 foreach (
@@ -160,82 +190,52 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
                     var file = new FileInfo(fileName);
                     Dictionary.Items.Add(file.Name.Replace(".dic", ""));
                 }
+
+                Dictionary.Text = currentDictionary;
             }
             catch
             {
-                MessageBox.Show(this, String.Format(_noDictFilesFound.Text, AppSettings.GetDictionaryDir()));
+                MessageBox.Show(this, string.Format(_noDictFilesFound.Text, AppSettings.GetDictionaryDir()), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-        }
-
-        private void diffFontChangeButton_Click(object sender, EventArgs e)
-        {
-            diffFontDialog.Font = _diffFont;
-            DialogResult result = diffFontDialog.ShowDialog(this);
-
-            if (result == DialogResult.OK || result == DialogResult.Yes)
-            {
-                SetCurrentDiffFont(diffFontDialog.Font);
-            }
-        }
-
-        private void applicationFontChangeButton_Click(object sender, EventArgs e)
-        {
-            applicationDialog.Font = _applicationFont;
-            DialogResult result = applicationDialog.ShowDialog(this);
-
-            if (result == DialogResult.OK || result == DialogResult.Yes)
-            {
-                SetCurrentApplicationFont(applicationDialog.Font);
-            }
-        }
-
-        private void commitFontChangeButton_Click(object sender, EventArgs e)
-        {
-            commitFontDialog.Font = commitFont;
-            DialogResult result = commitFontDialog.ShowDialog(this);
-
-            if (result == DialogResult.OK || result == DialogResult.Yes)
-            {
-                SetCurrentCommitFont(commitFontDialog.Font);
-            }
-        }
-
-        private void SetCurrentDiffFont(Font newFont)
-        {
-            this._diffFont = newFont;
-            SetFontButtonText(newFont, diffFontChangeButton);
-        }
-
-        private void SetCurrentApplicationFont(Font newFont)
-        {
-            this._applicationFont = newFont;
-            SetFontButtonText(newFont, applicationFontChangeButton);
-        }
-
-        private void SetCurrentCommitFont(Font newFont)
-        {
-            this.commitFont = newFont;
-            SetFontButtonText(newFont, commitFontChangeButton);
-        }
-
-        private void SetFontButtonText(Font font, Button button)
-        {
-            button.Text = string.Format("{0}, {1}", font.FontFamily.Name, (int)(font.Size + 0.5f));
         }
 
         private void ClearImageCache_Click(object sender, EventArgs e)
         {
-            GravatarService.ClearImageCache();
+            ThreadHelper.JoinableTaskFactory.Run(AvatarService.Default.ClearCacheAsync);
         }
 
         private void helpTranslate_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start(Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "TranslationApp.exe"));
+            Process.Start(@"https://github.com/gitextensions/gitextensions/wiki/Translations");
         }
 
         private void downloadDictionary_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             Process.Start(@"https://github.com/gitextensions/gitextensions/wiki/Spelling");
+        }
+
+        private void pictureAvatarHelp_Click(object sender, EventArgs e)
+        {
+            Process.Start(@"http://en.gravatar.com/site/implement/images#default-image");
+        }
+
+        private void AvatarProvider_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            ManageGravatarOptionsDisplay();
+        }
+
+        private void ManageGravatarOptionsDisplay()
+        {
+            var showAvatarOptions = (AvatarProvider)AvatarProvider.SelectedValue == GitCommands.AvatarProvider.Gravatar;
+            lblNoImageService.Visible = showAvatarOptions;
+            _NO_TRANSLATE_NoImageService.Visible = showAvatarOptions;
+            pictureAvatarHelp.Visible = showAvatarOptions;
+        }
+
+        private class ComboBoxItem<T>
+        {
+            public string Text { get; set; }
+            public T Value { get; set; }
         }
     }
 }

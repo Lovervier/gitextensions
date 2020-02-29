@@ -1,36 +1,70 @@
+using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
 using GitCommands;
 using GitUIPluginInterfaces;
+using JetBrains.Annotations;
 
 namespace ResourceManager
 {
+    [UsedImplicitly]
     public abstract class GitPluginBase : IGitPlugin, ITranslate
     {
-        private string _description;
+        public string Description { get; protected set; }
+        public string Name { get; protected set; }
+        public Image Icon { get; protected set; }
 
-        public string Description
+        protected GitPluginBase(bool hasSettings)
         {
-            get { return _description; }
-            protected set { _description = value; }
+            HasSettings = hasSettings;
         }
 
-        //Store settings to use later
-        public ISettingsSource Settings { get; set; }
+        // required for the TranslationApp to work
+        protected GitPluginBase()
+            : this(false)
+        {
+        }
+
+        protected void SetNameAndDescription(string name)
+        {
+            Name = name;
+            Description = name;
+        }
+
+        void IDisposable.Dispose()
+        {
+        }
+
+        public bool HasSettings { get; }
+
+        // Store settings to use later
+        public ISettingsSource Settings => SettingsContainer.GetSettingsSource();
+
+        public IGitPluginSettingsContainer SettingsContainer { get; set; }
 
         public virtual IEnumerable<ISetting> GetSettings()
         {
-            return new List<ISetting>();
+            return Enumerable.Empty<ISetting>();
         }
 
         public virtual void Register(IGitUICommands gitUiCommands)
         {
+            SettingsContainer.SetSettingsSource(gitUiCommands.GitModule.GetEffectiveSettings());
         }
 
         public virtual void Unregister(IGitUICommands gitUiCommands)
         {
+            SettingsContainer.SetSettingsSource(null);
         }
 
-        public abstract bool Execute(GitUIBaseEventArgs gitUiCommands);
+        /// <summary>
+        /// Run the plugin Execute method
+        /// </summary>
+        /// <param name="args">arguments from the UI</param>
+        /// <returns>true, if the revision grid need a refresh
+        /// false, otherwise </returns>
+        public abstract bool Execute(GitUIEventArgs args);
 
         protected void Translate()
         {

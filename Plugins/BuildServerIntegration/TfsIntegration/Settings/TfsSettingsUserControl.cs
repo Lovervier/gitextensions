@@ -1,6 +1,7 @@
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Windows.Forms;
-using GitCommands.Settings;
 using GitUIPluginInterfaces;
 using GitUIPluginInterfaces.BuildServerIntegration;
 using ResourceManager;
@@ -8,7 +9,7 @@ using ResourceManager;
 namespace TfsIntegration.Settings
 {
     [Export(typeof(IBuildServerSettingsUserControl))]
-    [BuildServerSettingsUserControlMetadata("Team Foundation Server")]
+    [BuildServerSettingsUserControlMetadata(TfsAdapter.PluginName)]
     [PartCreationPolicy(CreationPolicy.NonShared)]
     public partial class TfsSettingsUserControl : GitExtensionsControl, IBuildServerSettingsUserControl
     {
@@ -17,12 +18,12 @@ namespace TfsIntegration.Settings
         public TfsSettingsUserControl()
         {
             InitializeComponent();
-            Translate();
+            InitializeComplete();
 
             Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top;
         }
 
-        public void Initialize(string defaultProjectName)
+        public void Initialize(string defaultProjectName, IEnumerable<string> remotes)
         {
             _defaultProjectName = defaultProjectName;
         }
@@ -34,16 +35,24 @@ namespace TfsIntegration.Settings
                 TfsServer.Text = buildServerConfig.GetString("TfsServer", string.Empty);
                 TfsTeamCollectionName.Text = buildServerConfig.GetString("TfsTeamCollectionName", "DefaultCollection");
                 TfsProjectName.Text = buildServerConfig.GetString("ProjectName", _defaultProjectName);
-                TfsBuildDefinitionName.Text = buildServerConfig.GetString("TfsBuildDefinitionName", string.Empty);
+                TfsBuildDefinitionNameFilter.Text = buildServerConfig.GetString("TfsBuildDefinitionName", string.Empty);
             }
         }
 
         public void SaveSettings(ISettingsSource buildServerConfig)
         {
-            buildServerConfig.SetString("TfsServer", TfsServer.Text);
-            buildServerConfig.SetString("TfsTeamCollectionName", TfsTeamCollectionName.Text);
-            buildServerConfig.SetString("ProjectName", TfsProjectName.Text);
-            buildServerConfig.SetString("TfsBuildDefinitionName", TfsBuildDefinitionName.Text);
+            if (BuildServerSettingsHelper.IsRegexValid(TfsBuildDefinitionNameFilter.Text))
+            {
+                buildServerConfig.SetString("TfsServer", TfsServer.Text);
+                buildServerConfig.SetString("TfsTeamCollectionName", TfsTeamCollectionName.Text);
+                buildServerConfig.SetString("ProjectName", TfsProjectName.Text);
+                buildServerConfig.SetString("TfsBuildDefinitionName", TfsBuildDefinitionNameFilter.Text);
+            }
+        }
+
+        private void TfsBuildDefinitionNameFilter_TextChanged(object sender, EventArgs e)
+        {
+            labelRegexError.Visible = !BuildServerSettingsHelper.IsRegexValid(TfsBuildDefinitionNameFilter.Text);
         }
     }
 }

@@ -1,247 +1,189 @@
 ﻿using System;
-using System.Drawing;
-using System.Windows.Forms;
+using System.Diagnostics;
+using System.Linq;
 using GitCommands;
-using GitUI.Editor;
+using GitExtUtils.GitUI.Theming;
+using GitUI.Theming;
 using ResourceManager;
 
 namespace GitUI.CommandsDialogs.SettingsDialog.Pages
 {
     public partial class ColorsSettingsPage : SettingsPageWithHeader
     {
+        private int _updateThemeSettingsCounter;
+
+        private static readonly TranslationString FormatBuiltinThemeName =
+            new TranslationString("{0}");
+
+        private static readonly TranslationString FormatUserDefinedThemeName =
+            new TranslationString("{0}, user-defined");
+
+        private static readonly TranslationString DefaultThemeName =
+            new TranslationString("default");
+
         public ColorsSettingsPage()
         {
             InitializeComponent();
-            Text = "Colors";
-            Translate();
+            InitializeComplete();
         }
 
-        protected override string GetCommaSeparatedKeywordList()
+        private ThemeId SelectedThemeId
         {
-            return "color,graph,diff,icon";
-        }
-
-        private int GetIconStyleIndex(string text)
-        {
-            switch (text.ToLowerInvariant())
+            get
             {
-                case "large":
-                    return 1;
-                case "small":
-                    return 2;
-                case "cow":
-                    return 3;
-                default:
-                    return 0;
+                return ((FormattedThemeId)_NO_TRANSLATE_cbSelectTheme.SelectedItem).ThemeId;
+            }
+            set
+            {
+                var formattedThemeId = new FormattedThemeId(value);
+                int index = _NO_TRANSLATE_cbSelectTheme.Items.IndexOf(formattedThemeId);
+                if (index < 0)
+                {
+                    // Handle case when selected theme is missing gracefully.
+                    // It may happen in a following scenario:
+                    // - user creates custom theme and selects it in this settings page
+                    // - user saves app settings
+                    // - user deletes the file with custom theme
+                    Trace.WriteLine("Theme not found: " + formattedThemeId);
+                    index = 0;
+                }
+
+                _NO_TRANSLATE_cbSelectTheme.SelectedIndex = index;
             }
         }
 
-        private string GetIconStyleString(int index)
+        public bool UseSystemVisualStyle
         {
-            switch (index)
+            get => chkUseSystemVisualStyle.Checked;
+            set => chkUseSystemVisualStyle.Checked = value;
+        }
+
+        protected override void OnRuntimeLoad()
+        {
+            base.OnRuntimeLoad();
+
+            if (!IsSettingsLoaded)
             {
-                case 1:
-                    return "large";
-                case 2:
-                    return "small";
-                case 3:
-                    return "cow";
-                default:
-                    return "default";
+                SettingsToPage();
             }
         }
 
         protected override void SettingsToPage()
         {
             MulticolorBranches.Checked = AppSettings.MulticolorBranches;
-            MulticolorBranches_CheckedChanged(null, null);
 
+            chkDrawAlternateBackColor.Checked = AppSettings.RevisionGraphDrawAlternateBackColor;
             DrawNonRelativesGray.Checked = AppSettings.RevisionGraphDrawNonRelativesGray;
             DrawNonRelativesTextGray.Checked = AppSettings.RevisionGraphDrawNonRelativesTextGray;
-            BranchBorders.Checked = AppSettings.BranchBorders;
-            StripedBanchChange.Checked = AppSettings.StripedBranchChange;
-            HighlightAuthoredRevisions.Checked = AppSettings.HighlightAuthoredRevisions;
+            chkHighlightAuthored.Checked = AppSettings.HighlightAuthoredRevisions;
 
-            _NO_TRANSLATE_ColorGraphLabel.BackColor = AppSettings.GraphColor;
-            _NO_TRANSLATE_ColorGraphLabel.Text = AppSettings.GraphColor.Name;
-            _NO_TRANSLATE_ColorGraphLabel.ForeColor =
-                ColorHelper.GetForeColorForBackColor(_NO_TRANSLATE_ColorGraphLabel.BackColor);
-            _NO_TRANSLATE_ColorTagLabel.BackColor = AppSettings.TagColor;
-            _NO_TRANSLATE_ColorTagLabel.Text = AppSettings.TagColor.Name;
-            _NO_TRANSLATE_ColorTagLabel.ForeColor =
-                ColorHelper.GetForeColorForBackColor(_NO_TRANSLATE_ColorTagLabel.BackColor);
-            _NO_TRANSLATE_ColorBranchLabel.BackColor = AppSettings.BranchColor;
-            _NO_TRANSLATE_ColorBranchLabel.Text = AppSettings.BranchColor.Name;
-            _NO_TRANSLATE_ColorBranchLabel.ForeColor =
-                ColorHelper.GetForeColorForBackColor(_NO_TRANSLATE_ColorBranchLabel.BackColor);
-            _NO_TRANSLATE_ColorRemoteBranchLabel.BackColor = AppSettings.RemoteBranchColor;
-            _NO_TRANSLATE_ColorRemoteBranchLabel.Text = AppSettings.RemoteBranchColor.Name;
-            _NO_TRANSLATE_ColorRemoteBranchLabel.ForeColor =
-                ColorHelper.GetForeColorForBackColor(_NO_TRANSLATE_ColorRemoteBranchLabel.BackColor);
-            _NO_TRANSLATE_ColorOtherLabel.BackColor = AppSettings.OtherTagColor;
-            _NO_TRANSLATE_ColorOtherLabel.Text = AppSettings.OtherTagColor.Name;
-            _NO_TRANSLATE_ColorOtherLabel.ForeColor =
-                ColorHelper.GetForeColorForBackColor(_NO_TRANSLATE_ColorOtherLabel.BackColor);
-
-            _NO_TRANSLATE_ColorAddedLineLabel.BackColor = AppSettings.DiffAddedColor;
-            _NO_TRANSLATE_ColorAddedLineLabel.Text = AppSettings.DiffAddedColor.Name;
-            _NO_TRANSLATE_ColorAddedLineLabel.ForeColor =
-                ColorHelper.GetForeColorForBackColor(_NO_TRANSLATE_ColorAddedLineLabel.BackColor);
-            _NO_TRANSLATE_ColorAddedLineDiffLabel.BackColor = AppSettings.DiffAddedExtraColor;
-            _NO_TRANSLATE_ColorAddedLineDiffLabel.Text = AppSettings.DiffAddedExtraColor.Name;
-            _NO_TRANSLATE_ColorAddedLineDiffLabel.ForeColor =
-                ColorHelper.GetForeColorForBackColor(_NO_TRANSLATE_ColorAddedLineDiffLabel.BackColor);
-
-            _NO_TRANSLATE_ColorRemovedLine.BackColor = AppSettings.DiffRemovedColor;
-            _NO_TRANSLATE_ColorRemovedLine.Text = AppSettings.DiffRemovedColor.Name;
-            _NO_TRANSLATE_ColorRemovedLine.ForeColor =
-                ColorHelper.GetForeColorForBackColor(_NO_TRANSLATE_ColorRemovedLine.BackColor);
-            _NO_TRANSLATE_ColorRemovedLineDiffLabel.BackColor = AppSettings.DiffRemovedExtraColor;
-            _NO_TRANSLATE_ColorRemovedLineDiffLabel.Text = AppSettings.DiffRemovedExtraColor.Name;
-            _NO_TRANSLATE_ColorRemovedLineDiffLabel.ForeColor =
-                ColorHelper.GetForeColorForBackColor(_NO_TRANSLATE_ColorRemovedLineDiffLabel.BackColor);
-            _NO_TRANSLATE_ColorSectionLabel.BackColor = AppSettings.DiffSectionColor;
-            _NO_TRANSLATE_ColorSectionLabel.Text = AppSettings.DiffSectionColor.Name;
-            _NO_TRANSLATE_ColorSectionLabel.ForeColor =
-                ColorHelper.GetForeColorForBackColor(_NO_TRANSLATE_ColorSectionLabel.BackColor);
-
-            _NO_TRANSLATE_ColorAuthoredRevisions.BackColor = AppSettings.AuthoredRevisionsColor;
-            _NO_TRANSLATE_ColorAuthoredRevisions.Text = AppSettings.AuthoredRevisionsColor.Name;
-            _NO_TRANSLATE_ColorAuthoredRevisions.ForeColor =
-                ColorHelper.GetForeColorForBackColor(_NO_TRANSLATE_ColorAuthoredRevisions.BackColor);
-
-            string iconColor = AppSettings.IconColor.ToLower();
-            DefaultIcon.Checked = iconColor == "default";
-            BlueIcon.Checked = iconColor == "blue";
-            GreenIcon.Checked = iconColor == "green";
-            PurpleIcon.Checked = iconColor == "purple";
-            RedIcon.Checked = iconColor == "red";
-            YellowIcon.Checked = iconColor == "yellow";
-            RandomIcon.Checked = iconColor == "random";
-
-            IconStyle.SelectedIndex = GetIconStyleIndex(AppSettings.IconStyle);
-
-            ShowIconPreview();
+            BeginUpdateThemeSettings();
+            var themeRepository = new ThemeRepository(new ThemePersistence());
+            _NO_TRANSLATE_cbSelectTheme.Items.Clear();
+            _NO_TRANSLATE_cbSelectTheme.Items.Add(new FormattedThemeId(ThemeId.Default));
+            _NO_TRANSLATE_cbSelectTheme.Items.AddRange(themeRepository.GetThemeIds()
+                .Select(id => new FormattedThemeId(id))
+                .Cast<object>()
+                .ToArray());
+            SelectedThemeId = AppSettings.ThemeId;
+            UseSystemVisualStyle = AppSettings.UseSystemVisualStyle;
+            EndUpdateThemeSettings();
         }
 
         protected override void PageToSettings()
         {
             AppSettings.MulticolorBranches = MulticolorBranches.Checked;
+            AppSettings.RevisionGraphDrawAlternateBackColor = chkDrawAlternateBackColor.Checked;
             AppSettings.RevisionGraphDrawNonRelativesGray = DrawNonRelativesGray.Checked;
             AppSettings.RevisionGraphDrawNonRelativesTextGray = DrawNonRelativesTextGray.Checked;
-            AppSettings.BranchBorders = BranchBorders.Checked;
-            AppSettings.StripedBranchChange = StripedBanchChange.Checked;
-            AppSettings.HighlightAuthoredRevisions = HighlightAuthoredRevisions.Checked;
-
-            AppSettings.GraphColor = _NO_TRANSLATE_ColorGraphLabel.BackColor;
-            AppSettings.TagColor = _NO_TRANSLATE_ColorTagLabel.BackColor;
-            AppSettings.BranchColor = _NO_TRANSLATE_ColorBranchLabel.BackColor;
-            AppSettings.RemoteBranchColor = _NO_TRANSLATE_ColorRemoteBranchLabel.BackColor;
-            AppSettings.OtherTagColor = _NO_TRANSLATE_ColorOtherLabel.BackColor;
-            AppSettings.AuthoredRevisionsColor = _NO_TRANSLATE_ColorAuthoredRevisions.BackColor;
-
-            AppSettings.DiffAddedColor = _NO_TRANSLATE_ColorAddedLineLabel.BackColor;
-            AppSettings.DiffRemovedColor = _NO_TRANSLATE_ColorRemovedLine.BackColor;
-            AppSettings.DiffAddedExtraColor = _NO_TRANSLATE_ColorAddedLineDiffLabel.BackColor;
-            AppSettings.DiffRemovedExtraColor = _NO_TRANSLATE_ColorRemovedLineDiffLabel.BackColor;
-            AppSettings.DiffSectionColor = _NO_TRANSLATE_ColorSectionLabel.BackColor;
-
-            AppSettings.IconColor = GetSelectedApplicationIconColor();
-            AppSettings.IconStyle = GetIconStyleString(IconStyle.SelectedIndex);
+            AppSettings.HighlightAuthoredRevisions = chkHighlightAuthored.Checked;
+            AppSettings.UseSystemVisualStyle = UseSystemVisualStyle;
+            AppSettings.ThemeId = SelectedThemeId;
         }
 
-        private string GetSelectedApplicationIconColor()
+        private void ComboBoxTheme_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (BlueIcon.Checked)
-                return "blue";
-            if (LightblueIcon.Checked)
-                return "lightblue";
-            if (GreenIcon.Checked)
-                return "green";
-            if (PurpleIcon.Checked)
-                return "purple";
-            if (RedIcon.Checked)
-                return "red";
-            if (YellowIcon.Checked)
-                return "yellow";
-            if (RandomIcon.Checked)
-                return "random";
-            return "default";
-        }
-
-        private void IconStyle_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (IsLoadingSettings)
+            if (IsThemeSettingsUpdating())
+            {
                 return;
-
-            ShowIconPreview();
-        }
-
-        private void IconColor_CheckedChanged(object sender, EventArgs e)
-        {
-            if (IsLoadingSettings)
-                return;
-
-            ShowIconPreview();
-        }
-
-        private void MulticolorBranches_CheckedChanged(object sender, EventArgs e)
-        {
-            if (MulticolorBranches.Checked)
-            {
-                _NO_TRANSLATE_ColorGraphLabel.Visible = false;
-                StripedBanchChange.Enabled = true;
             }
-            else
-            {
-                _NO_TRANSLATE_ColorGraphLabel.Visible = true;
-                StripedBanchChange.Enabled = false;
-            }
+
+            BeginUpdateThemeSettings();
+            UseSystemVisualStyle = SelectedThemeId == ThemeId.Default;
+            EndUpdateThemeSettings();
         }
 
-        private void ShowIconPreview()
+        private void ChkUseSystemVisualStyle_CheckedChanged(object sender, EventArgs e)
         {
-            Icon icon;
-            switch (IconStyle.SelectedIndex)
+            BeginUpdateThemeSettings();
+            EndUpdateThemeSettings();
+        }
+
+        private void BeginUpdateThemeSettings()
+        {
+            _updateThemeSettingsCounter++;
+        }
+
+        private bool IsThemeSettingsUpdating() =>
+            _updateThemeSettingsCounter > 0;
+
+        private void EndUpdateThemeSettings()
+        {
+            int counter = --_updateThemeSettingsCounter;
+            if (counter < 0)
             {
-                case 0:
-                    IconPreview.Image = (new Icon(GitExtensionsForm.GetApplicationIcon("Large", GetSelectedApplicationIconColor()), 32, 32)).ToBitmap();
-                    IconPreviewSmall.Image = (new Icon(GitExtensionsForm.GetApplicationIcon("Small", GetSelectedApplicationIconColor()), 16, 16)).ToBitmap();
-                    break;
-                case 1:
-                    icon = GitExtensionsForm.GetApplicationIcon("Small", GetSelectedApplicationIconColor());
-                    IconPreview.Image = (new Icon(icon, 32, 32)).ToBitmap();
-                    IconPreviewSmall.Image = (new Icon(icon, 16, 16)).ToBitmap();
-                    break;
-                case 2:
-                    icon = GitExtensionsForm.GetApplicationIcon("Large", GetSelectedApplicationIconColor());
-                    IconPreview.Image = (new Icon(icon, 32, 32)).ToBitmap();
-                    IconPreviewSmall.Image = (new Icon(icon, 16, 16)).ToBitmap();
-                    break;
-                case 3:
-                    icon = GitExtensionsForm.GetApplicationIcon("Cow", GetSelectedApplicationIconColor());
-                    IconPreview.Image = (new Icon(icon, 32, 32)).ToBitmap();
-                    IconPreviewSmall.Image = (new Icon(icon, 16, 16)).ToBitmap();
-                    break;
+                throw new InvalidOperationException($"{nameof(EndUpdateThemeSettings)} must be called after {nameof(BeginUpdateThemeSettings)}");
+            }
+
+            if (counter == 0)
+            {
+                bool settingsChanged =
+                    UseSystemVisualStyle != ThemeModule.Settings.UseSystemVisualStyle ||
+                    SelectedThemeId != ThemeModule.Settings.Theme.Id;
+
+                lblRestartNeeded.Visible = settingsChanged;
+                chkUseSystemVisualStyle.Enabled = SelectedThemeId != ThemeId.Default;
             }
         }
 
-        private void ColorLabel_Click(object sender, EventArgs e)
+        private struct FormattedThemeId
         {
-            PickColor((Label) sender);
-        }
-
-        private void PickColor(Control targetColorControl)
-        {
-            using (var colorDialog = new ColorDialog {Color = targetColorControl.BackColor})
+            public FormattedThemeId(ThemeId themeId)
             {
-                colorDialog.ShowDialog(this);
-                targetColorControl.BackColor = colorDialog.Color;
-                targetColorControl.Text = colorDialog.Color.Name;
+                ThemeId = themeId;
             }
 
-            targetColorControl.ForeColor =
-                ColorHelper.GetForeColorForBackColor(targetColorControl.BackColor);
+            public ThemeId ThemeId { get; }
+
+            public override bool Equals(object obj) =>
+                obj is FormattedThemeId other && Equals(other);
+
+            public override int GetHashCode() =>
+                ThemeId.GetHashCode();
+
+            public static bool operator ==(FormattedThemeId left, FormattedThemeId right) =>
+                left.Equals(right);
+
+            public static bool operator !=(FormattedThemeId left, FormattedThemeId right) =>
+                !left.Equals(right);
+
+            public override string ToString()
+            {
+                if (ThemeId == ThemeId.Default)
+                {
+                    return DefaultThemeName.Text;
+                }
+
+                if (ThemeId.IsBuiltin)
+                {
+                    return string.Format(FormatBuiltinThemeName.Text, ThemeId.Name);
+                }
+
+                return string.Format(FormatUserDefinedThemeName.Text, ThemeId.Name);
+            }
+
+            private bool Equals(FormattedThemeId other) =>
+                ThemeId.Equals(other.ThemeId);
         }
     }
 }

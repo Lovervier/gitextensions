@@ -29,7 +29,6 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(GitFlowForm));
             this.btnInit = new System.Windows.Forms.Button();
             this.txtBranchName = new System.Windows.Forms.TextBox();
             this.btnCreateBranch = new System.Windows.Forms.Button();
@@ -37,6 +36,8 @@
             this.btnFinish = new System.Windows.Forms.Button();
             this.gbManage = new System.Windows.Forms.GroupBox();
             this.pnlManageBranch = new System.Windows.Forms.Panel();
+            this.cbSquash = new System.Windows.Forms.CheckBox();
+            this.cbPushAfterFinish = new System.Windows.Forms.CheckBox();
             this.panel2 = new System.Windows.Forms.Panel();
             this.pnlPull = new System.Windows.Forms.Panel();
             this.cbRemote = new System.Windows.Forms.ComboBox();
@@ -80,7 +81,7 @@
             // 
             this.btnInit.Location = new System.Drawing.Point(284, 12);
             this.btnInit.Name = "btnInit";
-            this.btnInit.Size = new System.Drawing.Size(83, 23);
+            this.btnInit.Size = new System.Drawing.Size(130, 23);
             this.btnInit.TabIndex = 0;
             this.btnInit.Text = "Init GitFlow";
             this.btnInit.UseVisualStyleBackColor = true;
@@ -135,6 +136,8 @@
             // 
             // pnlManageBranch
             // 
+            this.pnlManageBranch.Controls.Add(this.cbSquash);
+            this.pnlManageBranch.Controls.Add(this.cbPushAfterFinish);
             this.pnlManageBranch.Controls.Add(this.panel2);
             this.pnlManageBranch.Controls.Add(this.pnlPull);
             this.pnlManageBranch.Controls.Add(this.panel1);
@@ -147,6 +150,26 @@
             this.pnlManageBranch.Name = "pnlManageBranch";
             this.pnlManageBranch.Size = new System.Drawing.Size(610, 131);
             this.pnlManageBranch.TabIndex = 7;
+            // 
+            // cbSquash
+            // 
+            this.cbSquash.AutoSize = true;
+            this.cbSquash.Location = new System.Drawing.Point(492, 113);
+            this.cbSquash.Name = "cbSquash";
+            this.cbSquash.Size = new System.Drawing.Size(62, 17);
+            this.cbSquash.TabIndex = 9;
+            this.cbSquash.Text = "Squash";
+            this.cbSquash.UseVisualStyleBackColor = true;
+            // 
+            // cbPushAfterFinish
+            // 
+            this.cbPushAfterFinish.AutoSize = true;
+            this.cbPushAfterFinish.Location = new System.Drawing.Point(492, 97);
+            this.cbPushAfterFinish.Name = "cbPushAfterFinish";
+            this.cbPushAfterFinish.Size = new System.Drawing.Size(101, 17);
+            this.cbPushAfterFinish.TabIndex = 8;
+            this.cbPushAfterFinish.Text = "Push after finish";
+            this.cbPushAfterFinish.UseVisualStyleBackColor = true;
             // 
             // panel2
             // 
@@ -276,7 +299,7 @@
             this.lblPrefixName.AutoSize = true;
             this.lblPrefixName.Location = new System.Drawing.Point(119, 28);
             this.lblPrefixName.Name = "lblPrefixName";
-            this.lblPrefixName.Size = new System.Drawing.Size(49, 13);
+            this.lblPrefixName.Size = new System.Drawing.Size(43, 13);
             this.lblPrefixName.TabIndex = 1;
             this.lblPrefixName.Text = "[prefix]/";
             this.lblPrefixName.TextAlign = System.Drawing.ContentAlignment.TopRight;
@@ -452,7 +475,6 @@
             this.Controls.Add(this.btnClose);
             this.Controls.Add(this.btnInit);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "GitFlowForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "GitFlow";
@@ -512,5 +534,7 @@
         private System.Windows.Forms.GroupBox panel3;
         private System.Windows.Forms.Label lblRunCommand;
         private System.Windows.Forms.TextBox txtResult;
+        private System.Windows.Forms.CheckBox cbPushAfterFinish;
+        private System.Windows.Forms.CheckBox cbSquash;
     }
 }

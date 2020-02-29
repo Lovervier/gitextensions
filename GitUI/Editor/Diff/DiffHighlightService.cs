@@ -1,23 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using GitCommands;
+using GitCommands.Patches;
+using GitExtUtils.GitUI.Theming;
+using GitUI.Theming;
 using ICSharpCode.TextEditor.Document;
-using PatchApply;
+using JetBrains.Annotations;
 
 namespace GitUI.Editor.Diff
 {
     public class DiffHighlightService
     {
+        public static DiffHighlightService Instance { get; } = new DiffHighlightService();
+
         protected readonly LinePrefixHelper LinePrefixHelper = new LinePrefixHelper(new LineSegmentGetter());
-        public static DiffHighlightService Instance = new DiffHighlightService();
 
         protected DiffHighlightService()
         {
-
         }
 
-        public static bool IsCombinedDiff(string diff)
+        [ContractAnnotation("diff:null=>false")]
+        public static bool IsCombinedDiff([CanBeNull] string diff)
         {
             return PatchProcessor.IsCombinedDiff(diff);
         }
@@ -27,7 +30,9 @@ namespace GitUI.Editor.Diff
             int count = Math.Min(linesRemoved.Count, linesAdded.Count);
 
             for (int i = 0; i < count; i++)
+            {
                 MarkDifference(document, linesRemoved[i], linesAdded[i], beginOffset);
+            }
         }
 
         private static void MarkDifference(IDocument document, ISegment lineRemoved,
@@ -40,9 +45,13 @@ namespace GitUI.Editor.Diff
 
             while (beginOffset < endOffsetMin)
             {
-                if (!document.GetCharAt(lineAdded.Offset + beginOffset).Equals(
-                        document.GetCharAt(lineRemoved.Offset + beginOffset)))
+                var a = document.GetCharAt(lineAdded.Offset + beginOffset);
+                var r = document.GetCharAt(lineRemoved.Offset + beginOffset);
+
+                if (a != r)
+                {
                     break;
+                }
 
                 beginOffset++;
             }
@@ -51,10 +60,13 @@ namespace GitUI.Editor.Diff
             {
                 reverseOffset = lineAdded.Length - lineAddedEndOffset;
 
-                if (!document.GetCharAt(lineAdded.Offset + lineAdded.Length - 1 - reverseOffset).
-                         Equals(document.GetCharAt(lineRemoved.Offset + lineRemoved.Length - 1 -
-                                                   reverseOffset)))
+                var a = document.GetCharAt(lineAdded.Offset + lineAdded.Length - 1 - reverseOffset);
+                var r = document.GetCharAt(lineRemoved.Offset + lineRemoved.Length - 1 - reverseOffset);
+
+                if (a != r)
+                {
                     break;
+                }
 
                 lineRemovedEndOffset--;
                 lineAddedEndOffset--;
@@ -65,7 +77,7 @@ namespace GitUI.Editor.Diff
 
             if (lineAdded.Length - beginOffset - reverseOffset > 0)
             {
-                color = AppSettings.DiffAddedExtraColor;
+                color = AppColor.DiffAddedExtra.GetThemeColor();
                 markerStrategy.AddMarker(new TextMarker(lineAdded.Offset + beginOffset,
                                                         lineAdded.Length - beginOffset - reverseOffset,
                                                         TextMarkerType.SolidBlock, color,
@@ -74,13 +86,12 @@ namespace GitUI.Editor.Diff
 
             if (lineRemoved.Length - beginOffset - reverseOffset > 0)
             {
-                color = AppSettings.DiffRemovedExtraColor;
+                color = AppColor.DiffRemovedExtra.GetThemeColor();
                 markerStrategy.AddMarker(new TextMarker(lineRemoved.Offset + beginOffset,
                                                         lineRemoved.Length - beginOffset - reverseOffset,
                                                         TextMarkerType.SolidBlock, color,
                                                         ColorHelper.GetForeColorForBackColor(color)));
             }
-
         }
 
         private void AddExtraPatchHighlighting(IDocument document)
@@ -98,9 +109,13 @@ namespace GitUI.Editor.Diff
                 if (lineA.Length > 4 && lineB.Length > 4 &&
                     document.GetCharAt(lineA.Offset + 4) == 'a' &&
                     document.GetCharAt(lineB.Offset + 4) == 'b')
+                {
                     diffContentOffset = 5;
+                }
                 else
+                {
                     diffContentOffset = 4;
+                }
 
                 MarkDifference(document, linesRemoved, linesAdded, diffContentOffset);
             }
@@ -144,6 +159,7 @@ namespace GitUI.Editor.Diff
                 {
                     endLine = document.GetLineSegment(line);
                 }
+
                 line--;
                 line--;
                 endLine = document.GetLineSegment(line);
@@ -157,8 +173,6 @@ namespace GitUI.Editor.Diff
 
         public void AddPatchHighlighting(IDocument document)
         {
-            var markerStrategy = document.MarkerStrategy;
-            markerStrategy.RemoveAll(m => true);
             bool forceAbort = false;
 
             AddExtraPatchHighlighting(document);
@@ -168,49 +182,55 @@ namespace GitUI.Editor.Diff
                 var lineSegment = document.GetLineSegment(line);
 
                 if (lineSegment.TotalLength == 0)
+                {
                     continue;
+                }
 
                 if (line == document.TotalNumberOfLines - 1)
+                {
                     forceAbort = true;
+                }
 
                 line = TryHighlightAddedAndDeletedLines(document, line, lineSegment);
 
-                ProcessLineSegment(document, ref line, lineSegment, "@", AppSettings.DiffSectionColor);
-                ProcessLineSegment(document, ref line, lineSegment, "\\", AppSettings.DiffSectionColor);
+                ProcessLineSegment(document, ref line, lineSegment, "@", AppColor.DiffSection.GetThemeColor());
+                ProcessLineSegment(document, ref line, lineSegment, "\\", AppColor.DiffSection.GetThemeColor());
             }
         }
 
         protected virtual int TryHighlightAddedAndDeletedLines(IDocument document, int line, LineSegment lineSegment)
         {
-            ProcessLineSegment(document, ref line, lineSegment, "+", AppSettings.DiffAddedColor);
-            ProcessLineSegment(document, ref line, lineSegment, "-", AppSettings.DiffRemovedColor);
+            ProcessLineSegment(document, ref line, lineSegment, "+", AppColor.DiffAdded.GetThemeColor());
+            ProcessLineSegment(document, ref line, lineSegment, "-", AppColor.DiffRemoved.GetThemeColor());
             return line;
         }
 
         public void HighlightLine(IDocument document, int line, Color color)
         {
             if (line >= document.TotalNumberOfLines)
+            {
                 return;
+            }
 
             var markerStrategy = document.MarkerStrategy;
             var lineSegment = document.GetLineSegment(line);
             markerStrategy.AddMarker(new TextMarker(lineSegment.Offset,
-                                                    lineSegment.Length, TextMarkerType.SolidBlock, color
-                                                    ));
+                                                    lineSegment.Length, TextMarkerType.SolidBlock, color));
         }
 
         public void HighlightLines(IDocument document, int startLine, int endLine, Color color)
         {
             if (startLine > endLine || endLine >= document.TotalNumberOfLines)
+            {
                 return;
+            }
 
             var markerStrategy = document.MarkerStrategy;
             var startLineSegment = document.GetLineSegment(startLine);
             var endLineSegment = document.GetLineSegment(endLine);
             markerStrategy.AddMarker(new TextMarker(startLineSegment.Offset,
                                                     endLineSegment.Offset - startLineSegment.Offset + endLineSegment.Length,
-                                                    TextMarkerType.SolidBlock, color
-                                                    ));
+                                                    TextMarkerType.SolidBlock, color));
         }
     }
 }

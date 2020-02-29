@@ -1,78 +1,95 @@
 ﻿using System;
+using System.Configuration;
+using System.Diagnostics;
 using System.IO;
-using System.Threading;
 using System.Windows.Forms;
 using GitCommands;
 using GitCommands.Utils;
+using GitExtUtils.GitUI;
 using GitUI;
 using GitUI.CommandsDialogs.SettingsDialog;
 using GitUI.CommandsDialogs.SettingsDialog.Pages;
+using GitUI.Infrastructure.Telemetry;
+using GitUI.Theming;
+using JetBrains.Annotations;
+using Microsoft.VisualStudio.Threading;
+using ResourceManager;
 
 namespace GitExtensions
 {
     internal static class Program
     {
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool SetProcessDPIAware();
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
         private static void Main()
         {
+            if (Environment.OSVersion.Version.Major >= 6)
+            {
+                SetProcessDPIAware();
+            }
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            if (!EnvUtils.IsMonoRuntime())
+            ThemeModule.Load();
+            Application.ApplicationExit += (s, e) => ThemeModule.Unload();
+
+            HighDpiMouseCursors.Enable();
+
+            try
             {
-                try
+                DiagnosticsClient.Initialize(ThisAssembly.Git.IsDirty);
+
+                if (!Debugger.IsAttached)
                 {
-                    NBug.Settings.UIMode = NBug.Enums.UIMode.Full;
-
-                    // Uncomment the following after testing to see that NBug is working as configured
-                    NBug.Settings.ReleaseMode = true;
-                    NBug.Settings.ExitApplicationImmediately = false;
-                    NBug.Settings.WriteLogToDisk = false;
-                    NBug.Settings.MaxQueuedReports = 10;
-                    NBug.Settings.StopReportingAfter = 90;
-                    NBug.Settings.SleepBeforeSend = 30;
-                    NBug.Settings.StoragePath = NBug.Enums.StoragePath.WindowsTemp;
-
-                    AppDomain.CurrentDomain.UnhandledException += NBug.Handler.UnhandledException;
-                    Application.ThreadException += NBug.Handler.ThreadException;
-
+                    AppDomain.CurrentDomain.UnhandledException += (s, e) => ReportBug((Exception)e.ExceptionObject);
+                    Application.ThreadException += (s, e) => ReportBug(e.Exception);
                 }
-                catch (TypeInitializationException tie)
+            }
+            catch (TypeInitializationException tie)
+            {
+                // is this exception caused by the configuration?
+                if (tie.InnerException != null
+                    && tie.InnerException.GetType()
+                        .IsSubclassOf(typeof(ConfigurationException)))
                 {
-                    // is this exception caused by the configuration?
-                    if (tie.InnerException != null
-                        && tie.InnerException.GetType()
-                            .IsSubclassOf(typeof(System.Configuration.ConfigurationException)))
-                    {
-                        HandleConfigurationException((System.Configuration.ConfigurationException)tie.InnerException);
-                    }
+                    HandleConfigurationException((ConfigurationException)tie.InnerException);
                 }
             }
 
+            // This is done here so these values can be used in the GitGui project but this project is the authority of the values.
+            UserEnvironmentInformation.Initialise(ThisAssembly.Git.Sha, ThisAssembly.Git.IsDirty);
+            AppTitleGenerator.Initialise(ThisAssembly.Git.Sha, ThisAssembly.Git.Branch);
+
+            // NOTE we perform the rest of the application's startup in another method to defer
+            // the JIT processing more types than required to configure NBug.
+            // In this way, there's more chance we can handle startup exceptions correctly.
+            RunApplication();
+        }
+
+        private static void RunApplication()
+        {
             string[] args = Environment.GetCommandLineArgs();
-            FormSplash.ShowSplash();
-            //Store here SynchronizationContext.Current, because later sometimes it can be null
-            //see http://stackoverflow.com/questions/11621372/synchronizationcontext-current-is-null-in-continuation-on-the-main-ui-thread
-            GitUIExtensions.UISynchronizationContext = SynchronizationContext.Current;
-            Application.DoEvents();
+
+            // This form created to obtain UI synchronization context only
+            using (new Form())
+            {
+                // Store the shared JoinableTaskContext
+                ThreadHelper.JoinableTaskContext = new JoinableTaskContext();
+            }
 
             AppSettings.LoadSettings();
+
             if (EnvUtils.RunningOnWindows())
             {
-              WebBrowserEmulationMode.SetBrowserFeatureControl();
-
-              //Quick HOME check:
-                FormSplash.SetAction("Checking home path...");
-                Application.DoEvents();
-
+                WebBrowserEmulationMode.SetBrowserFeatureControl();
                 FormFixHome.CheckHomePath();
             }
-            //Register plugins
-            FormSplash.SetAction("Loading plugins...");
-            Application.DoEvents();
 
             if (string.IsNullOrEmpty(AppSettings.Translation))
             {
@@ -82,23 +99,44 @@ namespace GitExtensions
                 }
             }
 
+            if (!AppSettings.TelemetryEnabled.HasValue)
+            {
+                AppSettings.TelemetryEnabled = MessageBox.Show(null, Strings.TelemetryPermissionMessage,
+                                                               Strings.TelemetryPermissionCaption, MessageBoxButtons.YesNo,
+                                                               MessageBoxIcon.Question) == DialogResult.Yes;
+            }
+
             try
             {
-                if (AppSettings.CheckSettings || string.IsNullOrEmpty(AppSettings.GitCommandValue))
+                // Ensure we can find the git command to execute,
+                // unless we are being instructed to uninstall,
+                // or AppSettings.CheckSettings is set to false.
+                if (!(args.Length >= 2 && args[1] == "uninstall"))
                 {
-                    FormSplash.SetAction("Checking settings...");
-                    Application.DoEvents();
-
-                    GitUICommands uiCommands = new GitUICommands(string.Empty);
-                    var commonLogic = new CommonLogic(uiCommands.Module);
-                    var checkSettingsLogic = new CheckSettingsLogic(commonLogic);
-                    ISettingsPageHost fakePageHost = new SettingsPageHostMock(checkSettingsLogic);
-                    using (var checklistSettingsPage = SettingsPageBase.Create<ChecklistSettingsPage>(fakePageHost))
+                    if (!CheckSettingsLogic.SolveGitCommand())
                     {
-                        if (!checklistSettingsPage.CheckSettings())
+                        if (!LocateMissingGit())
                         {
-                            checkSettingsLogic.AutoSolveAllSettings();
-                            uiCommands.StartSettingsDialog();
+                            Environment.Exit(-1);
+                            return;
+                        }
+                    }
+
+                    if (AppSettings.CheckSettings)
+                    {
+                        var uiCommands = new GitUICommands("");
+                        var commonLogic = new CommonLogic(uiCommands.Module);
+                        var checkSettingsLogic = new CheckSettingsLogic(commonLogic);
+                        var fakePageHost = new SettingsPageHostMock(checkSettingsLogic);
+                        using (var checklistSettingsPage = SettingsPageBase.Create<ChecklistSettingsPage>(fakePageHost))
+                        {
+                            if (!checklistSettingsPage.CheckSettings())
+                            {
+                                if (!checkSettingsLogic.AutoSolveAllSettings())
+                                {
+                                    uiCommands.StartSettingsDialog();
+                                }
+                            }
                         }
                     }
                 }
@@ -108,55 +146,72 @@ namespace GitExtensions
                 // TODO: remove catch-all
             }
 
-            FormSplash.HideSplash();
-
             if (EnvUtils.RunningOnWindows())
+            {
                 MouseWheelRedirector.Active = true;
+            }
 
-            GitUICommands uCommands = new GitUICommands(GetWorkingDir(args));
+            var commands = new GitUICommands(GetWorkingDir(args));
 
             if (args.Length <= 1)
             {
-                uCommands.StartBrowseDialog();
+                commands.StartBrowseDialog();
             }
-            else  // if we are here args.Length > 1
+            else
             {
-                uCommands.RunCommand(args);
+                // if we are here args.Length > 1
+                commands.RunCommand(args);
             }
 
             AppSettings.SaveSettings();
         }
 
+        [CanBeNull]
         private static string GetWorkingDir(string[] args)
         {
-            string workingDir = string.Empty;
+            string workingDir = null;
+
             if (args.Length >= 3)
             {
-                if (Directory.Exists(args[2]))
-                    workingDir = GitModule.FindGitWorkingDir(args[2]);
-                else
+                // there is bug in .net
+                // while parsing command line arguments, it unescapes " incorrectly
+                // https://github.com/gitextensions/gitextensions/issues/3489
+                string dirArg = args[2].TrimEnd('"');
+                if (!string.IsNullOrWhiteSpace(dirArg))
                 {
-                    workingDir = Path.GetDirectoryName(args[2]);
-                    workingDir = GitModule.FindGitWorkingDir(workingDir);
-                }
+                    if (!Directory.Exists(dirArg))
+                    {
+                        dirArg = Path.GetDirectoryName(dirArg);
+                    }
 
-                //Do not add this working directory to the recent repositories. It is a nice feature, but it
-                //also increases the startup time
-                //if (Module.ValidWorkingDir())
-                //    Repositories.RepositoryHistory.AddMostRecentRepository(Module.WorkingDir);
+                    workingDir = GitModule.TryFindGitWorkingDir(dirArg);
+
+                    if (Directory.Exists(workingDir))
+                    {
+                        workingDir = Path.GetFullPath(workingDir);
+                    }
+
+                    // Do not add this working directory to the recent repositories. It is a nice feature, but it
+                    // also increases the startup time
+                    ////if (Module.ValidWorkingDir())
+                    ////   Repositories.RepositoryHistory.AddMostRecentRepository(Module.WorkingDir);
+                }
             }
 
-            if (args.Length <= 1 && string.IsNullOrEmpty(workingDir) && AppSettings.StartWithRecentWorkingDir)
+            if (args.Length <= 1 && workingDir == null && AppSettings.StartWithRecentWorkingDir)
             {
                 if (GitModule.IsValidGitWorkingDir(AppSettings.RecentWorkingDir))
+                {
                     workingDir = AppSettings.RecentWorkingDir;
+                }
             }
 
-            if (string.IsNullOrEmpty(workingDir))
+            if (args.Length > 1 && workingDir == null)
             {
-                string findWorkingDir = GitModule.FindGitWorkingDir(Directory.GetCurrentDirectory());
-                if (GitModule.IsValidGitWorkingDir(findWorkingDir))
-                    workingDir = findWorkingDir;
+                // If no working dir is yet found, try to find one relative to the current working directory.
+                // This allows the `fileeditor` command to discover repository configuration which is
+                // required for core.commentChar support.
+                workingDir = GitModule.TryFindGitWorkingDir(Environment.CurrentDirectory);
             }
 
             return workingDir;
@@ -165,63 +220,136 @@ namespace GitExtensions
         /// <summary>
         /// Used in the rare event that the configuration file for the application is corrupted
         /// </summary>
-        /// <param name="ce"></param>
-        private static void HandleConfigurationException(System.Configuration.ConfigurationException ce)
+        private static void HandleConfigurationException(ConfigurationException ce)
         {
+            bool exceptionHandled = false;
             try
             {
                 // perhaps this should be checked for if it is null
                 var in3 = ce.InnerException.InnerException;
 
                 // saves having to have a reference to System.Xml just to check that we have an XmlException
-                if (in3.GetType().Name.Equals("XmlException"))
+                if (in3.GetType().Name == "XmlException")
                 {
                     var localSettingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GitExtensions");
 
-                    //assume that if we are having this error and the installation is not a portable one then the folder will exist.
+                    // assume that if we are having this error and the installation is not a portable one then the folder will exist.
                     if (Directory.Exists(localSettingsPath))
                     {
-                        string messageContent = String.Format("There is a problem with the user.xml configuration file.{0}{0}The error message was: {1}{0}{0}The configuration file is usually found in: {2}{0}{0}Problems with configuration can usually be solved by deleting the configuration file. Would you like to delete the file?", Environment.NewLine, in3.Message, localSettingsPath);
+                        string messageContent = string.Format("There is a problem with the user.xml configuration file.{0}{0}The error message was: {1}{0}{0}The configuration file is usually found in: {2}{0}{0}Problems with configuration can usually be solved by deleting the configuration file. Would you like to delete the file?", Environment.NewLine, in3.Message, localSettingsPath);
 
                         if (DialogResult.Yes.Equals(MessageBox.Show(messageContent, "Configuration Error", MessageBoxButtons.YesNo, MessageBoxIcon.Error, MessageBoxDefaultButton.Button2)))
                         {
                             try
                             {
-                                Directory.Delete(localSettingsPath, true); //deletes all application settings not just for this instance - but should work
-                                //Restart GitExtensions with the same arguments after old config is deleted?
-                                if (DialogResult.OK.Equals(MessageBox.Show(String.Format("Files have been deleted.{0}{0}Would you like to attempt to restart GitExtensions?", Environment.NewLine), "Configuration Error", MessageBoxButtons.OKCancel, MessageBoxIcon.Information)))
+                                Directory.Delete(localSettingsPath, true); // deletes all application settings not just for this instance - but should work
+
+                                // Restart Git Extensions with the same arguments after old config is deleted?
+                                if (DialogResult.OK.Equals(MessageBox.Show(string.Format("Files have been deleted.{0}{0}Would you like to attempt to restart Git Extensions?", Environment.NewLine), "Configuration Error", MessageBoxButtons.OKCancel, MessageBoxIcon.Question)))
                                 {
                                     var args = Environment.GetCommandLineArgs();
-                                    System.Diagnostics.Process p = new System.Diagnostics.Process();
-                                    p.StartInfo.FileName = args[0];
+                                    var p = new System.Diagnostics.Process { StartInfo = { FileName = args[0] } };
                                     if (args.Length > 1)
                                     {
                                         args[0] = "";
-                                        p.StartInfo.Arguments = String.Join(" ", args);
+                                        p.StartInfo.Arguments = string.Join(" ", args);
                                     }
+
                                     p.Start();
                                 }
                             }
                             catch (IOException)
                             {
-                                MessageBox.Show(String.Format("Could not delete all files and folders in {0}!", localSettingsPath), "Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                MessageBox.Show(string.Format("Could not delete all files and folders in {0}!", localSettingsPath), "Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             }
                         }
                     }
-                    //assuming that there is no localSettingsPath directory in existence we probably have a portable installation.
+
+                    // assuming that there is no localSettingsPath directory in existence we probably have a portable installation.
                     else
                     {
-                        string messageContent = String.Format("There is a problem with the application settings XML configuration file.{0}{0}The error message was: {1}{0}{0}Problems with configuration can usually be solved by deleting the configuration file.", Environment.NewLine, in3.Message);
+                        string messageContent = string.Format("There is a problem with the application settings XML configuration file.{0}{0}The error message was: {1}{0}{0}Problems with configuration can usually be solved by deleting the configuration file.", Environment.NewLine, in3.Message);
                         MessageBox.Show(messageContent, "Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
+
+                    exceptionHandled = true;
                 }
             }
-            finally // if we fail in this somehow at least this message might get somewhere
+            finally
             {
-                System.Console.WriteLine("Configuration Error");
-                System.Environment.Exit(1);
+                // if we fail in this somehow at least this message might get somewhere
+                if (!exceptionHandled)
+                {
+                    MessageBox.Show(ce.ToString(), "Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+
+                Environment.Exit(1);
             }
         }
 
+        private static bool LocateMissingGit()
+        {
+            int dialogResult = PSTaskDialog.cTaskDialog.ShowCommandBox(Title: "Error",
+                                                                        MainInstruction: ResourceManager.Strings.GitExecutableNotFound,
+                                                                        Content: null,
+                                                                        ExpandedInfo: null,
+                                                                        Footer: null,
+                                                                        VerificationText: null,
+                                                                        CommandButtons: $"{ResourceManager.Strings.FindGitExecutable}|{ResourceManager.Strings.InstallGitInstructions}",
+                                                                        ShowCancelButton: true,
+                                                                        MainIcon: PSTaskDialog.eSysIcons.Error,
+                                                                        FooterIcon: PSTaskDialog.eSysIcons.Warning);
+            switch (dialogResult)
+            {
+                case 0:
+                    {
+                        using (var dialog = new OpenFileDialog
+                        {
+                            Filter = @"git.exe|git.exe|git.cmd|git.cmd",
+                        })
+                        {
+                            if (dialog.ShowDialog(null) == DialogResult.OK)
+                            {
+                                AppSettings.GitCommandValue = dialog.FileName;
+                            }
+
+                            if (CheckSettingsLogic.SolveGitCommand())
+                            {
+                                return true;
+                            }
+                        }
+
+                        return false;
+                    }
+
+                case 1:
+                    {
+                        Process.Start(@"https://github.com/gitextensions/gitextensions/wiki/Application-Dependencies#git");
+                        return false;
+                    }
+
+                default:
+                    {
+                        return false;
+                    }
+            }
+        }
+
+        private static void ReportBug(Exception ex)
+        {
+            // if the error happens before we had a chance to init the environment information
+            // the call to GetInformation() will fail. A double Initialise() call is safe.
+            UserEnvironmentInformation.Initialise(ThisAssembly.Git.Sha, ThisAssembly.Git.IsDirty);
+            var envInfo = UserEnvironmentInformation.GetInformation();
+
+            using (var form = new GitUI.NBugReports.BugReportForm())
+            {
+                var result = form.ShowDialog(ex, envInfo);
+                if (result == DialogResult.Abort)
+                {
+                    Environment.Exit(-1);
+                }
+            }
+        }
     }
 }

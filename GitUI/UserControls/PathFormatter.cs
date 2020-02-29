@@ -3,8 +3,10 @@ using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Windows.Forms;
 using GitCommands;
 using GitCommands.Utils;
+using JetBrains.Annotations;
 
 namespace GitUI
 {
@@ -22,80 +24,92 @@ namespace GitUI
 
         public PathFormatter(Graphics graphics, Font font)
         {
-            if (graphics == null)
-                throw new ArgumentNullException("graphics");
-
-            if (font == null)
-                throw new ArgumentNullException("font");
-
-            _graphics = graphics;
-            _font = font;
+            _graphics = graphics ?? throw new ArgumentNullException(nameof(graphics));
+            _font = font ?? throw new ArgumentNullException(nameof(font));
         }
 
-        private static string TruncatePath(string path, int length)
+        public (string prefix, string text, string suffix, int width) FormatTextForDrawing(int maxWidth, string name, string oldName)
         {
-            if (path.Length == length)
-                return path;
+            string prefix = null;
+            string text = string.Empty;
+            string suffix = null;
+            int width = 0;
 
-            if (length <= 0)
-                return string.Empty;
-
-            string truncatePathMethod = AppSettings.TruncatePathMethod;
-            if (truncatePathMethod.Equals("compact", StringComparison.OrdinalIgnoreCase) &&
-                EnvUtils.RunningOnWindows()) //The win32 method PathCompactPathEx is only supported on Windows
+            switch (AppSettings.TruncatePathMethod)
             {
-                var result = new StringBuilder(length);
-                NativeMethods.PathCompactPathEx(result, path, length, 0);
-                return result.ToString();
-            }
-            if (truncatePathMethod.Equals("trimStart", StringComparison.OrdinalIgnoreCase))
-            {
-                return "..." + path.Substring(path.Length - length);
-            }
+                case TruncatePathMethod.FileNameOnly:
+                    (text, suffix) = FormatTextForFileNameOnly(name, oldName);
+                    width = MeasureString(prefix, text, suffix).Width;
+                    return (prefix, text, suffix, width);
 
-            return path;//.Substring(0, length+1);
+                case TruncatePathMethod.None:
+                case TruncatePathMethod.Compact when !EnvUtils.RunningOnWindows():
+                    (prefix, text, suffix) = FormatString(name, oldName, step: 0, isNameTruncated: false);
+                    width = MeasureString(prefix, text, suffix).Width;
+                    return (prefix, text, suffix, width);
+
+                default:
+                    int maxStep = oldName == null
+                        ? name.Length
+                        : Math.Max(name.Length, oldName.Length) * 2;
+
+                    BinarySearch.Find(min: 0, count: maxStep + 1, step =>
+                    {
+                        var (tmpPrefix, tmpText, tmpSuffix) = FormatString(name, oldName, step, isNameTruncated: step % 2 == 0);
+                        int measuredWidth = MeasureString(tmpPrefix, tmpText, tmpSuffix).Width;
+                        bool isShortEnough = measuredWidth <= maxWidth;
+
+                        if (isShortEnough)
+                        {
+                            prefix = tmpPrefix;
+                            text = tmpText;
+                            suffix = tmpSuffix;
+                            width = measuredWidth;
+                        }
+
+                        return isShortEnough;
+                    });
+
+                    return (prefix, text, suffix, width);
+            }
         }
 
-        public string FormatTextForDrawing(int width, string name, string oldName)
+        [CanBeNull]
+        public static (string text, string suffix) FormatTextForFileNameOnly(string name, string oldName)
         {
-            string truncatePathMethod = AppSettings.TruncatePathMethod;
-
-            if (truncatePathMethod.Equals("fileNameOnly"))
-            {
-                name = name.TrimEnd(AppSettings.PosixPathSeparator);
-                var fileName = Path.GetFileName(name);
-                var oldFileName = Path.GetFileName(oldName);
-                
-                if (fileName.Equals(oldFileName))
-                    oldFileName = null;
-
-                return fileName.Combine(" ", oldFileName.AddParenthesesNE());
-            }
-
-            if ((!truncatePathMethod.Equals("compact", StringComparison.OrdinalIgnoreCase) || !EnvUtils.RunningOnWindows()) &&
-                !truncatePathMethod.Equals("trimStart", StringComparison.OrdinalIgnoreCase))
-                return FormatString(name, oldName, 0, false);
-
-            int step = 0;
-            bool isNameBeingTruncated = true;
-            int maxStep = oldName == null ? name.Length : Math.Max(name.Length, oldName.Length) * 2;
-            string result = string.Empty;
-
-            while (step <= maxStep)
-            {
-                result = FormatString(name, oldName, step, isNameBeingTruncated);
-
-                if (_graphics.MeasureString(result, _font).Width <= width)
-                    break;
-
-                step++;
-                isNameBeingTruncated = !isNameBeingTruncated;
-            }
-
-            return result;
+            name = name.TrimEnd(PathUtil.PosixDirectorySeparatorChar);
+            var fileName = Path.GetFileName(name);
+            var oldFileName = Path.GetFileName(oldName);
+            string suffix = fileName == oldFileName ? null : FormatOldName(oldFileName);
+            return (fileName, suffix);
         }
 
-        private static string FormatString(string name, string oldName, int step, bool isNameTruncated)
+        public Size MeasureString(string prefix, string text, string suffix)
+        {
+            string str = prefix.Combine(string.Empty, text).Combine(string.Empty, suffix);
+            return MeasureString(str, withPadding: true);
+        }
+
+        public Size MeasureString(string str, bool withPadding = false)
+        {
+            var formatFlags = FilePathStringFormat;
+            if (!withPadding)
+            {
+                formatFlags |= TextFormatFlags.NoPadding;
+            }
+
+            return TextRenderer.MeasureText(
+                _graphics,
+                str,
+                _font,
+                new Size(int.MaxValue, int.MaxValue),
+                formatFlags);
+        }
+
+        public void DrawString(string str, Rectangle rect, Color color) =>
+            TextRenderer.DrawText(_graphics, str, _font, rect, color, FilePathStringFormat);
+
+        private static (string prefix, string text, string suffix) FormatString(string name, string oldName, int step, bool isNameTruncated)
         {
             if (oldName != null)
             {
@@ -103,11 +117,78 @@ namespace GitUI
                 int nameTruncatedChars = isNameTruncated ? step - numberOfTruncatedChars : numberOfTruncatedChars;
                 int oldNameTruncatedChars = step - nameTruncatedChars;
 
-                return string.Concat(TruncatePath(name, name.Length - oldNameTruncatedChars), " (",
-                                     TruncatePath(oldName, oldName.Length - oldNameTruncatedChars), ")");
+                var (path, filename) = SplitPathName(TruncatePath(name, name.Length - oldNameTruncatedChars));
+                string suffix = FormatOldName(TruncatePath(oldName, oldName.Length - oldNameTruncatedChars));
+                return (path, filename, suffix);
             }
 
-            return TruncatePath(name, name.Length - step);
+            var (prefix, text) = SplitPathName(TruncatePath(name, name.Length - step));
+            return (prefix, text, null);
+
+            string TruncatePath(string path, int length)
+            {
+                if (path.Length == length)
+                {
+                    return path;
+                }
+
+                if (length <= 0)
+                {
+                    return string.Empty;
+                }
+
+                // The win32 method PathCompactPathEx is only supported on Windows
+                var truncatePathMethod = AppSettings.TruncatePathMethod;
+
+                if (truncatePathMethod == TruncatePathMethod.Compact && EnvUtils.RunningOnWindows())
+                {
+                    var result = new StringBuilder(length);
+                    NativeMethods.PathCompactPathEx(result, path, length, 0);
+                    return result.ToString();
+                }
+
+                if (truncatePathMethod == TruncatePathMethod.TrimStart)
+                {
+                    return "..." + path.Substring(path.Length - length);
+                }
+
+                return path;
+            }
+        }
+
+        private static string FormatOldName(string oldName)
+        {
+            return string.IsNullOrEmpty(oldName) ? null : " (" + oldName + ")";
+        }
+
+        private static (string path, string fileName) SplitPathName(string name)
+        {
+            if (name == null)
+            {
+                return (null, null);
+            }
+
+            int slashIndex = name.TrimEnd(PathUtil.PosixDirectorySeparatorChar).LastIndexOf(PathUtil.PosixDirectorySeparatorChar);
+            if (slashIndex >= 0 && slashIndex < name.Length)
+            {
+                string path = name.Substring(0, slashIndex + 1);
+                string fileName = name.Substring(slashIndex + 1);
+                return (path, fileName);
+            }
+
+            return (null, name);
+        }
+
+        private const TextFormatFlags FilePathStringFormat =
+            TextFormatFlags.NoClipping |
+            TextFormatFlags.NoPrefix |
+            TextFormatFlags.VerticalCenter |
+            TextFormatFlags.TextBoxControl;
+
+        internal readonly struct TestAccessor
+        {
+            internal static string FormatOldName(string oldName) => PathFormatter.FormatOldName(oldName);
+            internal static (string path, string fileName) SplitPathName(string name) => PathFormatter.SplitPathName(name);
         }
     }
 }

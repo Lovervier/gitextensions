@@ -1,39 +1,40 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Runtime.Serialization;
 using System.Windows.Forms;
-using System.Xml;
-using System.Xml.Schema;
 using System.Xml.Serialization;
+using GitCommands;
+using JetBrains.Annotations;
 
 namespace GitUI
 {
     /// <summary>
     ///   Stores the state and position of a single window
     /// </summary>
-    [DebuggerDisplay("Name={Name} Rect={Rect} State={State}")]
+    [DebuggerDisplay("Name={Name} Rect={Rect} DeviceDpi={DeviceDpi} State={State}")]
     [Serializable]
     public class WindowPosition
     {
         protected WindowPosition()
         {
+            DeviceDpi = 96;
         }
 
-        public WindowPosition(Rectangle rect, FormWindowState state, string name)
+        public WindowPosition(Rectangle rect, int deviceDpi, FormWindowState state, string name)
         {
             Rect = rect;
+            DeviceDpi = deviceDpi;
             State = state;
             Name = name;
         }
 
         public Rectangle Rect { get; set; }
+        [DefaultValue(96)]
+        public int DeviceDpi { get; set; }
         public FormWindowState State { get; set; }
         public string Name { get; set; }
     }
@@ -41,25 +42,16 @@ namespace GitUI
     [Serializable]
     public class WindowPositionList
     {
-        public List<WindowPosition> WindowPositions { get; set; }
+        private static readonly string ConfigFilePath = Path.Combine(AppSettings.LocalApplicationDataPath.Value, "WindowPositions.xml");
+        private static readonly XmlSerializer _serializer = new XmlSerializer(typeof(WindowPositionList));
 
-        private static readonly string AppDataDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GitExtensions");
+        public List<WindowPosition> WindowPositions { get; set; } = new List<WindowPosition>();
 
-        private static readonly string ConfigFilePath = Path.Combine(AppDataDir, "WindowPositions.xml");
-
-        static WindowPositionList()
-        {
-            if (!Directory.Exists(AppDataDir))
-            {
-                Directory.CreateDirectory(AppDataDir);
-            }
-        }
         protected WindowPositionList()
         {
-            WindowPositions = new List<WindowPosition>();
         }
 
+        [CanBeNull]
         public WindowPosition Get(string name)
         {
             return WindowPositions.FirstOrDefault(r => r.Name == name);
@@ -71,18 +63,19 @@ namespace GitUI
             WindowPositions.Add(pos);
         }
 
+        [CanBeNull]
         public static WindowPositionList Load()
         {
             if (!File.Exists(ConfigFilePath))
             {
                 return new WindowPositionList();
             }
+
             try
             {
-                using (
-                    var stream = File.Open(ConfigFilePath, FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite))
+                using (var stream = File.Open(ConfigFilePath, FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite))
                 {
-                    return new XmlSerializer(typeof (WindowPositionList)).Deserialize(stream) as WindowPositionList;
+                    return (WindowPositionList)_serializer.Deserialize(stream);
                 }
             }
             catch
@@ -95,7 +88,7 @@ namespace GitUI
         {
             using (var stream = File.Open(ConfigFilePath, FileMode.Create, FileAccess.Write))
             {
-                new XmlSerializer(typeof(WindowPositionList)).Serialize(stream, this);
+                _serializer.Serialize(stream, this);
             }
         }
     }

@@ -1,77 +1,98 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 
 namespace GitUIPluginInterfaces
 {
-    public class StringSetting: ISetting
+    public class StringSetting : ISetting
     {
-        public StringSetting(string aName, string aDefaultValue)
-            : this(aName, aName, aDefaultValue)
+        public StringSetting(string name, string defaultValue)
+            : this(name, name, defaultValue)
         {
         }
 
-        public StringSetting(string aName, string aCaption, string aDefaultValue)
+        public StringSetting(string name, string caption, string defaultValue, bool useDefaultValueIfBlank = false)
         {
-            Name = aName;
-            Caption = aCaption;
-            DefaultValue = aDefaultValue;
-            _controlBinding = new TextBoxBinding(this);
+            Name = name;
+            Caption = caption;
+            DefaultValue = defaultValue;
+            UseDefaultValueIfBlank = useDefaultValueIfBlank;
         }
 
-        public string Name { get; private set; }
-        public string Caption { get; private set; }
+        public string Name { get; }
+        public string Caption { get; }
         public string DefaultValue { get; set; }
+        public TextBox CustomControl { get; set; }
+        public bool UseDefaultValueIfBlank { get; set; }
 
-        private ISettingControlBinding _controlBinding;
-        public ISettingControlBinding ControlBinding
+        public ISettingControlBinding CreateControlBinding()
         {
-            get { return _controlBinding; }
+            return new TextBoxBinding(this, CustomControl, UseDefaultValueIfBlank);
         }
 
-        private class TextBoxBinding : SettingControlBinding<TextBox>
+        private class TextBoxBinding : SettingControlBinding<StringSetting, TextBox>
         {
-            StringSetting Setting;
+            private readonly bool _useDefaultValueIfBlank;
 
-            public TextBoxBinding(StringSetting aSetting)
+            public TextBoxBinding(StringSetting setting, TextBox customControl, bool useDefaultValueIfBlank)
+                : base(setting, customControl)
             {
-                Setting = aSetting;
+                _useDefaultValueIfBlank = useDefaultValueIfBlank;
             }
 
             public override TextBox CreateControl()
             {
-                return new TextBox();
+                Setting.CustomControl = new TextBox();
+                return Setting.CustomControl;
             }
 
             public override void LoadSetting(ISettingsSource settings, TextBox control)
             {
-                control.Text = Setting[settings];
+                if (control.ReadOnly)
+                {
+                    // readonly controls can't be changed by the user, so there is no need to load settings
+                    return;
+                }
+
+                string settingVal = settings.SettingLevel == SettingLevel.Effective
+                    ? Setting.ValueOrDefault(settings)
+                    : Setting[settings];
+
+                if (settingVal == null && _useDefaultValueIfBlank)
+                {
+                    settingVal = Setting.ValueOrDefault(settings);
+                }
+
+                // for multiline control, transform "\n" in "\r\n" but prevent "\r\n" to be transformed in "\r\r\n"
+                control.Text = control.Multiline
+                    ? settingVal?.Replace(Environment.NewLine, "\n").Replace("\n", Environment.NewLine)
+                    : settingVal;
             }
 
             public override void SaveSetting(ISettingsSource settings, TextBox control)
             {
-                Setting[settings] = control.Text;
+                var controlValue = control.Text;
+                if (settings.SettingLevel == SettingLevel.Effective)
+                {
+                    if (Setting.ValueOrDefault(settings) == controlValue)
+                    {
+                        return;
+                    }
+                }
+
+                Setting[settings] = controlValue;
             }
         }
 
         public string this[ISettingsSource settings]
         {
-            get 
-            {
-                return settings.GetValue(Name, DefaultValue, s =>
-                    {
-                        if (string.IsNullOrEmpty(s))
-                            return DefaultValue;
-                        return s;
-                    });
-            }
+            get => settings.GetString(Name, null);
 
-            set 
-            {
-                settings.SetValue(Name, value, s => { return s; });
-            }
+            set => settings.SetString(Name, value);
+        }
+
+        public string ValueOrDefault(ISettingsSource settings)
+        {
+            return this[settings] ?? DefaultValue;
         }
     }
 }

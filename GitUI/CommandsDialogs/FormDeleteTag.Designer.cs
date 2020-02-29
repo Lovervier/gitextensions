@@ -43,7 +43,7 @@
             // Ok
             // 
             this.Ok.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.Ok.ForeColor = System.Drawing.Color.Black;
+            this.Ok.ForeColor = System.Drawing.SystemColors.ControlText;
             this.Ok.Location = new System.Drawing.Point(369, 10);
             this.Ok.Name = "Ok";
             this.Ok.Size = new System.Drawing.Size(75, 25);
@@ -65,7 +65,7 @@
             // 
             // Tags
             // 
-            this.Tags.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.Tags.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.Tags.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
             this.Tags.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
@@ -78,7 +78,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.ForeColor = System.Drawing.Color.Black;
+            this.label1.ForeColor = System.Drawing.SystemColors.ControlText;
             this.label1.Location = new System.Drawing.Point(7, 15);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(58, 15);
@@ -150,9 +150,7 @@
             this.Controls.Add(this.Tags);
             this.Controls.Add(this.label1);
             this.MaximizeBox = false;
-            this.MaximumSize = new System.Drawing.Size(1000, 210);
             this.MinimizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(470, 210);
             this.Name = "FormDeleteTag";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Delete tag";

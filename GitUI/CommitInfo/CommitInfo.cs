@@ -2,123 +2,76 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Net;
+using System.Reactive.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitCommands;
-using GitCommands.Utils;
-using GitCommands.GitExtLinks;
+using GitCommands.ExternalLinks;
+using GitCommands.Git;
+using GitCommands.Remotes;
+using GitExtUtils;
+using GitExtUtils.GitUI;
+using GitExtUtils.GitUI.Theming;
+using GitUI.CommandsDialogs;
 using GitUI.Editor.RichTextBoxExtension;
+using GitUI.Hotkey;
+using GitUI.UserControls;
+using GitUIPluginInterfaces;
+using JetBrains.Annotations;
+using Microsoft.VisualStudio.Threading;
 using ResourceManager;
+using ResourceManager.CommitDataRenders;
 
 namespace GitUI.CommitInfo
 {
     public partial class CommitInfo : GitModuleControl
     {
-        private readonly TranslationString containedInBranches = new TranslationString("Contained in branches:");
-        private readonly TranslationString containedInNoBranch = new TranslationString("Contained in no branch");
-        private readonly TranslationString containedInTags = new TranslationString("Contained in tags:");
-        private readonly TranslationString containedInNoTag = new TranslationString("Contained in no tag");
-        private readonly TranslationString trsLinksRelatedToRevision = new TranslationString("Related links:");
+        private event EventHandler<CommandEventArgs> CommandClickedEvent;
 
-        private const int MaximumDisplayedRefs = 20;
-
-        public CommitInfo()
+        public event EventHandler<CommandEventArgs> CommandClicked
         {
-            InitializeComponent();
-            Translate();
-            GitUICommandsSourceSet += (a, uiCommandsSource) =>
+            add
             {
-                _sortedRefs = null;
-            };
-        }
-
-        [DefaultValue(false)]
-        public bool ShowBranchesAsLinks { get; set; }
-
-        public event EventHandler<CommandEventArgs> CommandClick;
-
-        private void RevisionInfoLinkClicked(object sender, LinkClickedEventArgs e)
-        {
-            try
-            {
-                var url = e.LinkText;
-                var data = url.Split(new[] { '#' }, 2);
-
-                try
-                {
-                    if (data.Length > 1)
-                    {
-                        var result = new Uri(data[1]);
-                        if (result.Scheme == "gitext")
-                        {
-                            if (CommandClick != null)
-                            {
-                                string path = result.AbsolutePath.TrimStart('/');
-                                CommandClick(sender, new CommandEventArgs(result.Host, path));
-                            }
-                            return;
-                        }
-                        else
-                        {
-                            url = result.AbsoluteUri;
-                        }
-                    }
-                }
-                catch (UriFormatException)
-                {
-
-                }
-
-                using (var process = new Process
-                    {
-                        EnableRaisingEvents = false,
-                        StartInfo = { FileName = url }
-                    })
-                    process.Start();
+                CommandClickedEvent += value;
+                commitInfoHeader.CommandClicked += value;
             }
-            catch (Exception ex)
+            remove
             {
-                MessageBox.Show(ex.Message);
+                CommandClickedEvent -= value;
+                commitInfoHeader.CommandClicked -= value;
             }
         }
+
+        private static readonly TranslationString _brokenRefs = new TranslationString("The repository refs seem to be broken:");
+        private static readonly TranslationString _copyLink = new TranslationString("Copy &link ({0})");
+        private static readonly TranslationString _trsLinksRelatedToRevision = new TranslationString("Related links:");
+        private static readonly TranslationString _derivesFromTag = new TranslationString("Derives from tag:");
+        private static readonly TranslationString _derivesFromNoTag = new TranslationString("Derives from no tag");
+        private static readonly TranslationString _plusCommits = new TranslationString("commits");
+        private static readonly TranslationString _repoFailure = new TranslationString("Repository failure");
+
+        private readonly ILinkFactory _linkFactory = new LinkFactory();
+        private readonly ICommitDataManager _commitDataManager;
+        private readonly ICommitDataBodyRenderer _commitDataBodyRenderer;
+        private readonly IExternalLinksStorage _externalLinksStorage;
+        private readonly IConfiguredLinkDefinitionsProvider _effectiveLinkDefinitionsProvider;
+        private readonly IGitRevisionExternalLinksParser _gitRevisionExternalLinksParser;
+        private readonly IExternalLinkRevisionParser _externalLinkRevisionParser;
+        private readonly IConfigFileRemoteSettingsManager _remotesManager;
+        private readonly GitDescribeProvider _gitDescribeProvider;
+        private readonly CancellationTokenSequence _asyncLoadCancellation = new CancellationTokenSequence();
+        private readonly RefsFormatter _refsFormatter;
+
+        private readonly IDisposable _revisionInfoResizedSubscription;
+        private readonly IDisposable _commitMessageResizedSubscription;
 
         private GitRevision _revision;
-        private List<string> _children;
-        public void SetRevisionWithChildren(GitRevision revision, List<string> children)
-        {
-            _revision = revision;
-            _children = children;
-            ReloadCommitInfo();
-        }
-
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [Browsable(false)]
-        public GitRevision Revision
-        {
-            get
-            {
-                return _revision;
-            }
-            set
-            {
-                SetRevisionWithChildren(value, null);
-            }
-        }
-
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [Browsable(false)]
-        public string RevisionGuid
-        {
-            get
-            {
-                return _revision.Guid;
-            }
-        }
-
-        private string _revisionInfo;
+        private IReadOnlyList<ObjectId> _children;
         private string _linksInfo;
         private IDictionary<string, string> _annotatedTagsMessages;
         private string _annotatedTagsInfo;
@@ -126,7 +79,207 @@ namespace GitUI.CommitInfo
         private string _tagInfo;
         private List<string> _branches;
         private string _branchInfo;
-        private IList<string> _sortedRefs;
+        private string _gitDescribeInfo;
+        [CanBeNull] private IDictionary<string, int> _tagsOrderDict;
+        private int _revisionInfoHeight;
+        private int _commitMessageHeight;
+        private bool _showAllBranches;
+        private bool _showAllTags;
+
+        [DefaultValue(false)]
+        public bool ShowBranchesAsLinks { get; set; }
+
+        public CommitInfo()
+        {
+            InitializeComponent();
+            InitializeComplete();
+
+            UICommandsSourceSet += delegate
+            {
+                this.InvokeAsync(() =>
+                {
+                    UICommandsSource.UICommandsChanged += delegate { RefreshSortedTags(); };
+
+                    // call this event handler also now (necessary for "Contained in branches/tags")
+                    RefreshSortedTags();
+                }).FileAndForget();
+            };
+
+            _commitDataManager = new CommitDataManager(() => Module);
+
+            _commitDataBodyRenderer = new CommitDataBodyRenderer(() => Module, _linkFactory);
+            _externalLinksStorage = new ExternalLinksStorage();
+            _effectiveLinkDefinitionsProvider = new ConfiguredLinkDefinitionsProvider(_externalLinksStorage);
+            _remotesManager = new ConfigFileRemoteSettingsManager(() => Module);
+            _externalLinkRevisionParser = new ExternalLinkRevisionParser(_remotesManager);
+            _gitRevisionExternalLinksParser = new GitRevisionExternalLinksParser(_effectiveLinkDefinitionsProvider, _externalLinkRevisionParser);
+            _gitDescribeProvider = new GitDescribeProvider(() => Module);
+            _refsFormatter = new RefsFormatter(_linkFactory);
+
+            var messageBackground = KnownColor.Window.MakeBackgroundDarkerBy(0.04);
+            pnlCommitMessage.BackColor = messageBackground;
+            rtbxCommitMessage.BackColor = messageBackground;
+
+            rtbxCommitMessage.Font = AppSettings.CommitFont;
+            RevisionInfo.Font = AppSettings.Font;
+
+            Hotkeys = HotkeySettingsManager.LoadHotkeys(FormBrowse.HotkeySettingsName);
+            addNoteToolStripMenuItem.ShortcutKeyDisplayString = GetShortcutKeys((int)FormBrowse.Command.AddNotes).ToShortcutKeyDisplayString();
+
+            _commitMessageResizedSubscription = subscribeToContentsResized(rtbxCommitMessage, CommitMessage_ContentsResized);
+            _revisionInfoResizedSubscription = subscribeToContentsResized(RevisionInfo, RevisionInfo_ContentsResized);
+
+            IDisposable subscribeToContentsResized(RichTextBox richTextBox, Action<ContentsResizedEventArgs> handler) =>
+                Observable
+                    .FromEventPattern<ContentsResizedEventHandler, ContentsResizedEventArgs>(
+                        h => richTextBox.ContentsResized += h,
+                        h => richTextBox.ContentsResized -= h)
+                    .Throttle(TimeSpan.FromMilliseconds(100))
+                    .ObserveOn(MainThreadScheduler.Instance)
+                    .Subscribe(_ => handler(_.EventArgs));
+
+            commitInfoHeader.SetContextMenuStrip(commitInfoContextMenuStrip);
+        }
+
+        private void RefreshSortedTags()
+        {
+            if (!Module.IsValidGitWorkingDir())
+            {
+                return;
+            }
+
+            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            {
+                await LoadSortedTagsAsync();
+            }).FileAndForget();
+        }
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        public GitRevision Revision
+        {
+            get => _revision;
+            set => SetRevisionWithChildren(value, null);
+        }
+
+        private void RevisionInfoLinkClicked(object sender, LinkClickedEventArgs e)
+        {
+            var link = _linkFactory.ParseLink(e.LinkText);
+
+            try
+            {
+                var result = new Uri(link);
+                if (result.Scheme == "gitext")
+                {
+                    CommandClickedEvent?.Invoke(sender, new CommandEventArgs(result.Host, result.AbsolutePath.TrimStart('/')));
+                }
+                else
+                {
+                    using (var process = new Process
+                    {
+                        EnableRaisingEvents = false,
+                        StartInfo = { FileName = result.AbsoluteUri }
+                    })
+                    {
+                        process.Start();
+                    }
+                }
+            }
+            catch (UriFormatException)
+            {
+            }
+        }
+
+        public void SetRevisionWithChildren(GitRevision revision, IReadOnlyList<ObjectId> children)
+        {
+            _revision = revision;
+            _children = children;
+
+            if (revision == null)
+            {
+                tableLayout.Visible = false;
+                return;
+            }
+
+            tableLayout.Visible = true;
+            commitInfoHeader.ShowCommitInfo(revision, children);
+            ReloadCommitInfo();
+        }
+
+        public void ShowAll(string what)
+        {
+            switch (what)
+            {
+                case "branches":
+                    _showAllBranches = true;
+                    _branchInfo = null; // forces update
+                    break;
+                case "tags":
+                    _showAllTags = true;
+                    _tagInfo = null; // forces update
+                    break;
+                default:
+                    Debug.Fail("unsupported type in ShowAll(\"" + what + "\")");
+                    return;
+            }
+
+            UpdateRevisionInfo();
+        }
+
+        private IDictionary<string, int> GetSortedTags()
+        {
+            var args = new GitArgumentBuilder("for-each-ref")
+            {
+                "--sort=-taggerdate",
+                "--format=\"%(refname)\"",
+                "refs/tags/"
+            };
+
+            string tree = Module.GitExecutable.GetOutput(args);
+            int warningPos = tree.IndexOf("warning:");
+            if (warningPos >= 0)
+            {
+                throw new RefsWarningException(tree.Substring(warningPos).SplitLines()[0]);
+            }
+
+            int i = 0;
+            var dict = new Dictionary<string, int>();
+            foreach (var entry in tree.Split('\n'))
+            {
+                if (dict.ContainsKey(entry))
+                {
+                    continue;
+                }
+
+                dict.Add(entry, i);
+                i++;
+            }
+
+            return dict;
+        }
+
+        private async Task LoadSortedTagsAsync()
+        {
+            ThreadHelper.AssertOnUIThread();
+            _tagsOrderDict = null;
+
+            await TaskScheduler.Default.SwitchTo();
+            try
+            {
+                var tagsOrderDict = GetSortedTags();
+
+                await this.SwitchToMainThreadAsync();
+                _tagsOrderDict = tagsOrderDict;
+                UpdateRevisionInfo();
+            }
+            catch (RefsWarningException ex)
+            {
+                await this.SwitchToMainThreadAsync();
+                MessageBox.Show(this, string.Format("{0}{1}{1}{2}", _brokenRefs.Text, Environment.NewLine, ex.Message), _repoFailure.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            return;
+        }
 
         private void ReloadCommitInfo()
         {
@@ -135,204 +288,261 @@ namespace GitUI.CommitInfo
             showContainedInBranchesRemoteIfNoLocalToolStripMenuItem.Checked = AppSettings.CommitInfoShowContainedInBranchesRemoteIfNoLocal;
             showContainedInTagsToolStripMenuItem.Checked = AppSettings.CommitInfoShowContainedInTags;
             showMessagesOfAnnotatedTagsToolStripMenuItem.Checked = AppSettings.ShowAnnotatedTagsMessages;
+            showTagThisCommitDerivesFromMenuItem.Checked = AppSettings.CommitInfoShowTagThisCommitDerivesFrom;
 
-            ResetTextAndImage();
+            _showAllBranches = false;
+            _showAllTags = false;
+            _branches = null;
+            _tags = null;
+            _annotatedTagsMessages = null;
+            _linkFactory.Clear();
 
-            if (string.IsNullOrEmpty(_revision.Guid))
-                return; //is it regular case or should throw an exception
+            UpdateCommitMessage();
 
-            _RevisionHeader.SelectionTabs = GetRevisionHeaderTabStops();
-            _RevisionHeader.Text = string.Empty;
-            _RevisionHeader.Refresh();
+            _annotatedTagsInfo = "";
+            _linksInfo = "";
+            _branchInfo = "";
+            _tagInfo = "";
+            _gitDescribeInfo = "";
 
-            string error = "";
-            CommitData data = CommitData.CreateFromRevision(_revision);
-            if (_revision.Body == null)
+            if (_revision != null && !_revision.IsArtificial)
             {
-                CommitData.UpdateCommitMessage(data, Module, _revision.Guid, ref error);
-                _revision.Body = data.Body;
+                UpdateRevisionInfo();
+                StartAsyncDataLoad();
             }
 
-            ThreadPool.QueueUserWorkItem(_ => loadLinksForRevision(_revision));
+            return;
 
-            if (_sortedRefs == null)
-                ThreadPool.QueueUserWorkItem(_ => loadSortedRefs());
-
-            data.ChildrenGuids = _children;
-            CommitInformation commitInformation = CommitInformation.GetCommitInfo(data, CommandClick != null);
-
-            _RevisionHeader.SetXHTMLText(commitInformation.Header);
-            _RevisionHeader.Height = GetRevisionHeaderHeight();
-            _revisionInfo = commitInformation.Body;
-            updateText();
-            LoadAuthorImage(data.Author ?? data.Committer);
-
-            if (AppSettings.CommitInfoShowContainedInBranches)
-                ThreadPool.QueueUserWorkItem(_ => loadBranchInfo(_revision.Guid));
-
-            if (AppSettings.ShowAnnotatedTagsMessages)
-                ThreadPool.QueueUserWorkItem(_ => loadAnnotatedTagInfo(_revision));
-
-            if (AppSettings.CommitInfoShowContainedInTags)
-                ThreadPool.QueueUserWorkItem(_ => loadTagInfo(_revision.Guid));
-        }
-
-        /// <summary>
-        /// Returns an array of strings contains titles of fields field returned by GetHeader.
-        /// Used to calculate layout in advance
-        /// </summary>
-        /// <returns></returns>
-        private static string[] GetPossibleHeaders()
-        {
-            return new string[]
-                   {
-                       Strings.GetAuthorText(), Strings.GetAuthorDateText(), Strings.GetCommitterText(),
-                       Strings.GetCommitDateText(), Strings.GetCommitHashText(), Strings.GetChildrenText(),
-                       Strings.GetParentsText()
-                   };
-        }
-
-        private int[] _revisionHeaderTabStops;
-        private int[] GetRevisionHeaderTabStops()
-        {
-            if (_revisionHeaderTabStops != null)
-                return _revisionHeaderTabStops;
-            int tabStop = 0;
-            foreach (string s in GetPossibleHeaders())
+            void UpdateCommitMessage()
             {
-                tabStop = Math.Max(tabStop, TextRenderer.MeasureText(s + "  ", _RevisionHeader.Font).Width);
-            }
-            // simulate a two column layout even when there's more then one tab used
-            _revisionHeaderTabStops = new int[] { tabStop, tabStop + 1, tabStop + 2, tabStop + 3 };
-            return _revisionHeaderTabStops;
-        }
-
-        private int GetRevisionHeaderHeight()
-        {
-            if (EnvUtils.IsMonoRuntime())
-                return (int)(_RevisionHeader.Lines.Length * (0.8 + _RevisionHeader.Font.GetHeight()));
-
-            return _RevisionHeader.GetPreferredSize(new System.Drawing.Size(0, 0)).Height;
-        }
-
-        private void loadSortedRefs()
-        {
-            _sortedRefs = Module.GetSortedRefs();
-            this.InvokeAsync(updateText);
-        }
-
-        private void loadAnnotatedTagInfo(GitRevision revision)
-        {
-            _annotatedTagsMessages = GetAnnotatedTagsMessages(revision);
-            this.InvokeAsync(updateText);
-        }
-
-        private IDictionary<string, string> GetAnnotatedTagsMessages(GitRevision revision)
-        {
-            if (revision == null)
-                return null;
-
-            IDictionary<string, string> result = new Dictionary<string, string>();
-
-            foreach (GitRef gitRef in revision.Refs)
-            {
-                #region Note on annotated tags
-                // Notice that for the annotated tags, gitRef's come in pairs because they're produced 
-                // by the "show-ref --dereference" command. GitRef's in such pair have the same Name, 
-                // a bit different CompleteName's, and completely different checksums:
-                //      GitRef_1:
-                //      { 
-                //          Name: "some_tag"
-                //          CompleteName: "refs/tags/some_tag"
-                //          Guid: <some_tag_checksum>
-                //      },
-                //       
-                //      GitRef_2:
-                //      { 
-                //          Name: "some_tag"
-                //          CompleteName: "refs/tags/some_tag^{}"   <- by "^{}", IsDereference is true.
-                //          Guid: <target_object_checksum>
-                //      }
-                //
-                // The 2nd one is a dereference: a link between the tag and the object which it references.
-                // GitRevions.Refs by design contains GitRef's where Guid's are equal to the GitRevision.Guid,
-                // so this collection contains only derefencing GitRef's - just because GitRef_2 has the same 
-                // Guid as the GitRevision, while GitRef_1 doesn't. So annotated tag's GitRef would always be
-                // of 2nd type in GitRevision.Refs collection, i.e. the one that has IsDereference==true.
-                #endregion
-
-                if (gitRef.IsTag && gitRef.IsDereference)
+                if (_revision == null)
                 {
-                    string content = WebUtility.HtmlEncode(Module.GetTagMessage(gitRef.LocalName));
-
-                    if (content != null)
-                        result.Add(gitRef.LocalName, content);
+                    rtbxCommitMessage.SetXHTMLText(string.Empty);
+                    return;
                 }
+
+                var data = _commitDataManager.CreateFromRevision(_revision, _children);
+
+                if (_revision.Body == null || (AppSettings.ShowGitNotes && !_revision.HasNotes))
+                {
+                    _commitDataManager.UpdateBody(data, out _);
+                    _revision.Body = data.Body;
+                    _revision.HasNotes = true;
+                }
+
+                var commitMessage = _commitDataBodyRenderer.Render(data, showRevisionsAsLinks: CommandClickedEvent != null);
+                rtbxCommitMessage.SetXHTMLText(commitMessage);
             }
 
-            return result;
-        }
+            void StartAsyncDataLoad()
+            {
+                var cancellationToken = _asyncLoadCancellation.Next();
 
-        private void loadTagInfo(string revision)
-        {
-            _tags = Module.GetAllTagsWhichContainGivenCommit(revision).ToList();
-            this.InvokeAsync(updateText);
-        }
+                var initialRevision = _revision;
 
-        private void loadBranchInfo(string revision)
-        {
-            // Include local branches if explicitly requested or when needed to decide whether to show remotes
-            bool getLocal = AppSettings.CommitInfoShowContainedInBranchesLocal ||
-                            AppSettings.CommitInfoShowContainedInBranchesRemoteIfNoLocal;
-            // Include remote branches if requested
-            bool getRemote = AppSettings.CommitInfoShowContainedInBranchesRemote ||
-                             AppSettings.CommitInfoShowContainedInBranchesRemoteIfNoLocal;
-            _branches = Module.GetAllBranchesWhichContainGivenCommit(revision, getLocal, getRemote).ToList();
-            this.InvokeAsync(updateText);
-        }
+                ThreadHelper.JoinableTaskFactory.RunAsync(async () => { await LoadLinksForRevisionAsync(initialRevision); }).FileAndForget();
 
-        private void loadLinksForRevision(GitRevision revision)
-        {
-            if (revision == null)
+                ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+                {
+                    // No branch/tag data for artificial commands
+                    if (AppSettings.CommitInfoShowContainedInBranches)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        await LoadBranchInfoAsync(initialRevision.ObjectId);
+                    }
+
+                    if (AppSettings.ShowAnnotatedTagsMessages)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        await LoadAnnotatedTagInfoAsync(initialRevision.Refs);
+                    }
+
+                    if (AppSettings.CommitInfoShowContainedInTags)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        await LoadTagInfoAsync(initialRevision.ObjectId);
+                    }
+
+                    if (AppSettings.CommitInfoShowTagThisCommitDerivesFrom)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        await LoadDescribeInfoAsync(initialRevision.ObjectId);
+                    }
+                }).FileAndForget();
+
                 return;
 
-            _linksInfo = GetLinksForRevision(revision);
-            this.InvokeAsync(updateText);
+                async Task LoadLinksForRevisionAsync(GitRevision revision)
+                {
+                    if (revision == null)
+                    {
+                        return;
+                    }
+
+                    await TaskScheduler.Default;
+                    var linksInfo = GetLinksForRevision();
+
+                    // Most commits do not have link; do not switch to main thread if nothing is changed
+                    if (_linksInfo == linksInfo)
+                    {
+                        return;
+                    }
+
+                    await this.SwitchToMainThreadAsync(cancellationToken);
+                    _linksInfo = linksInfo;
+                    UpdateRevisionInfo();
+
+                    return;
+
+                    string GetLinksForRevision()
+                    {
+                        var links = _gitRevisionExternalLinksParser.Parse(revision, Module.EffectiveSettings);
+                        var result = string.Join(", ", links.Distinct().Select(link => _linkFactory.CreateLink(link.Caption, link.Uri)));
+
+                        if (string.IsNullOrEmpty(result))
+                        {
+                            return "";
+                        }
+
+                        return $"{WebUtility.HtmlEncode(_trsLinksRelatedToRevision.Text)} {result}";
+                    }
+                }
+
+                async Task LoadAnnotatedTagInfoAsync(IReadOnlyList<IGitRef> refs)
+                {
+                    await TaskScheduler.Default;
+
+                    var annotatedTagsMessages = GetAnnotatedTagsMessages();
+
+                    await this.SwitchToMainThreadAsync(cancellationToken);
+                    _annotatedTagsMessages = annotatedTagsMessages;
+                    UpdateRevisionInfo();
+
+                    return;
+
+                    IDictionary<string, string> GetAnnotatedTagsMessages()
+                    {
+                        if (refs == null)
+                        {
+                            return null;
+                        }
+
+                        var result = new Dictionary<string, string>();
+
+                        foreach (var gitRef in refs)
+                        {
+                            #region Note on annotated tags
+                            // Notice that for the annotated tags, gitRef's come in pairs because they're produced
+                            // by the "show-ref --dereference" command. GitRef's in such pair have the same Name,
+                            // a bit different CompleteName's, and completely different checksums:
+                            //      GitRef_1:
+                            //      {
+                            //          Name: "some_tag"
+                            //          CompleteName: "refs/tags/some_tag"
+                            //          Guid: <some_tag_checksum>
+                            //      },
+                            //
+                            //      GitRef_2:
+                            //      {
+                            //          Name: "some_tag"
+                            //          CompleteName: "refs/tags/some_tag^{}"   <- by "^{}", IsDereference is true.
+                            //          Guid: <target_object_checksum>
+                            //      }
+                            //
+                            // The 2nd one is a dereference: a link between the tag and the object which it references.
+                            // GitRevision.Refs by design contains GitRefs where Guids are equal to the GitRevision.Guid,
+                            // so this collection contains only dereferencing GitRef's - just because GitRef_2 has the same
+                            // Guid as the GitRevision, while GitRef_1 doesn't. So annotated tag's GitRef would always be
+                            // of 2nd type in GitRevision.Refs collection, i.e. the one that has IsDereference==true.
+                            #endregion
+
+                            if (gitRef.IsTag && gitRef.IsDereference)
+                            {
+                                string content = WebUtility.HtmlEncode(Module.GetTagMessage(gitRef.LocalName));
+
+                                if (content != null)
+                                {
+                                    result.Add(gitRef.LocalName, content);
+                                }
+                            }
+                        }
+
+                        return result;
+                    }
+                }
+
+                async Task LoadTagInfoAsync(ObjectId objectId)
+                {
+                    await TaskScheduler.Default;
+
+                    var tags = Module.GetAllTagsWhichContainGivenCommit(objectId).ToList();
+
+                    await this.SwitchToMainThreadAsync(cancellationToken);
+                    _tags = tags;
+                    UpdateRevisionInfo();
+                }
+
+                async Task LoadBranchInfoAsync(ObjectId revision)
+                {
+                    await TaskScheduler.Default;
+
+                    // Include local branches if explicitly requested or when needed to decide whether to show remotes
+                    bool getLocal = AppSettings.CommitInfoShowContainedInBranchesLocal ||
+                                    AppSettings.CommitInfoShowContainedInBranchesRemoteIfNoLocal;
+
+                    // Include remote branches if requested
+                    bool getRemote = AppSettings.CommitInfoShowContainedInBranchesRemote ||
+                                     AppSettings.CommitInfoShowContainedInBranchesRemoteIfNoLocal;
+                    var branches = Module.GetAllBranchesWhichContainGivenCommit(revision, getLocal, getRemote).ToList();
+
+                    await this.SwitchToMainThreadAsync(cancellationToken);
+                    _branches = branches;
+                    UpdateRevisionInfo();
+                }
+
+                async Task LoadDescribeInfoAsync(ObjectId commitId)
+                {
+                    await TaskScheduler.Default;
+
+                    var info = GetDescribeInfoForRevision();
+
+                    await this.SwitchToMainThreadAsync(cancellationToken);
+                    _gitDescribeInfo = info;
+                    UpdateRevisionInfo();
+
+                    return;
+
+                    string GetDescribeInfoForRevision()
+                    {
+                        var (precedingTag, commitCount) = _gitDescribeProvider.Get(commitId);
+
+                        var gitDescribeInfo = new StringBuilder();
+                        if (!string.IsNullOrEmpty(precedingTag))
+                        {
+                            string tagString = ShowBranchesAsLinks ? _linkFactory.CreateTagLink(precedingTag) : WebUtility.HtmlEncode(precedingTag);
+                            gitDescribeInfo.Append(Environment.NewLine + WebUtility.HtmlEncode(_derivesFromTag.Text) + " " + tagString);
+                            if (!string.IsNullOrEmpty(commitCount))
+                            {
+                                gitDescribeInfo.Append(" + " + commitCount + " " + WebUtility.HtmlEncode(_plusCommits.Text));
+                            }
+                        }
+                        else
+                        {
+                            gitDescribeInfo.Append(Environment.NewLine + WebUtility.HtmlEncode(_derivesFromNoTag.Text));
+                        }
+
+                        return gitDescribeInfo.ToString();
+                    }
+                }
+            }
         }
 
-        private class ItemTpComparer : IComparer<string>
+        private void UpdateRevisionInfo()
         {
-            private readonly IList<string> _otherList;
-            private readonly string _prefix;
-
-            public ItemTpComparer(IList<string> otherList, string prefix)
-            {
-                _otherList = otherList;
-                _prefix = prefix;
-            }
-
-            public int Compare(string a, string b)
-            {
-                if (a.StartsWith("remotes/"))
-                    a = "refs/" + a;
-                else
-                    a = _prefix + a;
-                if (b.StartsWith("remotes/"))
-                    b = "refs/" + b;
-                else
-                    b = _prefix + b;
-                int i = _otherList.IndexOf(a);
-                int j = _otherList.IndexOf(b);
-                return i - j;
-            }
-        }
-
-        private void updateText()
-        {
-            if (_sortedRefs != null)
+            if (_tagsOrderDict != null)
             {
                 if (_annotatedTagsMessages != null &&
-                    _annotatedTagsMessages.Count() > 0 &&
+                    _annotatedTagsMessages.Count > 0 &&
                     string.IsNullOrEmpty(_annotatedTagsInfo) &&
                     Revision != null)
                 {
@@ -345,158 +555,67 @@ namespace GitUI.CommitInfo
                         .Select(r => r.LocalName)
                         .ToList();
 
-                    thisRevisionTagNames.Sort(new ItemTpComparer(_sortedRefs, "refs/tags/"));
-                    _annotatedTagsInfo = GetAnnotatedTagsInfo(Revision, thisRevisionTagNames, _annotatedTagsMessages);
+                    thisRevisionTagNames.Sort(new TagsComparer(_tagsOrderDict));
+                    _annotatedTagsInfo = GetAnnotatedTagsInfo(thisRevisionTagNames, _annotatedTagsMessages);
                 }
+
                 if (_tags != null && string.IsNullOrEmpty(_tagInfo))
                 {
-                    _tags.Sort(new ItemTpComparer(_sortedRefs, "refs/tags/"));
-                    if (_tags.Count > MaximumDisplayedRefs)
-                    {
-                        _tags[MaximumDisplayedRefs - 2] = "…";
-                        _tags[MaximumDisplayedRefs - 1] = _tags[_tags.Count - 1];
-                        _tags.RemoveRange(MaximumDisplayedRefs, _tags.Count - MaximumDisplayedRefs);
-                    }
-                    _tagInfo = GetTagsWhichContainsThisCommit(_tags, ShowBranchesAsLinks);
-                }
-                if (_branches != null && string.IsNullOrEmpty(_branchInfo))
-                {
-                    _branches.Sort(new ItemTpComparer(_sortedRefs, "refs/heads/"));
-                    if (_branches.Count > MaximumDisplayedRefs)
-                    {
-                        _branches[MaximumDisplayedRefs - 2] = "…";
-                        _branches[MaximumDisplayedRefs - 1] = _branches[_branches.Count - 1];
-                        _branches.RemoveRange(MaximumDisplayedRefs, _branches.Count - MaximumDisplayedRefs);
-                    }
-                    _branchInfo = GetBranchesWhichContainsThisCommit(_branches, ShowBranchesAsLinks);
+                    _tags.Sort(new TagsComparer(_tagsOrderDict));
+                    _tagInfo = _refsFormatter.FormatTags(_tags, ShowBranchesAsLinks, limit: !_showAllTags);
                 }
             }
-            RevisionInfo.SuspendLayout();
-            RevisionInfo.SetXHTMLText(_revisionInfo + "\n" + _annotatedTagsInfo + _linksInfo + _branchInfo + _tagInfo);
-            RevisionInfo.SelectionStart = 0; //scroll up
-            RevisionInfo.ScrollToCaret();    //scroll up
-            RevisionInfo.ResumeLayout(true);
-        }
 
-        private static string GetAnnotatedTagsInfo(
-            GitRevision revision,
-            IEnumerable<string> tagNames,
-            IDictionary<string, string> annotatedTagsMessages)
-        {
-            string result = string.Empty;
-
-            foreach (string tag in tagNames)
+            if (_branches != null && string.IsNullOrEmpty(_branchInfo))
             {
-                string annotatedContents;
-                if (annotatedTagsMessages.TryGetValue(tag, out annotatedContents))
-                    result += "<u>" + tag + "</u>: " + annotatedContents + Environment.NewLine;
+                _branches.Sort(new BranchComparer(Module.GetSelectedBranch()));
+                _branchInfo = _refsFormatter.FormatBranches(_branches, ShowBranchesAsLinks, limit: !_showAllBranches);
             }
 
-            if (result.IsNullOrEmpty())
-                return string.Empty;
+            string body = string.Join(Environment.NewLine,
+                new[] { _annotatedTagsInfo, _linksInfo, _branchInfo, _tagInfo, _gitDescribeInfo }
+                    .Where(_ => !string.IsNullOrEmpty(_)));
 
-            return Environment.NewLine + result;
+            RevisionInfo.SetXHTMLText(body);
+            return;
+
+            string GetAnnotatedTagsInfo(
+                IEnumerable<string> tagNames,
+                IDictionary<string, string> annotatedTagsMessages)
+            {
+                var result = new StringBuilder();
+
+                foreach (var tag in tagNames)
+                {
+                    if (annotatedTagsMessages.TryGetValue(tag, out var annotatedContents))
+                    {
+                        result.Append("<u>").Append(tag).Append("</u>: ").Append(annotatedContents).AppendLine();
+                    }
+                }
+
+                return result.ToString();
+            }
         }
 
-        private void ResetTextAndImage()
+        private void commitInfoContextMenuStrip_Opening(object sender, CancelEventArgs e)
         {
-            _revisionInfo = string.Empty;
-            _linksInfo = string.Empty;
-            _branchInfo = string.Empty;
-            _annotatedTagsInfo = string.Empty;
-            _tagInfo = string.Empty;
-            _branches = null;
-            _annotatedTagsMessages = null;
-            _tags = null;
-            updateText();
-            gravatar1.LoadImageForEmail("");
-        }
-
-        private void LoadAuthorImage(string author)
-        {
-            var matches = Regex.Matches(author, @"<([\w\-\.]+@[\w\-\.]+)>");
-
-            if (matches.Count == 0)
+            var rtb = (sender as ContextMenuStrip)?.SourceControl as RichTextBox;
+            if (rtb == null)
+            {
+                copyLinkToolStripMenuItem.Visible = false;
                 return;
-
-            gravatar1.LoadImageForEmail(matches[0].Groups[1].Value);
-        }
-
-        private string GetBranchesWhichContainsThisCommit(IEnumerable<string> branches, bool showBranchesAsLinks)
-        {
-            const string remotesPrefix = "remotes/";
-            // Include local branches if explicitly requested or when needed to decide whether to show remotes
-            bool getLocal = AppSettings.CommitInfoShowContainedInBranchesLocal ||
-                            AppSettings.CommitInfoShowContainedInBranchesRemoteIfNoLocal;
-            // Include remote branches if requested
-            bool getRemote = AppSettings.CommitInfoShowContainedInBranchesRemote ||
-                             AppSettings.CommitInfoShowContainedInBranchesRemoteIfNoLocal;
-            var links = new List<string>();
-            bool allowLocal = AppSettings.CommitInfoShowContainedInBranchesLocal;
-            bool allowRemote = getRemote;
-
-            foreach (var branch in branches)
-            {
-                string noPrefixBranch = branch;
-                bool branchIsLocal;
-                if (getLocal && getRemote)
-                {
-                    // "git branch -a" prefixes remote branches with "remotes/"
-                    // It is possible to create a local branch named "remotes/origin/something"
-                    // so this check is not 100% reliable.
-                    // This shouldn't be a big problem if we're only displaying information.
-                    branchIsLocal = !branch.StartsWith(remotesPrefix);
-                    if (!branchIsLocal)
-                        noPrefixBranch = branch.Substring(remotesPrefix.Length);
-                }
-                else
-                {
-                    branchIsLocal = !getRemote;
-                }
-
-                if ((branchIsLocal && allowLocal) || (!branchIsLocal && allowRemote))
-                {
-                    string branchText;
-                    if (showBranchesAsLinks)
-                        branchText = LinkFactory.CreateBranchLink(noPrefixBranch);
-                    else
-                        branchText = WebUtility.HtmlEncode(noPrefixBranch);
-                    links.Add(branchText);
-                }
-
-                if (branchIsLocal && AppSettings.CommitInfoShowContainedInBranchesRemoteIfNoLocal)
-                    allowRemote = false;
-            }
-            if (links.Any())
-                return Environment.NewLine + WebUtility.HtmlEncode(containedInBranches.Text) + " " + links.Join(", ");
-            return Environment.NewLine + WebUtility.HtmlEncode(containedInNoBranch.Text);
-        }
-
-        private string GetTagsWhichContainsThisCommit(IEnumerable<string> tags, bool showBranchesAsLinks)
-        {
-            var tagString = tags
-                .Select(s => showBranchesAsLinks ? LinkFactory.CreateTagLink(s) : WebUtility.HtmlEncode(s)).Join(", ");
-
-            if (!String.IsNullOrEmpty(tagString))
-                return Environment.NewLine + WebUtility.HtmlEncode(containedInTags.Text) + " " + tagString;
-            return Environment.NewLine + WebUtility.HtmlEncode(containedInNoTag.Text);
-        }
-
-        private string GetLinksForRevision(GitRevision revision)
-        {
-            GitExtLinksParser parser = new GitExtLinksParser(Module.EffectiveSettings);
-            var links = parser.Parse(revision).Distinct();
-            var linksString = string.Empty;
-
-            foreach (var link in links)
-            {
-                linksString = linksString.Combine(", ", LinkFactory.CreateLink(link.Caption, link.URI));
             }
 
-            if (linksString.IsNullOrEmpty())
-                return string.Empty;
-            else
-                return Environment.NewLine + WebUtility.HtmlEncode(trsLinksRelatedToRevision.Text) + " " + linksString;
+            int charIndex = rtb.GetCharIndexFromPosition(rtb.PointToClient(MousePosition));
+            string link = rtb.GetLink(charIndex);
+            copyLinkToolStripMenuItem.Visible = link != null;
+            copyLinkToolStripMenuItem.Text = string.Format(_copyLink.Text, link);
+            copyLinkToolStripMenuItem.Tag = link;
+        }
+
+        private void copyLinkToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ClipboardUtil.TrySetText(copyLinkToolStripMenuItem.Tag as string);
         }
 
         private void showContainedInBranchesToolStripMenuItem_Click(object sender, EventArgs e)
@@ -511,9 +630,16 @@ namespace GitUI.CommitInfo
             ReloadCommitInfo();
         }
 
+        private void showTagThisCommitDerivesFromMenuItem_Click(object sender, EventArgs e)
+        {
+            AppSettings.CommitInfoShowTagThisCommitDerivesFrom = !AppSettings.CommitInfoShowTagThisCommitDerivesFrom;
+            ReloadCommitInfo();
+        }
+
         private void copyCommitInfoToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Clipboard.SetText(string.Concat(_RevisionHeader.GetPlaintText(), Environment.NewLine, RevisionInfo.GetPlaintText()));
+            var commitInfo = $"{commitInfoHeader.GetPlainText()}{Environment.NewLine}{Environment.NewLine}{rtbxCommitMessage.GetPlainText()}{Environment.NewLine}{RevisionInfo.GetPlainText()}";
+            ClipboardUtil.TrySetText(commitInfo);
         }
 
         private void showContainedInBranchesRemoteToolStripMenuItem_Click(object sender, EventArgs e)
@@ -536,29 +662,202 @@ namespace GitUI.CommitInfo
 
         private void addNoteToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Module.EditNotes(_revision.Guid);
+            Module.EditNotes(_revision.ObjectId);
+            _revision.HasNotes = false;
+            _revision.Body = null;
             ReloadCommitInfo();
-        }
-
-        private void DoCommandClick(string command, string data)
-        {
-            if (CommandClick != null)
-            {
-                CommandClick(this, new CommandEventArgs(command, data));
-            }
         }
 
         private void _RevisionHeader_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.XButton1)
             {
-                DoCommandClick("navigatebackward", null);
+                DoCommandClick("navigatebackward");
             }
             else if (e.Button == MouseButtons.XButton2)
             {
-                DoCommandClick("navigateforward", null);
+                DoCommandClick("navigateforward");
+            }
+
+            void DoCommandClick(string command)
+            {
+                CommandClickedEvent?.Invoke(this, new CommandEventArgs(command, null));
             }
         }
 
+        private void RevisionInfo_ContentsResized(ContentsResizedEventArgs e)
+        {
+            _revisionInfoHeight = e.NewRectangle.Height;
+            PerformLayout();
+        }
+
+        private void CommitMessage_ContentsResized(ContentsResizedEventArgs e)
+        {
+            _commitMessageHeight = e.NewRectangle.Height;
+
+            // at scale factor of 150% there is rendering artifact - the last line is almost lost
+            // at all other scaling factors from 100% to 350% everything is rendered as expected
+            // see https://github.com/gitextensions/gitextensions/issues/6898 for more details
+            //
+            // absent of an obvious way to fix it, hardcode the fix - add an extra space at the bottom
+            if (Math.Abs(DpiUtil.ScaleX - 1.5f) <= 0.01f)
+            {
+                _commitMessageHeight += 16;
+            }
+
+            PerformLayout();
+        }
+
+        protected override void OnLayout(LayoutEventArgs e)
+        {
+            tableLayout.SuspendLayout();
+
+            int[] heights =
+            {
+                commitInfoHeader.Height + commitInfoHeader.Margin.Vertical,
+                _commitMessageHeight + rtbxCommitMessage.Margin.Vertical + pnlCommitMessage.Margin.Vertical,
+                _revisionInfoHeight + RevisionInfo.Margin.Vertical
+            };
+
+            // leave 1st row SizeType = AutoWidth to let CommitInfoHeader.AutoSize be correctly applied
+            for (int i = 1; i < tableLayout.RowStyles.Count; i++)
+            {
+                tableLayout.RowStyles[i].SizeType = SizeType.Absolute;
+                tableLayout.RowStyles[i].Height = heights[i];
+            }
+
+            int height = heights.Sum();
+
+            int clientWidth = Width;
+            if (height > Height)
+            {
+                clientWidth -= SystemInformation.VerticalScrollBarWidth;
+            }
+
+            int width = Math.Max(clientWidth, commitInfoHeader.Width + commitInfoHeader.Margin.Horizontal);
+
+            tableLayout.ColumnStyles[0].SizeType = SizeType.Absolute;
+            tableLayout.ColumnStyles[0].Width = width;
+
+            tableLayout.Size = new Size(width, height);
+
+            tableLayout.ResumeLayout(false);
+            tableLayout.PerformLayout();
+
+            base.OnLayout(e);
+        }
+
+        private void RichTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            var rtb = sender as RichTextBox;
+            if (rtb == null || !e.Control || e.KeyCode != Keys.C)
+            {
+                return;
+            }
+
+            // Override RichTextBox Ctrl-c handling to copy plain text
+            ClipboardUtil.TrySetText(rtb.GetSelectionPlainText());
+            e.Handled = true;
+        }
+
+        protected override void DisposeCustomResources()
+        {
+            _asyncLoadCancellation.Dispose();
+            _revisionInfoResizedSubscription.Dispose();
+            _commitMessageResizedSubscription.Dispose();
+            base.DisposeCustomResources();
+        }
+
+        internal sealed class BranchComparer : IComparer<string>
+        {
+            private const string RemoteBranchPrefix = "remotes/";
+
+            private static readonly Regex _importantRepoRegex = new Regex($"^{RemoteBranchPrefix}(origin|upstream)/",
+                RegexOptions.Compiled | RegexOptions.CultureInvariant);
+            private static readonly Regex _remoteMasterRegex = new Regex($"^{RemoteBranchPrefix}.*/master[^/]*$",
+                RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+            private readonly string _currentBranch;
+
+            public BranchComparer(string currentBranch)
+            {
+                _currentBranch = currentBranch;
+            }
+
+            public int Compare(string a, string b)
+            {
+                int priorityA = GetBranchPriority(a);
+                int priorityB = GetBranchPriority(b);
+                return priorityA == priorityB ? Comparer<string>.Default.Compare(a, b)
+                    : priorityA - priorityB;
+            }
+
+            private int GetBranchPriority(string branch)
+            {
+                return branch == _currentBranch ? 0
+                    : IsImportantLocalBranch() ? 1
+                    : IsImportantRemoteBranch() ? IsImportantRepo() ? 2 : 3
+                    : IsLocalBranch() ? 4
+                    : IsImportantRepo() ? 5
+                    : 6;
+
+                // Note: This assumes that branches starting with "master" are important branches, this is not configurable.
+                bool IsImportantLocalBranch() => branch.StartsWith("master");
+                bool IsImportantRemoteBranch() => _remoteMasterRegex.IsMatch(branch);
+                bool IsImportantRepo() => _importantRepoRegex.IsMatch(branch);
+                bool IsLocalBranch() => !branch.StartsWith(RemoteBranchPrefix);
+            }
+        }
+
+        private sealed class TagsComparer : IComparer<string>
+        {
+            private readonly IDictionary<string, int> _orderDict;
+            private readonly string _prefix;
+
+            public TagsComparer(IDictionary<string, int> orderDict, string prefix = "refs/tags/")
+            {
+                _orderDict = orderDict;
+                _prefix = prefix;
+            }
+
+            public int Compare(string a, string b)
+            {
+                return IndexOf(a) - IndexOf(b);
+
+                int IndexOf(string s)
+                {
+                    if (s.StartsWith("remotes/"))
+                    {
+                        s = "refs/" + s;
+                    }
+                    else
+                    {
+                        s = _prefix + s;
+                    }
+
+                    if (_orderDict.TryGetValue(s, out var index))
+                    {
+                        return index;
+                    }
+
+                    return -1;
+                }
+            }
+        }
+
+        internal TestAccessor GetTestAccessor()
+            => new TestAccessor(this);
+
+        internal readonly struct TestAccessor
+        {
+            private readonly CommitInfo _commitInfo;
+
+            public TestAccessor(CommitInfo commitInfo)
+            {
+                _commitInfo = commitInfo;
+            }
+
+            public IDictionary<string, int> GetSortedTags() => _commitInfo.GetSortedTags();
+        }
     }
 }

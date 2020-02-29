@@ -42,8 +42,8 @@
             // Delete
             // 
             this.Delete.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.Delete.ForeColor = System.Drawing.Color.Black;
-            this.Delete.Image = global::GitUI.Properties.Resources.IconBranchDelete;
+            this.Delete.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.Delete.Image = global::GitUI.Properties.Images.BranchDelete;
             this.Delete.Location = new System.Drawing.Point(439, 65);
             this.Delete.Name = "Delete";
             this.Delete.Size = new System.Drawing.Size(120, 25);
@@ -57,7 +57,7 @@
             // labelSelectBranches
             // 
             this.labelSelectBranches.AutoSize = true;
-            this.labelSelectBranches.ForeColor = System.Drawing.Color.Black;
+            this.labelSelectBranches.ForeColor = System.Drawing.SystemColors.ControlText;
             this.labelSelectBranches.Location = new System.Drawing.Point(9, 9);
             this.labelSelectBranches.Name = "labelSelectBranches";
             this.labelSelectBranches.Size = new System.Drawing.Size(99, 16);
@@ -67,7 +67,7 @@
             // labelDeleteBranchWarning
             // 
             this.labelDeleteBranchWarning.AutoSize = true;
-            this.labelDeleteBranchWarning.ForeColor = System.Drawing.Color.Black;
+            this.labelDeleteBranchWarning.ForeColor = System.Drawing.SystemColors.ControlText;
             this.labelDeleteBranchWarning.Location = new System.Drawing.Point(39, 116);
             this.labelDeleteBranchWarning.MaximumSize = new System.Drawing.Size(500, 0);
             this.labelDeleteBranchWarning.Name = "labelDeleteBranchWarning";
@@ -77,8 +77,8 @@
             // 
             // pictureBox1
             // 
-            this.pictureBox1.Image = global::GitUI.Properties.Resources.IconWarning;
-            this.pictureBox1.InitialImage = global::GitUI.Properties.Resources.IconWarning;
+            this.pictureBox1.Image = global::GitUI.Properties.Images.Warning;
+            this.pictureBox1.InitialImage = global::GitUI.Properties.Images.Warning;
             this.pictureBox1.Location = new System.Drawing.Point(12, 142);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(21, 20);

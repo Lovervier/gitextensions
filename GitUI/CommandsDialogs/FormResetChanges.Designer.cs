@@ -53,7 +53,7 @@
             this.btnReset.Name = "btnReset";
             this.btnReset.Size = new System.Drawing.Size(95, 25);
             this.btnReset.TabIndex = 1;
-            this.btnReset.Text = "Reset";
+            this.btnReset.Text = "&Reset";
             this.btnReset.UseVisualStyleBackColor = true;
             this.btnReset.Click += new System.EventHandler(this.btnReset_Click);
             // 
@@ -65,7 +65,7 @@
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(95, 25);
             this.btnCancel.TabIndex = 2;
-            this.btnCancel.Text = "Cancel";
+            this.btnCancel.Text = "&Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
@@ -76,7 +76,7 @@
             this.cbDeleteNewFilesAndDirectories.Name = "cbDeleteNewFilesAndDirectories";
             this.cbDeleteNewFilesAndDirectories.Size = new System.Drawing.Size(251, 20);
             this.cbDeleteNewFilesAndDirectories.TabIndex = 3;
-            this.cbDeleteNewFilesAndDirectories.Text = "Also delete new files and/or directories";
+            this.cbDeleteNewFilesAndDirectories.Text = "Also delete &new files and/or directories";
             this.cbDeleteNewFilesAndDirectories.UseVisualStyleBackColor = true;
             // 
             // label2

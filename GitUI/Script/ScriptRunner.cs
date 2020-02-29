@@ -1,481 +1,198 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Security.Policy;
 using System.Windows.Forms;
 using GitCommands;
-using GitCommands.Config;
-using GitUI.HelperDialogs;
+using GitUIPluginInterfaces;
 
 namespace GitUI.Script
 {
     /// <summary>Runs scripts.</summary>
     public static class ScriptRunner
     {
-        /// <summary>Tries to run scripts identified by a <paramref name="command"/> 
-        /// and returns true if any executed.</summary>
-        public static bool ExecuteScriptCommand(IWin32Window owner, GitModule aModule, int command, RevisionGrid revisionGrid = null)
+        /// <summary>Tries to run scripts identified by a <paramref name="command"/></summary>
+        public static CommandStatus ExecuteScriptCommand(IWin32Window owner, GitModule module, int command, IGitUICommands uiCommands, RevisionGridControl revisionGrid)
         {
-            var curScripts = ScriptManager.GetScripts();
-            bool anyScriptExecuted = false;
+            var anyScriptExecuted = false;
+            var needsGridRefresh = false;
 
-            foreach (ScriptInfo s in curScripts)
+            foreach (var script in ScriptManager.GetScripts())
             {
-                if (s.HotkeyCommandIdentifier == command)
+                if (script.HotkeyCommandIdentifier == command)
                 {
-                    RunScript(owner, aModule, s.Name, revisionGrid);
+                    var result = RunScript(owner, module, script.Name, uiCommands, revisionGrid);
                     anyScriptExecuted = true;
+                    needsGridRefresh |= result.NeedsGridRefresh;
                 }
             }
-            return anyScriptExecuted;
+
+            return new CommandStatus(anyScriptExecuted, needsGridRefresh);
         }
 
-        public static bool RunScript(IWin32Window owner, GitModule aModule, string script, RevisionGrid revisionGrid)
+        public static CommandStatus RunScript(IWin32Window owner, IGitModule module, string scriptKey, IGitUICommands uiCommands, RevisionGridControl revisionGrid)
         {
-            if (string.IsNullOrEmpty(script))
-                return false;
+            return RunScript(owner, module, scriptKey, uiCommands, revisionGrid,
+                msg => MessageBox.Show(owner, msg, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error));
+        }
 
-            ScriptInfo scriptInfo = ScriptManager.GetScript(script);
-
-            if (scriptInfo == null)
+        public static CommandStatus RunScript(IWin32Window owner, IGitModule module, string scriptKey, IGitUICommands uiCommands,
+            RevisionGridControl revisionGrid, Action<string> showError)
+        {
+            if (string.IsNullOrEmpty(scriptKey))
             {
-                MessageBox.Show(owner, "Cannot find script: " + script, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
 
-            if (string.IsNullOrEmpty(scriptInfo.Command))
-                return false;
+            var script = ScriptManager.GetScript(scriptKey);
 
-            string argument = scriptInfo.Arguments;
-            foreach (string option in Options)
+            if (script == null)
             {
-                if (string.IsNullOrEmpty(argument) || !argument.Contains(option))
-                    continue;
-                if (!option.StartsWith("{s"))
-                    continue;
-                if (revisionGrid != null)
-                    continue;
-                MessageBox.Show(owner, 
-                    string.Format("Option {0} is only supported when started from revision grid.", option),
-                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                showError("Cannot find script: " + scriptKey);
                 return false;
             }
-            return RunScript(owner, aModule, scriptInfo, revisionGrid);
+
+            if (string.IsNullOrEmpty(script.Command))
+            {
+                return false;
+            }
+
+            string arguments = script.Arguments;
+            if (!string.IsNullOrEmpty(arguments) && revisionGrid == null)
+            {
+                string optionDependingOnSelectedRevision
+                    = ScriptOptionsParser.Options.FirstOrDefault(option => ScriptOptionsParser.DependsOnSelectedRevision(option)
+                        && ScriptOptionsParser.Contains(arguments, option));
+                if (optionDependingOnSelectedRevision != null)
+                {
+                    showError($"Option {optionDependingOnSelectedRevision} is only supported when started with revision grid available.");
+                    return false;
+                }
+            }
+
+            return RunScript(owner, module, script, uiCommands, revisionGrid, showError);
         }
 
-        private static string GetRemotePath(string url)
+        private static CommandStatus RunScript(IWin32Window owner, IGitModule module, ScriptInfo scriptInfo, IGitUICommands uiCommands,
+            RevisionGridControl revisionGrid, Action<string> showError)
         {
-            Uri uri;
-            string path = "";
-            if (Uri.TryCreate(url, UriKind.Absolute, out uri))
-                path = uri.LocalPath;
-            else if (Uri.TryCreate("ssh://" + url.Replace(":", "/"), UriKind.Absolute, out uri))
-                path = uri.LocalPath;
-            int pos = path.LastIndexOf(".");
-            if (pos >= 0)
-                path = path.Substring(0, pos);
-            return path;
-        }
+            if (scriptInfo.AskConfirmation && MessageBox.Show(owner, $"Do you want to execute '{scriptInfo.Name}'?", "Script", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+            {
+                return false;
+            }
 
-        internal static bool RunScript(IWin32Window owner, GitModule aModule, ScriptInfo scriptInfo, RevisionGrid revisionGrid)
-        {
             string originalCommand = scriptInfo.Command;
-            string argument = scriptInfo.Arguments;
+            (string argument, bool abort) = ScriptOptionsParser.Parse(scriptInfo.Arguments, module, owner, revisionGrid);
+            if (abort)
+            {
+                showError($"There must be a revision in order to substitute the argument option(s) for the script to run.");
+                return false;
+            }
 
             string command = OverrideCommandWhenNecessary(originalCommand);
-            var allSelectedRevisions = new List<GitRevision>();
+            command = ExpandCommandVariables(command, module);
 
-            GitRevision selectedRevision = null;
-            GitRevision currentRevision = null;
-
-            var selectedLocalBranches = new List<GitRef>();
-            var selectedRemoteBranches = new List<GitRef>();
-            var selectedRemotes = new List<string>();
-            var selectedBranches = new List<GitRef>();
-            var selectedTags = new List<GitRef>();
-            var currentLocalBranches = new List<GitRef>();
-            var currentRemoteBranches = new List<GitRef>();
-            var currentRemote = "";
-            var currentBranches = new List<GitRef>();
-            var currentTags = new List<GitRef>();
-
-            foreach (string option in Options)
+            if (scriptInfo.IsPowerShell)
             {
-                if (string.IsNullOrEmpty(argument) || !argument.Contains(option))
-                    continue;
-                if (option.StartsWith("{c") && currentRevision == null)
-                {
-                    currentRevision = GetCurrentRevision(aModule, revisionGrid, currentTags, currentLocalBranches, currentRemoteBranches, currentBranches, currentRevision);
+                PowerShellHelper.RunPowerShell(command, argument, module.WorkingDir, scriptInfo.RunInBackground);
 
-                    if (currentLocalBranches.Count == 1)
-                        currentRemote = aModule.GetSetting(string.Format("branch.{0}.remote", currentLocalBranches[0].Name));
-                    else
+                // 'RunPowerShell' always runs the script detached (yet).
+                // Hence currently, it does not make sense to set 'needsGridRefresh' to '!scriptInfo.RunInBackground'.
+                return new CommandStatus(executed: true, needsGridRefresh: false);
+            }
+
+            if (command.StartsWith(PluginPrefix))
+            {
+                command = command.Replace(PluginPrefix, "");
+                foreach (var plugin in PluginRegistry.Plugins)
+                {
+                    if (plugin.Description.ToLower().Equals(command, StringComparison.CurrentCultureIgnoreCase))
                     {
-                        currentRemote = aModule.GetCurrentRemote();
-                        if (string.IsNullOrEmpty(currentRemote))
-                            currentRemote = aModule.GetSetting(string.Format("branch.{0}.remote",
-                                askToSpecify(currentLocalBranches, "Current Revision Branch")));
+                        var eventArgs = new GitUIEventArgs(owner, uiCommands);
+                        return new CommandStatus(executed: true, needsGridRefresh: plugin.Execute(eventArgs));
                     }
                 }
-                else if (option.StartsWith("{s") && selectedRevision == null && revisionGrid != null)
+
+                return false;
+            }
+
+            if (command.StartsWith(NavigateToPrefix))
+            {
+                if (revisionGrid == null)
                 {
-                    allSelectedRevisions = revisionGrid.GetSelectedRevisions();
-                    allSelectedRevisions.Reverse(); // Put first clicked revisions first
-                    selectedRevision = CalculateSelectedRevision(revisionGrid, selectedRemoteBranches, selectedRemotes, selectedLocalBranches, selectedBranches, selectedTags);
+                    return false;
                 }
 
-                string remote;
-                string url;
-                switch (option)
+                command = command.Replace(NavigateToPrefix, string.Empty);
+                if (!command.IsNullOrEmpty())
                 {
-                    case "{sHashes}":
-                        argument = argument.Replace(option,
-                            string.Join(" ", allSelectedRevisions.Select(revision => revision.Guid).ToArray()));
-                        break;
-                    case "{sTag}":
-                        if (selectedTags.Count == 1)
-                            argument = argument.Replace(option, selectedTags[0].Name);
-                        else if (selectedTags.Count != 0)
-                            argument = argument.Replace(option, askToSpecify(selectedTags, "Selected Revision Tag"));
-                        else
-                            argument = argument.Replace(option, "");
-                        break;
-                    case "{sBranch}":
-                        if (selectedBranches.Count == 1)
-                            argument = argument.Replace(option, selectedBranches[0].Name);
-                        else if (selectedBranches.Count != 0)
-                            argument = argument.Replace(option,
-                                                        askToSpecify(selectedBranches, "Selected Revision Branch"));
-                        else
-                            argument = argument.Replace(option, "");
-                        break;
-                    case "{sLocalBranch}":
-                        if (selectedLocalBranches.Count == 1)
-                            argument = argument.Replace(option, selectedLocalBranches[0].Name);
-                        else if (selectedLocalBranches.Count != 0)
-                            argument = argument.Replace(option,
-                                                        askToSpecify(selectedLocalBranches,
-                                                                     "Selected Revision Local Branch"));
-                        else
-                            argument = argument.Replace(option, "");
-                        break;
-                    case "{sRemoteBranch}":
-                        if (selectedRemoteBranches.Count == 1)
-                            argument = argument.Replace(option, selectedRemoteBranches[0].Name);
-                        else if (selectedRemoteBranches.Count != 0)
-                            argument = argument.Replace(option,
-                                                        askToSpecify(selectedRemoteBranches,
-                                                                     "Selected Revision Remote Branch"));
-                        else
-                            argument = argument.Replace(option, "");
-                        break;
-                    case "{sRemote}":
-                        if (selectedRemotes.Count == 0)
-                        {
-                            argument = argument.Replace(option, "");
-                            break;
-                        }
-                        if (selectedRemotes.Count == 1)
-                            remote = selectedRemotes[0];
-                        else
-                            remote = askToSpecify(selectedRemotes, "Selected Revision Remote");
-                        argument = argument.Replace(option, remote);
-                        break;
-                    case "{sRemoteUrl}":
-                        if (selectedRemotes.Count == 0)
-                        {
-                            argument = argument.Replace(option, "");
-                            break;
-                        }
-                        if (selectedRemotes.Count == 1)
-                            remote = selectedRemotes[0];
-                        else
-                            remote = askToSpecify(selectedRemotes, "Selected Revision Remote");
-                        url = aModule.GetPathSetting(string.Format(SettingKeyString.RemoteUrl, remote));
-                        argument = argument.Replace(option, url);
-                        break;
-                    case "{sRemotePathFromUrl}":
-                        if (selectedRemotes.Count == 0)
-                        {
-                            argument = argument.Replace(option, "");
-                            break;
-                        }
-                        if (selectedRemotes.Count == 1)
-                            remote = selectedRemotes[0];
-                        else
-                            remote = askToSpecify(selectedRemotes, "Selected Revision Remote");
-                        url = aModule.GetPathSetting(string.Format(SettingKeyString.RemoteUrl, remote));
-                        argument = argument.Replace(option, GetRemotePath(url));
-                        break;
-                    case "{sHash}":
-                        argument = argument.Replace(option, selectedRevision.Guid);
-                        break;
-                    case "{sMessage}":
-                        argument = argument.Replace(option, selectedRevision.Subject);
-                        break;
-                    case "{sAuthor}":
-                        argument = argument.Replace(option, selectedRevision.Author);
-                        break;
-                    case "{sCommitter}":
-                        argument = argument.Replace(option, selectedRevision.Committer);
-                        break;
-                    case "{sAuthorDate}":
-                        argument = argument.Replace(option, selectedRevision.AuthorDate.ToString());
-                        break;
-                    case "{sCommitDate}":
-                        argument = argument.Replace(option, selectedRevision.CommitDate.ToString());
-                        break;
-                    case "{cTag}":
-                        if (currentTags.Count == 1)
-                            argument = argument.Replace(option, currentTags[0].Name);
-                        else if (currentTags.Count != 0)
-                            argument = argument.Replace(option, askToSpecify(currentTags, "Current Revision Tag"));
-                        else
-                            argument = argument.Replace(option, "");
-                        break;
-                    case "{cBranch}":
-                        if (currentBranches.Count == 1)
-                            argument = argument.Replace(option, currentBranches[0].Name);
-                        else if (currentBranches.Count != 0)
-                            argument = argument.Replace(option,
-                                                        askToSpecify(currentBranches, "Current Revision Branch"));
-                        else
-                            argument = argument.Replace(option, "");
-                        break;
-                    case "{cLocalBranch}":
-                        if (currentLocalBranches.Count == 1)
-                            argument = argument.Replace(option, currentLocalBranches[0].Name);
-                        else if (currentLocalBranches.Count != 0)
-                            argument = argument.Replace(option,
-                                                        askToSpecify(currentLocalBranches,
-                                                                     "Current Revision Local Branch"));
-                        else
-                            argument = argument.Replace(option, "");
-                        break;
-                    case "{cRemoteBranch}":
-                        if (currentRemoteBranches.Count == 1)
-                            argument = argument.Replace(option, currentRemoteBranches[0].Name);
-                        else if (currentRemoteBranches.Count != 0)
-                            argument = argument.Replace(option,
-                                                        askToSpecify(currentRemoteBranches,
-                                                                     "Current Revision Remote Branch"));
-                        else
-                            argument = argument.Replace(option, "");
-                        break;
-                    case "{cHash}":
-                        argument = argument.Replace(option, currentRevision.Guid);
-                        break;
-                    case "{cMessage}":
-                        argument = argument.Replace(option, currentRevision.Subject);
-                        break;
-                    case "{cAuthor}":
-                        argument = argument.Replace(option, currentRevision.Author);
-                        break;
-                    case "{cCommitter}":
-                        argument = argument.Replace(option, currentRevision.Committer);
-                        break;
-                    case "{cAuthorDate}":
-                        argument = argument.Replace(option, currentRevision.AuthorDate.ToString());
-                        break;
-                    case "{cCommitDate}":
-                        argument = argument.Replace(option, currentRevision.CommitDate.ToString());
-                        break;
-                    case "{cDefaultRemote}":
-                        if (string.IsNullOrEmpty(currentRemote))
-                        {
-                            argument = argument.Replace(option, "");
-                            break;
-                        }
-                        argument = argument.Replace(option, currentRemote);
-                        break;
-                    case "{cDefaultRemoteUrl}":
-                        if (string.IsNullOrEmpty(currentRemote))
-                        {
-                            argument = argument.Replace(option, "");
-                            break;
-                        }
-                        url = aModule.GetPathSetting(string.Format(SettingKeyString.RemoteUrl, currentRemote));
-                        argument = argument.Replace(option, url);
-                        break;
-                    case "{cDefaultRemotePathFromUrl}":
-                        if (string.IsNullOrEmpty(currentRemote))
-                        {
-                            argument = argument.Replace(option, "");
-                            break;
-                        }
-                        url = aModule.GetPathSetting(string.Format(SettingKeyString.RemoteUrl, currentRemote));
-                        argument = argument.Replace(option, GetRemotePath(url));
-                        break;
-                    case "{UserInput}":
-                        using (SimplePrompt Prompt = new SimplePrompt())
-                        {
-                            Prompt.ShowDialog();
-                            argument = argument.Replace(option, Prompt.UserInput);
-                        }
-                        break;
-                    case "{WorkingDir}":
-                        argument = argument.Replace(option, aModule.WorkingDir);
-                        break;
+                    var revisionRef = new Executable(command, module.WorkingDir).GetOutputLines(argument).FirstOrDefault();
+
+                    if (revisionRef != null)
+                    {
+                        revisionGrid.GoToRef(revisionRef, true);
+                    }
                 }
+
+                return new CommandStatus(executed: true, needsGridRefresh: false);
             }
-            command = ExpandCommandVariables(command,aModule);
 
             if (!scriptInfo.RunInBackground)
-                FormProcess.ShowDialog(owner, command, argument, aModule.WorkingDir, null, true);
+            {
+                FormProcess.ShowStandardProcessDialog(owner, command, argument, module.WorkingDir, null, true);
+            }
             else
             {
                 if (originalCommand.Equals("{openurl}", StringComparison.CurrentCultureIgnoreCase))
+                {
                     Process.Start(argument);
-                else
-                    aModule.RunExternalCmdDetached(command, argument);
-            }
-            return !scriptInfo.RunInBackground;
-        }
-
-        private static string ExpandCommandVariables(string originalCommand, GitModule aModule)
-        {
-            return originalCommand.Replace("{WorkingDir}", aModule.WorkingDir);
-           
-        }
-
-        private static GitRevision CalculateSelectedRevision(RevisionGrid revisionGrid, List<GitRef> selectedRemoteBranches,
-                                                             List<string> selectedRemotes, List<GitRef> selectedLocalBranches,
-                                                             List<GitRef> selectedBranches, List<GitRef> selectedTags)
-        {
-            GitRevision selectedRevision = revisionGrid.GetRevision(revisionGrid.LastRowIndex);
-            foreach (GitRef head in selectedRevision.Refs)
-            {
-                if (head.IsTag)
-                    selectedTags.Add(head);
-
-                else if (head.IsHead || head.IsRemote)
-                {
-                    selectedBranches.Add(head);
-                    if (head.IsRemote)
-                    {
-                        selectedRemoteBranches.Add(head);
-                        if (!selectedRemotes.Contains(head.Remote))
-                            selectedRemotes.Add(head.Remote);
-                    }
-                    else
-                        selectedLocalBranches.Add(head);
-                }
-            }
-            return selectedRevision;
-        }
-
-        private static GitRevision GetCurrentRevision(GitModule aModule, RevisionGrid RevisionGrid, List<GitRef> currentTags, List<GitRef> currentLocalBranches,
-                                                      List<GitRef> currentRemoteBranches, List<GitRef> currentBranches,
-                                                      GitRevision currentRevision)
-        {
-            if (currentRevision == null)
-            {
-                IList<GitRef> refs;
-
-                if (RevisionGrid == null)
-                {
-                    string currentRevisionGuid = aModule.GetCurrentCheckout();
-                    refs = aModule.GetRefs(true, true).Where(gitRef => gitRef.Guid == currentRevisionGuid).ToList();
                 }
                 else
                 {
-                    currentRevision = RevisionGrid.GetCurrentRevision();
-                    refs = currentRevision.Refs;
-                }
-
-                foreach (GitRef gitRef in refs)
-                {
-                    if (gitRef.IsTag)
-                        currentTags.Add(gitRef);
-                    else if (gitRef.IsHead || gitRef.IsRemote)
-                    {
-                        currentBranches.Add(gitRef);
-                        if (gitRef.IsRemote)
-                            currentRemoteBranches.Add(gitRef);
-                        else
-                            currentLocalBranches.Add(gitRef);
-                    }
+                    new Executable(command, module.WorkingDir).Start(argument);
                 }
             }
-            return currentRevision;
+
+            return new CommandStatus(executed: true, needsGridRefresh: !scriptInfo.RunInBackground);
         }
 
-        private static string[] Options
+        private static string ExpandCommandVariables(string originalCommand, IGitModule module)
         {
-            get
-            {
-                string[] options =
-                    {
-                        "{sHashes}",
-                        "{sTag}",
-                        "{sBranch}",
-                        "{sLocalBranch}",
-                        "{sRemoteBranch}",
-                        "{sRemote}",
-                        "{sRemoteUrl}",
-                        "{sRemotePathFromUrl}",
-                        "{sHash}",
-                        "{sMessage}",
-                        "{sAuthor}",
-                        "{sCommitter}",
-                        "{sAuthorDate}",
-                        "{sCommitDate}",
-                        "{cTag}",
-                        "{cBranch}",
-                        "{cLocalBranch}",
-                        "{cRemoteBranch}",
-                        "{cHash}",
-                        "{cMessage}",
-                        "{cAuthor}",
-                        "{cCommitter}",
-                        "{cAuthorDate}",
-                        "{cCommitDate}",
-                        "{cDefaultRemote}",
-                        "{cDefaultRemoteUrl}",
-                        "{cDefaultRemotePathFromUrl}",
-                        "{UserInput}",
-                        "{WorkingDir}"
-                    };
-                return options;
-            }
+            return originalCommand.Replace("{WorkingDir}", module.WorkingDir);
         }
+
+        private const string PluginPrefix = "plugin:";
+        private const string NavigateToPrefix = "navigateTo:";
 
         private static string OverrideCommandWhenNecessary(string originalCommand)
         {
-            //Make sure we are able to run git, even if git is not in the path
+            // Make sure we are able to run git, even if git is not in the path
             if (originalCommand.Equals("git", StringComparison.CurrentCultureIgnoreCase) ||
                 originalCommand.Equals("{git}", StringComparison.CurrentCultureIgnoreCase))
+            {
                 return AppSettings.GitCommand;
+            }
 
             if (originalCommand.Equals("gitextensions", StringComparison.CurrentCultureIgnoreCase) ||
                 originalCommand.Equals("{gitextensions}", StringComparison.CurrentCultureIgnoreCase) ||
                 originalCommand.Equals("gitex", StringComparison.CurrentCultureIgnoreCase) ||
                 originalCommand.Equals("{gitex}", StringComparison.CurrentCultureIgnoreCase))
+            {
                 return AppSettings.GetGitExtensionsFullPath();
+            }
 
             if (originalCommand.Equals("{openurl}", StringComparison.CurrentCultureIgnoreCase))
+            {
                 return "explorer";
+            }
+
+            // Prefix should be {plugin:pluginname},{plugin=pluginname}
+            var match = System.Text.RegularExpressions.Regex.Match(originalCommand, @"\{plugin.(.+)\}", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            if (match.Success && match.Groups.Count > 1)
+            {
+                originalCommand = $"{PluginPrefix}{match.Groups[1].Value.ToLower()}";
+            }
+
             return originalCommand;
-        }
-
-        private static string askToSpecify(IEnumerable<GitRef> options, string title)
-        {
-            using (var f = new FormRunScriptSpecify(options, title))
-            {
-                f.ShowDialog();
-                return f.ret;
-            }
-        }
-
-        private static string askToSpecify(IEnumerable<string> options, string title)
-        {
-            using (var f = new FormRunScriptSpecify(options, title))
-            {
-                f.ShowDialog();
-                return f.ret;
-            }
         }
     }
 }

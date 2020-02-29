@@ -1,24 +1,18 @@
-<?xml version="1.0" ?><xliff GitExVersion="2.49a1" version="1.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<?xml version="1.0" ?><xliff GitExVersion="4.0.0" version="1.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <file datatype="plaintext" original="AppVeyorSettingsUserControl" source-language="en">
+    <body>
+      <trans-unit id="cbLoadTestResults.Text">
+        <source>Display test results in build status summary for each build result (network intensive!)</source>
+        <target>[Ḓīşƥŀȧẏ ŧḗşŧ řḗşŭŀŧş īƞ ƀŭīŀḓ şŧȧŧŭş şŭḿḿȧřẏ ƒǿř ḗȧƈħ ƀŭīŀḓ řḗşŭŀŧ (ƞḗŧẇǿřķ īƞŧḗƞşīṽḗ!) ΰΰ靐ǋǲςϰ ϑΰǈı ǲ]</target>
+        
+      </trans-unit>
+    </body>
+  </file>
   <file datatype="plaintext" original="AutoCompileSubModulesPlugin" source-language="en">
     <body>
       <trans-unit id="Description.Text">
         <source>Auto compile SubModules</source>
-        <target>[Ȧŭŧǿ ƈǿḿƥīŀḗ ŞŭƀḾǿḓŭŀḗş ıϰΰ靐 ςΐϖǲıǅ]</target>
-        
-      </trans-unit>
-      <trans-unit id="MsBuildArguments.Caption">
-        <source>msbuild.exe arguments</source>
-        <target>[ḿşƀŭīŀḓ.ḗẋḗ ȧřɠŭḿḗƞŧş ıϰẛǋẛǲǋ鶱ϖϰ]</target>
-        
-      </trans-unit>
-      <trans-unit id="MsBuildEnabled.Caption">
-        <source>Enabled</source>
-        <target>[Ḗƞȧƀŀḗḓ ǈǈǋ衋ſ靐靐]</target>
-        
-      </trans-unit>
-      <trans-unit id="MsBuildPath.Caption">
-        <source>Path to msbuild.exe</source>
-        <target>[Ƥȧŧħ ŧǿ ḿşƀŭīŀḓ.ḗẋḗ 靐ϱſϕ ǈ衋 ſǈϑ]</target>
+        <target>[Ȧŭŧǿ ƈǿḿƥīŀḗ ŞŭƀḾǿḓŭŀḗş 衋ǈǈϐ ıΰϱǅ衋ǋ]</target>
         
       </trans-unit>
       <trans-unit id="_doYouWantBuild.Text">
@@ -27,41 +21,256 @@
 {1}</source>
         <target>[Ḓǿ ẏǿŭ ẇȧƞŧ ŧǿ ƀŭīŀḓ {0}?
 
-{1} ẛ衋 ΰϕς ǅǅ衋]</target>
+{1} ǅϵ ϰıǋ ΐ衋衋]</target>
         
       </trans-unit>
       <trans-unit id="_enterCorrectMsBuildPath.Text">
         <source>Please enter correct MSBuild path in the plugin settings dialog and try again.</source>
-        <target>[Ƥŀḗȧşḗ ḗƞŧḗř ƈǿřřḗƈŧ ḾŞƁŭīŀḓ ƥȧŧħ īƞ ŧħḗ ƥŀŭɠīƞ şḗŧŧīƞɠş ḓīȧŀǿɠ ȧƞḓ ŧřẏ ȧɠȧīƞ. 鶱ϑϕ靐ϱϕ ǋǋϐϑϰ]</target>
+        <target>[Ƥŀḗȧşḗ ḗƞŧḗř ƈǿřřḗƈŧ ḾŞƁŭīŀḓ ƥȧŧħ īƞ ŧħḗ ƥŀŭɠīƞ şḗŧŧīƞɠş ḓīȧŀǿɠ ȧƞḓ ŧřẏ ȧɠȧīƞ. ϑǋẛϱϱΰ ϑ靐ſϑ鶱]</target>
+        
+      </trans-unit>
+      <trans-unit id="_msBuildArguments.Caption">
+        <source>msbuild.exe arguments</source>
+        <target>[ḿşƀŭīŀḓ.ḗẋḗ ȧřɠŭḿḗƞŧş ϖſıϐǋ鶱ϐǲǈΐ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_msBuildEnabled.Caption">
+        <source>Enabled</source>
+        <target>[Ḗƞȧƀŀḗḓ ǅϑǋǲΐǲϕ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_msBuildPath.Caption">
+        <source>Path to msbuild.exe</source>
+        <target>[Ƥȧŧħ ŧǿ ḿşƀŭīŀḓ.ḗẋḗ ϑϱΐ靐 衋ϱ ſϱ靐]</target>
         
       </trans-unit>
     </body>
   </file>
   <file datatype="plaintext" original="BackgroundFetchPlugin" source-language="en">
     <body>
-      <trans-unit id="AutoRefresh.Caption">
+      <trans-unit id="Description.Text">
+        <source>Periodic background fetch</source>
+        <target>[Ƥḗřīǿḓīƈ ƀȧƈķɠřǿŭƞḓ ƒḗŧƈħ ǋ靐ϐϕϕıϑǋ ΐ靐]</target>
+        
+      </trans-unit>
+      <trans-unit id="_autoRefresh.Caption">
         <source>Refresh view after fetch</source>
-        <target>[Řḗƒřḗşħ ṽīḗẇ ȧƒŧḗř ƒḗŧƈħ ϰǋϕςϖ鶱ı ǋẛ]</target>
+        <target>[Řḗƒřḗşħ ṽīḗẇ ȧƒŧḗř ƒḗŧƈħ ϕΐϖϐΰ衋ϑ ϖ鶱]</target>
+        
+      </trans-unit>
+      <trans-unit id="_fetchAllSubmodules.Caption">
+        <source>Fetch all submodules</source>
+        <target>[Ƒḗŧƈħ ȧŀŀ şŭƀḿǿḓŭŀḗş 衋ſǅǈϰ ΐǲϵ ϰǈ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_fetchInterval.Caption">
+        <source>Fetch every (seconds) - set to 0 to disable</source>
+        <target>[Ƒḗŧƈħ ḗṽḗřẏ (şḗƈǿƞḓş) - şḗŧ ŧǿ 0 ŧǿ ḓīşȧƀŀḗ ϑǲςǲǲ ϰϵ衋ϑ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_gitCommand.Caption">
+        <source>Arguments of git command to run</source>
+        <target>[Ȧřɠŭḿḗƞŧş ǿƒ ɠīŧ ƈǿḿḿȧƞḓ ŧǿ řŭƞ ſǈϵſϰςǅǲ衋 ϖ]</target>
+        
+      </trans-unit>
+    </body>
+  </file>
+  <file datatype="plaintext" original="BitbucketPlugin" source-language="en">
+    <body>
+      <trans-unit id="BitbucketBaseUrl.Caption">
+        <source>Specify the base URL to Bitbucket</source>
+        <target>[Şƥḗƈīƒẏ ŧħḗ ƀȧşḗ ŬŘĿ ŧǿ Ɓīŧƀŭƈķḗŧ 靐ϱǈǈϰǲΰ ǈǲ]</target>
+        
+      </trans-unit>
+      <trans-unit id="BitbucketDisableSsl.Caption">
+        <source>Disable SSL verification</source>
+        <target>[Ḓīşȧƀŀḗ ŞŞĿ ṽḗřīƒīƈȧŧīǿƞ ıǲϰǈǲΐϐ ϰǲ]</target>
+        
+      </trans-unit>
+      <trans-unit id="BitbucketPassword.Caption">
+        <source>Bitbucket Password</source>
+        <target>[Ɓīŧƀŭƈķḗŧ Ƥȧşşẇǿřḓ ϵϕϐǈϖϵϖẛΰ]</target>
+        
+      </trans-unit>
+      <trans-unit id="BitbucketUsername.Caption">
+        <source>Bitbucket Username</source>
+        <target>[Ɓīŧƀŭƈķḗŧ Ŭşḗřƞȧḿḗ 鶱ϕϰϵǋΰΰ鶱ǅ]</target>
         
       </trans-unit>
       <trans-unit id="Description.Text">
-        <source>Periodic background fetch</source>
-        <target>[Ƥḗřīǿḓīƈ ƀȧƈķɠřǿŭƞḓ ƒḗŧƈħ 鶱鶱ϖϱẛϵ靐ς ϖΐ]</target>
+        <source>Bitbucket Server</source>
+        <target>[Ɓīŧƀŭƈķḗŧ Şḗřṽḗř ςϱ衋ϑ衋ẛΰϱǲ ϵ]</target>
         
       </trans-unit>
-      <trans-unit id="FetchAllSubmodules.Caption">
-        <source>Fetch all submodules</source>
-        <target>[Ƒḗŧƈħ ȧŀŀ şŭƀḿǿḓŭŀḗş ΐǅϰẛǋ ΰǲǋ ǋΐ]</target>
+      <trans-unit id="_yourRepositoryIsNotInBitbucket.Text">
+        <source>Your repository is not hosted in BitBucket Server.</source>
+        <target>[Ẏǿŭř řḗƥǿşīŧǿřẏ īş ƞǿŧ ħǿşŧḗḓ īƞ ƁīŧƁŭƈķḗŧ Şḗřṽḗř. ǋǅẛΰ ϕ鶱]</target>
         
       </trans-unit>
-      <trans-unit id="FetchInterval.Caption">
-        <source>Fetch every (seconds) - set to 0 to disable</source>
-        <target>[Ƒḗŧƈħ ḗṽḗřẏ (şḗƈǿƞḓş) - şḗŧ ŧǿ 0 ŧǿ ḓīşȧƀŀḗ ΐǅςςϱ 鶱ẛΰǅ]</target>
+    </body>
+  </file>
+  <file datatype="plaintext" original="BitbucketPullRequestForm" source-language="en">
+    <body>
+      <trans-unit id="$this.Text">
+        <source>Bitbucket Server</source>
+        <target>[Ɓīŧƀŭƈķḗŧ Şḗřṽḗř ϰ靐ϰϐϑϑϑ靐ϑ ϰ]</target>
         
       </trans-unit>
-      <trans-unit id="GitCommand.Caption">
-        <source>Arguments of git command to run</source>
-        <target>[Ȧřɠŭḿḗƞŧş ǿƒ ɠīŧ ƈǿḿḿȧƞḓ ŧǿ řŭƞ ϵǈϱϱǋϖϖ衋ϑ ϰ]</target>
+      <trans-unit id="_committed.Text">
+        <source>{0} committed
+{1}</source>
+        <target>[{0} ƈǿḿḿīŧŧḗḓ
+{1} ϕſſ ǅϰıϕ靐ıϖϑ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_error.Text">
+        <source>Error</source>
+        <target>[Ḗřřǿř 鶱ı鶱ϖǋ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_linkLabelToolTip.Text">
+        <source>Right-click to copy link</source>
+        <target>[Řīɠħŧ-ƈŀīƈķ ŧǿ ƈǿƥẏ ŀīƞķ ǋϖϕǋϱ鶱ϑςςſ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_success.Text">
+        <source>Success</source>
+        <target>[Şŭƈƈḗşş ẛıǅẛϰς衋]</target>
+        
+      </trans-unit>
+      <trans-unit id="btnApprove.Text">
+        <source>Approve</source>
+        <target>[Ȧƥƥřǿṽḗ ϱǈΐſ靐ǲϰ]</target>
+        
+      </trans-unit>
+      <trans-unit id="btnCreate.Text">
+        <source>Create</source>
+        <target>[Ƈřḗȧŧḗ ϕǋ鶱ΰſǲ]</target>
+        
+      </trans-unit>
+      <trans-unit id="btnMerge.Text">
+        <source>Merge</source>
+        <target>[Ḿḗřɠḗ ϖϑǈϱϑ]</target>
+        
+      </trans-unit>
+      <trans-unit id="groupBoxCreatePullRequest.Text">
+        <source>Pull Request Info</source>
+        <target>[Ƥŭŀŀ Řḗɋŭḗşŧ Īƞƒǿ ϐςǋǈ ϰ鶱ǲϖςǈǅ]</target>
+        
+      </trans-unit>
+      <trans-unit id="groupBoxInformation.Text">
+        <source>Information</source>
+        <target>[Īƞƒǿřḿȧŧīǿƞ ϰẛςǅΐǋ靐靐ϖǅǋ]</target>
+        
+      </trans-unit>
+      <trans-unit id="groupBoxPullRequestInfo.Text">
+        <source>Pull Request Info</source>
+        <target>[Ƥŭŀŀ Řḗɋŭḗşŧ Īƞƒǿ ǈϑǲϰ ſΐϰǈſ靐靐]</target>
+        
+      </trans-unit>
+      <trans-unit id="groupBoxSource.Text">
+        <source>Source</source>
+        <target>[Şǿŭřƈḗ ϐϕẛϰǋ鶱]</target>
+        
+      </trans-unit>
+      <trans-unit id="groupBoxSourceRepoView.Text">
+        <source>Source</source>
+        <target>[Şǿŭřƈḗ ϑẛϐ鶱鶱ǅ]</target>
+        
+      </trans-unit>
+      <trans-unit id="groupBoxTarget.Text">
+        <source>Target</source>
+        <target>[Ŧȧřɠḗŧ ϕ鶱衋ϱǋϐ]</target>
+        
+      </trans-unit>
+      <trans-unit id="groupBoxTargetRepoView.Text">
+        <source>Target</source>
+        <target>[Ŧȧřɠḗŧ ϑǈϵſǅſ]</target>
+        
+      </trans-unit>
+      <trans-unit id="lblAuthor.Text">
+        <source>Author</source>
+        <target>[Ȧŭŧħǿř ıϵϕ靐靐ϱ]</target>
+        
+      </trans-unit>
+      <trans-unit id="lblBranchView.Text">
+        <source>Branch</source>
+        <target>[Ɓřȧƞƈħ 靐ẛ衋ϰǋſ]</target>
+        
+      </trans-unit>
+      <trans-unit id="lblDescription.Text">
+        <source>Description</source>
+        <target>[Ḓḗşƈřīƥŧīǿƞ ǋϑǲ衋ϱϐΐǅǅǅϰ]</target>
+        
+      </trans-unit>
+      <trans-unit id="lblDescriptionView.Text">
+        <source>Description</source>
+        <target>[Ḓḗşƈřīƥŧīǿƞ ẛẛǲςΐǈǈϑΐ靐ΰ]</target>
+        
+      </trans-unit>
+      <trans-unit id="lblRepositoryView.Text">
+        <source>Repository</source>
+        <target>[Řḗƥǿşīŧǿřẏ 靐ςϕϐ衋ſſϕϐϵ]</target>
+        
+      </trans-unit>
+      <trans-unit id="lblReviewerView.Text">
+        <source>Reviewer (approved)</source>
+        <target>[Řḗṽīḗẇḗř (ȧƥƥřǿṽḗḓ) ϖẛϕǈſΰǈϑ ϐǈ]</target>
+        
+      </trans-unit>
+      <trans-unit id="lblSourceBranch.Text">
+        <source>Branch</source>
+        <target>[Ɓřȧƞƈħ ϐϵϑϕſẛ]</target>
+        
+      </trans-unit>
+      <trans-unit id="lblSourceRepoView.Text">
+        <source>Repository</source>
+        <target>[Řḗƥǿşīŧǿřẏ ǋςϖ靐ϰϕΐǲǋǲ]</target>
+        
+      </trans-unit>
+      <trans-unit id="lblSourceRepository.Text">
+        <source>Repository</source>
+        <target>[Řḗƥǿşīŧǿřẏ ϕ鶱ſ鶱ϰıΐΰϰϵ]</target>
+        
+      </trans-unit>
+      <trans-unit id="lblState.Text">
+        <source>State</source>
+        <target>[Şŧȧŧḗ 靐靐ϱϕϐ]</target>
+        
+      </trans-unit>
+      <trans-unit id="lblTargetBranch.Text">
+        <source>Branch</source>
+        <target>[Ɓřȧƞƈħ 衋ıϐẛς鶱]</target>
+        
+      </trans-unit>
+      <trans-unit id="lblTargetRepoView.Text">
+        <source>Branch</source>
+        <target>[Ɓřȧƞƈħ 靐ϑı衋ΰϰ]</target>
+        
+      </trans-unit>
+      <trans-unit id="lblTargetRepository.Text">
+        <source>Repository</source>
+        <target>[Řḗƥǿşīŧǿřẏ ǈϰ衋ϖǋϵΰıſǲ]</target>
+        
+      </trans-unit>
+      <trans-unit id="lblTitle.Text">
+        <source>Title</source>
+        <target>[Ŧīŧŀḗ ǲϑǈϐẛ]</target>
+        
+      </trans-unit>
+      <trans-unit id="lblTitleView.Text">
+        <source>Title</source>
+        <target>[Ŧīŧŀḗ ϱǋϐǈǈ]</target>
+        
+      </trans-unit>
+      <trans-unit id="tabCreate.Text">
+        <source>Create Pull Request</source>
+        <target>[Ƈřḗȧŧḗ Ƥŭŀŀ Řḗɋŭḗşŧ ϕ衋ϵẛǈϑ ẛϕϱ靐]</target>
+        
+      </trans-unit>
+      <trans-unit id="tabView.Text">
+        <source>View Pull Requests</source>
+        <target>[Ṽīḗẇ Ƥŭŀŀ Řḗɋŭḗşŧş ǅϖ靐靐 靐ϑǲϵ]</target>
         
       </trans-unit>
     </body>
@@ -70,22 +279,17 @@
     <body>
       <trans-unit id="$this.Text">
         <source>Create local tracking branches</source>
-        <target>[Ƈřḗȧŧḗ ŀǿƈȧŀ ŧřȧƈķīƞɠ ƀřȧƞƈħḗş ϵ靐ẛſ鶱ı 鶱ϕǲ]</target>
-        
-      </trans-unit>
-      <trans-unit id="Remote.Text">
-        <source>origin</source>
-        <target>[ǿřīɠīƞ ϕǲſǅςς]</target>
+        <target>[Ƈřḗȧŧḗ ŀǿƈȧŀ ŧřȧƈķīƞɠ ƀřȧƞƈħḗş ϑǋςϑϵς ϖſı]</target>
         
       </trans-unit>
       <trans-unit id="button1.Text">
         <source>Create local tracking branches</source>
-        <target>[Ƈřḗȧŧḗ ŀǿƈȧŀ ŧřȧƈķīƞɠ ƀřȧƞƈħḗş ſǅǋϰΰẛ ẛẛı]</target>
+        <target>[Ƈřḗȧŧḗ ŀǿƈȧŀ ŧřȧƈķīƞɠ ƀřȧƞƈħḗş ϵıϱıϖẛ ΐı衋]</target>
         
       </trans-unit>
       <trans-unit id="label1.Text">
         <source>Remote to create tracking branches for</source>
-        <target>[Řḗḿǿŧḗ ŧǿ ƈřḗȧŧḗ ŧřȧƈķīƞɠ ƀřȧƞƈħḗş ƒǿř ǅϐϑϕϐſ 衋ǈ ǈ]</target>
+        <target>[Řḗḿǿŧḗ ŧǿ ƈřḗȧŧḗ ŧřȧƈķīƞɠ ƀřȧƞƈħḗş ƒǿř ǲ靐ǋǈϐϕ ǅ鶱 ǋ]</target>
         
       </trans-unit>
     </body>
@@ -94,7 +298,7 @@
     <body>
       <trans-unit id="Description.Text">
         <source>Create local tracking branches</source>
-        <target>[Ƈřḗȧŧḗ ŀǿƈȧŀ ŧřȧƈķīƞɠ ƀřȧƞƈħḗş ΐǈǋϐϕϖ 衋ǋϵ]</target>
+        <target>[Ƈřḗȧŧḗ ŀǿƈȧŀ ŧřȧƈķīƞɠ ƀřȧƞƈħḗş ϰς衋ϐΐı ϵ靐ϖ]</target>
         
       </trans-unit>
     </body>
@@ -103,106 +307,205 @@
     <body>
       <trans-unit id="$this.Text">
         <source>Delete obsolete branches</source>
-        <target>[Ḓḗŀḗŧḗ ǿƀşǿŀḗŧḗ ƀřȧƞƈħḗş ǈ鶱ΐſϕϕ 靐ẛΐ]</target>
+        <target>[Ḓḗŀḗŧḗ ǿƀşǿŀḗŧḗ ƀřȧƞƈħḗş ϐ衋ẛϵǋϑ ẛϰǅ]</target>
         
       </trans-unit>
       <trans-unit id="Author.HeaderText">
         <source>Last author</source>
-        <target>[Ŀȧşŧ ȧŭŧħǿř ǈΰǲ鶱 ϑϕıϰẛſ]</target>
+        <target>[Ŀȧşŧ ȧŭŧħǿř ſ靐ı衋 ıǲϵΰϰϕ]</target>
         
       </trans-unit>
       <trans-unit id="Cancel.Text">
         <source>Close</source>
-        <target>[Ƈŀǿşḗ ϵϵǋ衋ς]</target>
+        <target>[Ƈŀǿşḗ ΰ鶱ϱϖǲ]</target>
         
       </trans-unit>
       <trans-unit id="Delete.Text">
         <source>Delete</source>
-        <target>[Ḓḗŀḗŧḗ ΐϕϐϖǅϑ]</target>
+        <target>[Ḓḗŀḗŧḗ ΐ靐ϐſϖſ]</target>
         
       </trans-unit>
       <trans-unit id="IncludeRemoteBranches.Text">
         <source>Delete remote branches from</source>
-        <target>[Ḓḗŀḗŧḗ řḗḿǿŧḗ ƀřȧƞƈħḗş ƒřǿḿ ǲıϱΰΰǈ ſϕǋ]</target>
+        <target>[Ḓḗŀḗŧḗ řḗḿǿŧḗ ƀřȧƞƈħḗş ƒřǿḿ ϱ鶱ǈϰ衋ı ǋϵı]</target>
         
       </trans-unit>
       <trans-unit id="Message.HeaderText">
         <source>Last message</source>
-        <target>[Ŀȧşŧ ḿḗşşȧɠḗ ϖϕϐς ǈıΰϵϵ]</target>
+        <target>[Ŀȧşŧ ḿḗşşȧɠḗ 衋ǈϰ衋 靐ΐϐǋẛ]</target>
         
       </trans-unit>
       <trans-unit id="RefreshBtn.Text">
         <source>Search branches</source>
-        <target>[Şḗȧřƈħ ƀřȧƞƈħḗş ǲ衋ϕϱſϑ ϑıΐ]</target>
+        <target>[Şḗȧřƈħ ƀřȧƞƈħḗş ſΰẛϐſϰ ΰǈı]</target>
+        
+      </trans-unit>
+      <trans-unit id="_areYouSureToDelete.Text">
+        <source>Are you sure to delete {0} selected branches?</source>
+        <target>[Ȧřḗ ẏǿŭ şŭřḗ ŧǿ ḓḗŀḗŧḗ {0} şḗŀḗƈŧḗḓ ƀřȧƞƈħḗş? ẛΰẛ 靐ϖǅ ϕϰ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_branchesSelected.Text">
+        <source>{0}/{1} branches selected.</source>
+        <target>[{0}/{1} ƀřȧƞƈħḗş şḗŀḗƈŧḗḓ. ςΰϵϰ靐ϑϖ ẛẛǈ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_cancel.Text">
+        <source>Cancel</source>
+        <target>[Ƈȧƞƈḗŀ ϰǋ鶱ϱıı]</target>
+        
+      </trans-unit>
+      <trans-unit id="_chooseBranchesToDelete.Text">
+        <source>Choose branches to delete. Only branches that are fully merged in '{0}' will be deleted.</source>
+        <target>[Ƈħǿǿşḗ ƀřȧƞƈħḗş ŧǿ ḓḗŀḗŧḗ. Ǿƞŀẏ ƀřȧƞƈħḗş ŧħȧŧ ȧřḗ ƒŭŀŀẏ ḿḗřɠḗḓ īƞ '{0}' ẇīŀŀ ƀḗ ḓḗŀḗŧḗḓ. ςẛ靐ǈẛϑ ϱǈ鶱ſǲǲϕϑ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_dangerousAction.Text">
+        <source>DANGEROUS ACTION!
+Branches will be deleted on the remote '{0}'. This can not be undone.
+Are you sure you want to continue?</source>
+        <target>[ḒȦȠƓḖŘǾŬŞ ȦƇŦĪǾȠ!
+Ɓřȧƞƈħḗş ẇīŀŀ ƀḗ ḓḗŀḗŧḗḓ ǿƞ ŧħḗ řḗḿǿŧḗ '{0}'. Ŧħīş ƈȧƞ ƞǿŧ ƀḗ ŭƞḓǿƞḗ.
+Ȧřḗ ẏǿŭ şŭřḗ ẏǿŭ ẇȧƞŧ ŧǿ ƈǿƞŧīƞŭḗ? 鶱ſΰϵǋϰϐǲϖ ǋϑϵϐΐıſǅıǲ靐ǋſ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_deleteCaption.Text">
+        <source>Delete</source>
+        <target>[Ḓḗŀḗŧḗ ςΐϰſςϱ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_deletingBranches.Text">
+        <source>Deleting branches...</source>
+        <target>[Ḓḗŀḗŧīƞɠ ƀřȧƞƈħḗş... ſϕςϑϰ靐ıϑ ςǋϰ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_deletingUnmergedBranches.Text">
+        <source>Deleting unmerged branches will result in dangling commits. Use with caution!</source>
+        <target>[Ḓḗŀḗŧīƞɠ ŭƞḿḗřɠḗḓ ƀřȧƞƈħḗş ẇīŀŀ řḗşŭŀŧ īƞ ḓȧƞɠŀīƞɠ ƈǿḿḿīŧş. Ŭşḗ ẇīŧħ ƈȧŭŧīǿƞ! ẛϵΐẛǋẛϰſ ϱ鶱ϑ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_loading.Text">
+        <source>Loading...</source>
+        <target>[Ŀǿȧḓīƞɠ... ϵẛǈẛ衋ςϰſϖǈ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_pressToSearch.Text">
+        <source>Press '{0}' to search for branches to delete.</source>
+        <target>[Ƥřḗşş '{0}' ŧǿ şḗȧřƈħ ƒǿř ƀřȧƞƈħḗş ŧǿ ḓḗŀḗŧḗ. ſϐϖϱı ΰǋ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_searchBranches.Text">
+        <source>Search branches</source>
+        <target>[Şḗȧřƈħ ƀřȧƞƈħḗş ǋẛϱ鶱靐ſ ϑϱϰ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_selectBranchesToDelete.Text">
+        <source>Select branches to delete using checkboxes in '{0}' column.</source>
+        <target>[Şḗŀḗƈŧ ƀřȧƞƈħḗş ŧǿ ḓḗŀḗŧḗ ŭşīƞɠ ƈħḗƈķƀǿẋḗş īƞ '{0}' ƈǿŀŭḿƞ. 靐衋ϖϑǅǲ ΐϖΐ]</target>
         
       </trans-unit>
       <trans-unit id="buttonSettings.Text">
         <source>Settings</source>
-        <target>[Şḗŧŧīƞɠş 衋ΰΰıϰϖϑϱ]</target>
+        <target>[Şḗŧŧīƞɠş ϖ衋鶱ΰϕςǲϐ]</target>
         
       </trans-unit>
       <trans-unit id="dateDataGridViewTextBoxColumn.HeaderText">
         <source>Last activity</source>
-        <target>[Ŀȧşŧ ȧƈŧīṽīŧẏ 靐ϕǲẛ ΐ衋ϑ鶱ǅΰ]</target>
-        
-      </trans-unit>
-      <trans-unit id="deleteDataGridViewCheckBoxColumn.HeaderText">
-        <source>Delete</source>
-        <target>[Ḓḗŀḗŧḗ ϱϱϵǲǈ靐]</target>
+        <target>[Ŀȧşŧ ȧƈŧīṽīŧẏ ǅẛςϰ 靐ϵϱıẛΐ]</target>
         
       </trans-unit>
       <trans-unit id="includeUnmergedBranches.Text">
         <source>Include unmerged branches</source>
-        <target>[Īƞƈŀŭḓḗ ŭƞḿḗřɠḗḓ ƀřȧƞƈħḗş ẛϑΰϰ衋ϑϐ ΐ靐ϐ]</target>
+        <target>[Īƞƈŀŭḓḗ ŭƞḿḗřɠḗḓ ƀřȧƞƈħḗş ϖẛϖϖǲΰΐ ǋǅǋ]</target>
         
       </trans-unit>
       <trans-unit id="label1.Text">
         <source>Delete branches older than x days</source>
-        <target>[Ḓḗŀḗŧḗ ƀřȧƞƈħḗş ǿŀḓḗř ŧħȧƞ ẋ ḓȧẏş ǈϕıϱςǈ 靐ϑϰ]</target>
+        <target>[Ḓḗŀḗŧḗ ƀřȧƞƈħḗş ǿŀḓḗř ŧħȧƞ ẋ ḓȧẏş ǈϱϵ靐ϵı ΰϱ衋]</target>
         
       </trans-unit>
       <trans-unit id="label2.Text">
         <source>Delete branches fully merged into branch</source>
-        <target>[Ḓḗŀḗŧḗ ƀřȧƞƈħḗş ƒŭŀŀẏ ḿḗřɠḗḓ īƞŧǿ ƀřȧƞƈħ ϰǈϐϰϑς ǋǲϖ]</target>
+        <target>[Ḓḗŀḗŧḗ ƀřȧƞƈħḗş ƒŭŀŀẏ ḿḗřɠḗḓ īƞŧǿ ƀřȧƞƈħ ẛǲςϱϕϖ 靐ẛǅ]</target>
         
       </trans-unit>
       <trans-unit id="nameDataGridViewTextBoxColumn.HeaderText">
         <source>Name</source>
-        <target>[Ƞȧḿḗ 衋ǋϖẛ]</target>
+        <target>[Ƞȧḿḗ ϵϰϰǲ]</target>
+        
+      </trans-unit>
+      <trans-unit id="regexDoesNotMatch.Text">
+        <source>Does not match</source>
+        <target>[Ḓǿḗş ƞǿŧ ḿȧŧƈħ ςϑıϑ 鶱靐ϕ ǲςϖ]</target>
         
       </trans-unit>
       <trans-unit id="regexFilter.Text">
         <source>/(feature|develop)/</source>
-        <target>[/(ƒḗȧŧŭřḗ|ḓḗṽḗŀǿƥ)/ ſΰıſǲΐϖ衋衋ϕϵ]</target>
+        <target>[/(ƒḗȧŧŭřḗ|ḓḗṽḗŀǿƥ)/ ςϱςΐϖıϵǈǅΰ靐]</target>
         
       </trans-unit>
-      <trans-unit id="remote.Text">
-        <source>origin</source>
-        <target>[ǿřīɠīƞ ΰϑ衋ǲϕ衋]</target>
+      <trans-unit id="useRegexCaseInsensitive.Text">
+        <source>Case insensitive</source>
+        <target>[Ƈȧşḗ īƞşḗƞşīŧīṽḗ ϖϰςǅ 靐ſǲǋΰı]</target>
         
       </trans-unit>
       <trans-unit id="useRegexFilter.Text">
         <source>Use regex to filter branches</source>
-        <target>[Ŭşḗ řḗɠḗẋ ŧǿ ƒīŀŧḗř ƀřȧƞƈħḗş ϵϑϑ ςςſ衋ϐ 鶱]</target>
+        <target>[Ŭşḗ řḗɠḗẋ ŧǿ ƒīŀŧḗř ƀřȧƞƈħḗş ϵǲΐ ϖΰ靐ϕϑ ǋ]</target>
         
       </trans-unit>
     </body>
   </file>
   <file datatype="plaintext" original="DeleteUnusedBranchesPlugin" source-language="en">
     <body>
-      <trans-unit id="DaysOlderThan.Caption">
-        <source>Delete obsolete branches older than (days)</source>
-        <target>[Ḓḗŀḗŧḗ ǿƀşǿŀḗŧḗ ƀřȧƞƈħḗş ǿŀḓḗř ŧħȧƞ (ḓȧẏş) ϖǋ衋ϕϑſ ϱǋǈ]</target>
-        
-      </trans-unit>
       <trans-unit id="Description.Text">
         <source>Delete obsolete branches</source>
-        <target>[Ḓḗŀḗŧḗ ǿƀşǿŀḗŧḗ ƀřȧƞƈħḗş ϕſǈςǋϵ ϐϰΰ]</target>
+        <target>[Ḓḗŀḗŧḗ ǿƀşǿŀḗŧḗ ƀřȧƞƈħḗş ǋẛΰϕ靐ǈ ǲǅς]</target>
         
       </trans-unit>
-      <trans-unit id="MergedInBranch.Caption">
+      <trans-unit id="_daysOlderThan.Caption">
+        <source>Delete obsolete branches older than (days)</source>
+        <target>[Ḓḗŀḗŧḗ ǿƀşǿŀḗŧḗ ƀřȧƞƈħḗş ǿŀḓḗř ŧħȧƞ (ḓȧẏş) ϰǅϕϖϑǲ ϖϰϰ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_deleteRemoteBranchesFromFlag.Caption">
+        <source>Delete obsolete branches from remote</source>
+        <target>[Ḓḗŀḗŧḗ ǿƀşǿŀḗŧḗ ƀřȧƞƈħḗş ƒřǿḿ řḗḿǿŧḗ ıΐςſϱΰ ΰǅſ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_includeUnmergedBranchesFlag.Caption">
+        <source>Delete unmerged branches</source>
+        <target>[Ḓḗŀḗŧḗ ŭƞḿḗřɠḗḓ ƀřȧƞƈħḗş ϖ靐ΐϑſϖ ΐςϖ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_mergedInBranch.Caption">
         <source>Branch where all branches should be merged in</source>
-        <target>[Ɓřȧƞƈħ ẇħḗřḗ ȧŀŀ ƀřȧƞƈħḗş şħǿŭŀḓ ƀḗ ḿḗřɠḗḓ īƞ ς衋ǅ鶱ϵϑ ϱϖ衋]</target>
+        <target>[Ɓřȧƞƈħ ẇħḗřḗ ȧŀŀ ƀřȧƞƈħḗş şħǿŭŀḓ ƀḗ ḿḗřɠḗḓ īƞ ẛϵıϰϵ鶱 ϕϕϐ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_regexCaseInsensitiveFlag.Caption">
+        <source>Is regex filter case insensitive?</source>
+        <target>[Īş řḗɠḗẋ ƒīŀŧḗř ƈȧşḗ īƞşḗƞşīŧīṽḗ? ϐΰ ſςǅϱΰ ϵ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_regexFilter.Caption">
+        <source>Regex to filter branches to delete</source>
+        <target>[Řḗɠḗẋ ŧǿ ƒīŀŧḗř ƀřȧƞƈħḗş ŧǿ ḓḗŀḗŧḗ ςǅ靐衋ϖ ǲı ϱ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_regexInvertedFlag.Caption">
+        <source>Search branches that does not match regex</source>
+        <target>[Şḗȧřƈħ ƀřȧƞƈħḗş ŧħȧŧ ḓǿḗş ƞǿŧ ḿȧŧƈħ řḗɠḗẋ ǈǈǅǲ鶱ϑ ϱǋẛ靐]</target>
+        
+      </trans-unit>
+      <trans-unit id="_remoteName.Caption">
+        <source>Remote name obsoleted branches should be deleted from</source>
+        <target>[Řḗḿǿŧḗ ƞȧḿḗ ǿƀşǿŀḗŧḗḓ ƀřȧƞƈħḗş şħǿŭŀḓ ƀḗ ḓḗŀḗŧḗḓ ƒřǿḿ ſϖΐ靐ǲϖ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_useRegexToFilterBranchesFlag.Caption">
+        <source>Use regex to filter branches to delete</source>
+        <target>[Ŭşḗ řḗɠḗẋ ŧǿ ƒīŀŧḗř ƀřȧƞƈħḗş ŧǿ ḓḗŀḗŧḗ ΐΰẛ 衋ϖǅϵϕ ẛ]</target>
         
       </trans-unit>
     </body>
@@ -211,57 +514,67 @@
     <body>
       <trans-unit id="$this.Text">
         <source>Find large files</source>
-        <target>[Ƒīƞḓ ŀȧřɠḗ ƒīŀḗş 衋ǈϱϑ ϐıϕıẛ]</target>
+        <target>[Ƒīƞḓ ŀȧřɠḗ ƒīŀḗş 衋ıſ靐 ǅẛẛϱǈ]</target>
         
       </trans-unit>
       <trans-unit id="Cancel.Text">
         <source>Close</source>
-        <target>[Ƈŀǿşḗ ϐǲ靐ςϰ]</target>
+        <target>[Ƈŀǿşḗ ǲΰ衋衋ϰ]</target>
         
       </trans-unit>
       <trans-unit id="CompressedSize.HeaderText">
         <source>Compressed size</source>
-        <target>[Ƈǿḿƥřḗşşḗḓ şīzḗ ſǋſϐı鶱鶱ϱẛς]</target>
+        <target>[Ƈǿḿƥřḗşşḗḓ şīzḗ ςΐϵϑϵ靐衋ıϖϰ]</target>
         
       </trans-unit>
       <trans-unit id="Delete.Text">
         <source>Delete</source>
-        <target>[Ḓḗŀḗŧḗ ǈΐϱ衋靐ς]</target>
+        <target>[Ḓḗŀḗŧḗ ǲϰϱǈϐϖ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_areYouSureToDelete.Text">
+        <source>Are you sure to delete the selected files?</source>
+        <target>[Ȧřḗ ẏǿŭ şŭřḗ ŧǿ ḓḗŀḗŧḗ ŧħḗ şḗŀḗƈŧḗḓ ƒīŀḗş? ΰǋϑ ſ鶱ǅ 鶱ΰ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_deleteCaption.Text">
+        <source>Delete</source>
+        <target>[Ḓḗŀḗŧḗ ǲẛẛǲẛ鶱]</target>
         
       </trans-unit>
       <trans-unit id="commitCountDataGridViewTextBoxColumn.HeaderText">
         <source>Commit count</source>
-        <target>[Ƈǿḿḿīŧ ƈǿŭƞŧ ϖ靐ϵǈǋϵ 衋ſſ]</target>
+        <target>[Ƈǿḿḿīŧ ƈǿŭƞŧ ϖıſς衋ς ǈ靐ϕ]</target>
         
       </trans-unit>
       <trans-unit id="dataGridViewCheckBoxColumn1.HeaderText">
         <source>Delete</source>
-        <target>[Ḓḗŀḗŧḗ 靐ẛςϐǅϕ]</target>
+        <target>[Ḓḗŀḗŧḗ ǅΰǅϱǅς]</target>
         
       </trans-unit>
       <trans-unit id="label1.Text">
         <source>Reset local changes before deleting files. Choose files to delete. Force push for replacing data on remote repository.</source>
-        <target>[Řḗşḗŧ ŀǿƈȧŀ ƈħȧƞɠḗş ƀḗƒǿřḗ ḓḗŀḗŧīƞɠ ƒīŀḗş. Ƈħǿǿşḗ ƒīŀḗş ŧǿ ḓḗŀḗŧḗ. Ƒǿřƈḗ ƥŭşħ ƒǿř řḗƥŀȧƈīƞɠ ḓȧŧȧ ǿƞ řḗḿǿŧḗ řḗƥǿşīŧǿřẏ. ǋǅǋıΐ ẛϖϰϖϑ 衋ſ衋ııϖϕ]</target>
+        <target>[Řḗşḗŧ ŀǿƈȧŀ ƈħȧƞɠḗş ƀḗƒǿřḗ ḓḗŀḗŧīƞɠ ƒīŀḗş. Ƈħǿǿşḗ ƒīŀḗş ŧǿ ḓḗŀḗŧḗ. Ƒǿřƈḗ ƥŭşħ ƒǿř řḗƥŀȧƈīƞɠ ḓȧŧȧ ǿƞ řḗḿǿŧḗ řḗƥǿşīŧǿřẏ. ǅẛſϱϐ ǈǲı靐ϱ ǋ靐ϵϑǋǲſ]</target>
         
       </trans-unit>
       <trans-unit id="lastCommitDateDataGridViewTextBoxColumn.HeaderText">
         <source>Last commit date</source>
-        <target>[Ŀȧşŧ ƈǿḿḿīŧ ḓȧŧḗ ıϱẛΰ ϱΰſϕẛǲ]</target>
+        <target>[Ŀȧşŧ ƈǿḿḿīŧ ḓȧŧḗ ǅϕϕẛ 鶱ϱΐ鶱ϱǋ]</target>
         
       </trans-unit>
       <trans-unit id="pathDataGridViewTextBoxColumn.HeaderText">
         <source>Path</source>
-        <target>[Ƥȧŧħ ǲſ衋ϰ]</target>
+        <target>[Ƥȧŧħ ϕ靐ẛǅ]</target>
         
       </trans-unit>
       <trans-unit id="sHADataGridViewTextBoxColumn.HeaderText">
         <source>SHA</source>
-        <target>[ŞĦȦ ǋϵϕ]</target>
+        <target>[ŞĦȦ ϑΐϱ]</target>
         
       </trans-unit>
       <trans-unit id="sizeDataGridViewTextBoxColumn.HeaderText">
         <source>Size</source>
-        <target>[Şīzḗ ϕ衋鶱鶱]</target>
+        <target>[Şīzḗ ϖǈǲ鶱]</target>
         
       </trans-unit>
     </body>
@@ -270,12 +583,12 @@
     <body>
       <trans-unit id="Description.Text">
         <source>Find large files</source>
-        <target>[Ƒīƞḓ ŀȧřɠḗ ƒīŀḗş 衋ſΰǈ 鶱衋ǈǅς]</target>
+        <target>[Ƒīƞḓ ŀȧřɠḗ ƒīŀḗş ǋẛϖẛ ΰΰǋ衋ǋ]</target>
         
       </trans-unit>
-      <trans-unit id="SizeLargeFile.Caption">
+      <trans-unit id="_sizeLargeFile.Caption">
         <source>Find large files bigger than (Mb)</source>
-        <target>[Ƒīƞḓ ŀȧřɠḗ ƒīŀḗş ƀīɠɠḗř ŧħȧƞ (Ḿƀ) ſſϵϵ ϕǅϖǲǲ]</target>
+        <target>[Ƒīƞḓ ŀȧřɠḗ ƒīŀḗş ƀīɠɠḗř ŧħȧƞ (Ḿƀ) ſϕϑı ıςǋıϖ]</target>
         
       </trans-unit>
     </body>
@@ -284,17 +597,17 @@
     <body>
       <trans-unit id="$this.Text">
         <source>Change Submitted</source>
-        <target>[Ƈħȧƞɠḗ Şŭƀḿīŧŧḗḓ ϐ衋ǲıſΰ 衋靐ΐẛ]</target>
+        <target>[Ƈħȧƞɠḗ Şŭƀḿīŧŧḗḓ ǋϕϖǈϱ衋 ϕıǋǋ]</target>
         
       </trans-unit>
       <trans-unit id="btnClose.Text">
         <source>Close</source>
-        <target>[Ƈŀǿşḗ ǋǅϑ靐ı]</target>
+        <target>[Ƈŀǿşḗ ϖ衋ıẛ衋]</target>
         
       </trans-unit>
       <trans-unit id="labelSubmitted.Text">
         <source>Your change has been submitted for review at the following location:</source>
-        <target>[Ẏǿŭř ƈħȧƞɠḗ ħȧş ƀḗḗƞ şŭƀḿīŧŧḗḓ ƒǿř řḗṽīḗẇ ȧŧ ŧħḗ ƒǿŀŀǿẇīƞɠ ŀǿƈȧŧīǿƞ: ẛıϑſ ϱϖſẛſ]</target>
+        <target>[Ẏǿŭř ƈħȧƞɠḗ ħȧş ƀḗḗƞ şŭƀḿīŧŧḗḓ ƒǿř řḗṽīḗẇ ȧŧ ŧħḗ ƒǿŀŀǿẇīƞɠ ŀǿƈȧŧīǿƞ: ςıϕẛ ϕǋ衋ſϕ]</target>
         
       </trans-unit>
     </body>
@@ -303,62 +616,62 @@
     <body>
       <trans-unit id="$this.Text">
         <source>Download Gerrit Change</source>
-        <target>[Ḓǿẇƞŀǿȧḓ Ɠḗřřīŧ Ƈħȧƞɠḗ ϕϑΐ靐ϖẛǋſ ΐϖ]</target>
+        <target>[Ḓǿẇƞŀǿȧḓ Ɠḗřřīŧ Ƈħȧƞɠḗ ϖǅΐϕΐϖϕΰ ς鶱]</target>
         
       </trans-unit>
       <trans-unit id="AddRemote.Text">
         <source>Manage remotes</source>
-        <target>[Ḿȧƞȧɠḗ řḗḿǿŧḗş ẛıϕϱ鶱ϰ ς衋ǋϰς]</target>
+        <target>[Ḿȧƞȧɠḗ řḗḿǿŧḗş ϰϕϖϑ靐ǈ ϰẛǋϖẛ]</target>
         
       </trans-unit>
       <trans-unit id="Download.Text">
         <source>&amp;Download</source>
-        <target>[&amp;Ḓǿẇƞŀǿȧḓ ϕϱςϕΰΐẛϐı衋ΐ]</target>
+        <target>[&amp;Ḓǿẇƞŀǿȧḓ ſǋııǋϰ靐鶱鶱靐ǈ]</target>
         
       </trans-unit>
       <trans-unit id="_cannotGetChangeDetails.Text">
         <source>Could not retrieve the change details</source>
-        <target>[Ƈǿŭŀḓ ƞǿŧ řḗŧřīḗṽḗ ŧħḗ ƈħȧƞɠḗ ḓḗŧȧīŀş ẛΰΐΐ衋 ǲϖſ]</target>
+        <target>[Ƈǿŭŀḓ ƞǿŧ řḗŧřīḗṽḗ ŧħḗ ƈħȧƞɠḗ ḓḗŧȧīŀş ΐǈ衋衋鶱 ǈǅϰ]</target>
         
       </trans-unit>
       <trans-unit id="_downloadCaption.Text">
         <source>Download change {0}</source>
-        <target>[Ḓǿẇƞŀǿȧḓ ƈħȧƞɠḗ {0} ǅΐſıϵſΐϖ ΐǲ]</target>
+        <target>[Ḓǿẇƞŀǿȧḓ ƈħȧƞɠḗ {0} ςſǲſǲſϖǲ ẛΰ]</target>
         
       </trans-unit>
       <trans-unit id="_downloadGerritChangeCaption.Text">
         <source>Download Gerrit Change</source>
-        <target>[Ḓǿẇƞŀǿȧḓ Ɠḗřřīŧ Ƈħȧƞɠḗ ςϰǲϐΰǅϑϑ ſϖ]</target>
+        <target>[Ḓǿẇƞŀǿȧḓ Ɠḗřřīŧ Ƈħȧƞɠḗ ǈ靐ΰϖǋΐϐς ϖǈ]</target>
         
       </trans-unit>
       <trans-unit id="_selectChange.Text">
         <source>Please enter a change</source>
-        <target>[Ƥŀḗȧşḗ ḗƞŧḗř ȧ ƈħȧƞɠḗ ıϰϰςς衋 鶱靐ϕ]</target>
+        <target>[Ƥŀḗȧşḗ ḗƞŧḗř ȧ ƈħȧƞɠḗ ΰϕϰϖΰſ ϐǋΰ]</target>
         
       </trans-unit>
       <trans-unit id="_selectRemote.Text">
         <source>Please select a remote repository</source>
-        <target>[Ƥŀḗȧşḗ şḗŀḗƈŧ ȧ řḗḿǿŧḗ řḗƥǿşīŧǿřẏ ǅǲ鶱ϖǲ鶱 ϕ靐ǅ]</target>
+        <target>[Ƥŀḗȧşḗ şḗŀḗƈŧ ȧ řḗḿǿŧḗ řḗƥǿşīŧǿřẏ ϕϑ靐ϱǋ鶱 ıςϑ]</target>
         
       </trans-unit>
       <trans-unit id="labelChange.Text">
         <source>Change:</source>
-        <target>[Ƈħȧƞɠḗ: ϖǅǅϱϰǲΰ]</target>
+        <target>[Ƈħȧƞɠḗ: 衋衋ϖǈϑẛẛ]</target>
         
       </trans-unit>
       <trans-unit id="labelEnterChangeIdOrNumber.Text">
         <source>Enter the Change-Id or the number from the Gerrit URL</source>
-        <target>[Ḗƞŧḗř ŧħḗ Ƈħȧƞɠḗ-Īḓ ǿř ŧħḗ ƞŭḿƀḗř ƒřǿḿ ŧħḗ Ɠḗřřīŧ ŬŘĿ ΐı靐衋靐 衋]</target>
+        <target>[Ḗƞŧḗř ŧħḗ Ƈħȧƞɠḗ-Īḓ ǿř ŧħḗ ƞŭḿƀḗř ƒřǿḿ ŧħḗ Ɠḗřřīŧ ŬŘĿ ſǈϰϕǈ 靐]</target>
         
       </trans-unit>
       <trans-unit id="labelRemote.Text">
         <source>Remote:</source>
-        <target>[Řḗḿǿŧḗ: 鶱ϕϵẛǲϱ鶱]</target>
+        <target>[Řḗḿǿŧḗ: ϵϖϱǲΐǈϕ]</target>
         
       </trans-unit>
       <trans-unit id="labelTopicBranch.Text">
         <source>Topic branch:</source>
-        <target>[Ŧǿƥīƈ ƀřȧƞƈħ: ϵẛϕ靐ϑ ı衋ϖϑϰ]</target>
+        <target>[Ŧǿƥīƈ ƀřȧƞƈħ: ǲςǲΐſ ϐǈϑ衋衋]</target>
         
       </trans-unit>
     </body>
@@ -367,57 +680,72 @@
     <body>
       <trans-unit id="$this.Text">
         <source>Publish Gerrit Change</source>
-        <target>[Ƥŭƀŀīşħ Ɠḗřřīŧ Ƈħȧƞɠḗ ϵϑıẛ靐鶱ΰ ǋſ]</target>
+        <target>[Ƥŭƀŀīşħ Ɠḗřřīŧ Ƈħȧƞɠḗ ΐϑǲǅ鶱ϰſ ϵſ]</target>
         
       </trans-unit>
       <trans-unit id="AddRemote.Text">
         <source>Manage remotes</source>
-        <target>[Ḿȧƞȧɠḗ řḗḿǿŧḗş ǋςϑϰſΰ ϖΐ靐ſϰ]</target>
+        <target>[Ḿȧƞȧɠḗ řḗḿǿŧḗş ǈıǲ衋ϰς ǋςſςϐ]</target>
         
       </trans-unit>
       <trans-unit id="Publish.Text">
         <source>&amp;Publish</source>
-        <target>[&amp;Ƥŭƀŀīşħ ǲı鶱衋ϕϐǲΐ靐ϖ]</target>
-        
-      </trans-unit>
-      <trans-unit id="PublishDraft.Text">
-        <source>Submit review as draft</source>
-        <target>[Şŭƀḿīŧ řḗṽīḗẇ ȧş ḓřȧƒŧ ẛϖΐϖ鶱靐 ΐϑϑſ]</target>
+        <target>[&amp;Ƥŭƀŀīşħ ϱıΐ靐鶱ıǋϐǲϰ]</target>
         
       </trans-unit>
       <trans-unit id="_publishCaption.Text">
         <source>Publish change</source>
-        <target>[Ƥŭƀŀīşħ ƈħȧƞɠḗ ϖϵϵϑς靐ǅ ϱǋϐϵ]</target>
+        <target>[Ƥŭƀŀīşħ ƈħȧƞɠḗ ϰſǲǲẛǲǋ ΐǲϵſ]</target>
         
       </trans-unit>
       <trans-unit id="_publishGerritChangeCaption.Text">
         <source>Publish Gerrit Change</source>
-        <target>[Ƥŭƀŀīşħ Ɠḗřřīŧ Ƈħȧƞɠḗ ẛǈẛϑϑϖϵ ϵϵ]</target>
+        <target>[Ƥŭƀŀīşħ Ɠḗřřīŧ Ƈħȧƞɠḗ ſϖϕΐϕſ鶱 ϐǋ]</target>
         
       </trans-unit>
       <trans-unit id="_selectBranch.Text">
         <source>Please enter a branch</source>
-        <target>[Ƥŀḗȧşḗ ḗƞŧḗř ȧ ƀřȧƞƈħ 鶱ǲǲςϰſ ǈϕǈ]</target>
+        <target>[Ƥŀḗȧşḗ ḗƞŧḗř ȧ ƀřȧƞƈħ ϕ靐ſ衋ϰı ϑϵς]</target>
         
       </trans-unit>
       <trans-unit id="_selectRemote.Text">
         <source>Please select a remote repository</source>
-        <target>[Ƥŀḗȧşḗ şḗŀḗƈŧ ȧ řḗḿǿŧḗ řḗƥǿşīŧǿřẏ 靐ϵϱ衋ıẛ ϖǅǅ]</target>
+        <target>[Ƥŀḗȧşḗ şḗŀḗƈŧ ȧ řḗḿǿŧḗ řḗƥǿşīŧǿřẏ ϱǲϑϐſϕ ǅı靐]</target>
         
       </trans-unit>
       <trans-unit id="labelBranch.Text">
         <source>Branch:</source>
-        <target>[Ɓřȧƞƈħ: ǲ衋ǲǋǅ靐ǲ]</target>
+        <target>[Ɓřȧƞƈħ: 靐ϖϑϑǋ靐ΰ]</target>
+        
+      </trans-unit>
+      <trans-unit id="labelCc.Text">
+        <source>CC:</source>
+        <target>[ƇƇ: ϑıǈ]</target>
+        
+      </trans-unit>
+      <trans-unit id="labelHashtag.Text">
+        <source>Hashtag:</source>
+        <target>[Ħȧşħŧȧɠ: ϐϕ衋ǈΰςϑẛ]</target>
+        
+      </trans-unit>
+      <trans-unit id="labelPublishType.Text">
+        <source>Publish Type:</source>
+        <target>[Ƥŭƀŀīşħ Ŧẏƥḗ: ǈςſǲǈΰ靐 鶱ϱǋ]</target>
         
       </trans-unit>
       <trans-unit id="labelRemote.Text">
         <source>Remote:</source>
-        <target>[Řḗḿǿŧḗ: ϐ鶱ΰϖǅſϐ]</target>
+        <target>[Řḗḿǿŧḗ: ΐϑſϰϕςſ]</target>
+        
+      </trans-unit>
+      <trans-unit id="labelReviewers.Text">
+        <source>Reviewer(s):</source>
+        <target>[Řḗṽīḗẇḗř(ş): ǲϱΐϱϐΰϐΐςϐ]</target>
         
       </trans-unit>
       <trans-unit id="labelTopic.Text">
         <source>Topic:</source>
-        <target>[Ŧǿƥīƈ: ϑǋϰſϐϱ]</target>
+        <target>[Ŧǿƥīƈ: ſǋς衋ϵϱ]</target>
         
       </trans-unit>
     </body>
@@ -426,44 +754,44 @@
     <body>
       <trans-unit id="$this.Text">
         <source>Edit .gitreview</source>
-        <target>[Ḗḓīŧ .ɠīŧřḗṽīḗẇ ϖΐΐϰ ǅϵϵΰϕ]</target>
+        <target>[Ḗḓīŧ .ɠīŧřḗṽīḗẇ ẛǅΰǅ ςǲϖς靐]</target>
         
       </trans-unit>
       <trans-unit id="Save.Text">
         <source>Save</source>
-        <target>[Şȧṽḗ 靐衋ϐǈ]</target>
+        <target>[Şȧṽḗ ΐǋǅẛ]</target>
         
       </trans-unit>
       <trans-unit id="_cannotAccessGitreview.Text">
         <source>Failed to save .gitreview.
 Check if file is accessible.</source>
         <target>[Ƒȧīŀḗḓ ŧǿ şȧṽḗ .ɠīŧřḗṽīḗẇ.
-Ƈħḗƈķ īƒ ƒīŀḗ īş ȧƈƈḗşşīƀŀḗ. ϰǈ鶱ϖϑǅ ΐ]</target>
+Ƈħḗƈķ īƒ ƒīŀḗ īş ȧƈƈḗşşīƀŀḗ. ϑϐϖǅϑǲ ı]</target>
         
       </trans-unit>
       <trans-unit id="_cannotAccessGitreviewCaption.Text">
         <source>Failed to save .gitreview</source>
-        <target>[Ƒȧīŀḗḓ ŧǿ şȧṽḗ .ɠīŧřḗṽīḗẇ ϵΰΐΰ衋ΐ ϑ靐 ΰ]</target>
+        <target>[Ƒȧīŀḗḓ ŧǿ şȧṽḗ .ɠīŧřḗṽīḗẇ ǲ靐ςǋǅǋ ϰǈ ΰ]</target>
         
       </trans-unit>
       <trans-unit id="_gitreviewOnlyInWorkingDirSupported.Text">
         <source>.gitreview is only supported when there is a working directory.</source>
-        <target>[.ɠīŧřḗṽīḗẇ īş ǿƞŀẏ şŭƥƥǿřŧḗḓ ẇħḗƞ ŧħḗřḗ īş ȧ ẇǿřķīƞɠ ḓīřḗƈŧǿřẏ. ςΐϖΐϱϐǲΐſ]</target>
+        <target>[.ɠīŧřḗṽīḗẇ īş ǿƞŀẏ şŭƥƥǿřŧḗḓ ẇħḗƞ ŧħḗřḗ īş ȧ ẇǿřķīƞɠ ḓīřḗƈŧǿřẏ. ΰϐϖǅı鶱ϖϖ靐]</target>
         
       </trans-unit>
       <trans-unit id="_gitreviewOnlyInWorkingDirSupportedCaption.Text">
         <source>No working directory</source>
-        <target>[Ƞǿ ẇǿřķīƞɠ ḓīřḗƈŧǿřẏ ΰ鶱 ΐΐϐǲ靐ΐ衋 ſ]</target>
+        <target>[Ƞǿ ẇǿřķīƞɠ ḓīřḗƈŧǿřẏ 鶱ẛ ϑΐẛϱϵſ靐 ϱ]</target>
         
       </trans-unit>
       <trans-unit id="_saveFileQuestion.Text">
         <source>Save changes to .gitreview?</source>
-        <target>[Şȧṽḗ ƈħȧƞɠḗş ŧǿ .ɠīŧřḗṽīḗẇ? ǅſςϕ ǋΐǈϱſ]</target>
+        <target>[Şȧṽḗ ƈħȧƞɠḗş ŧǿ .ɠīŧřḗṽīḗẇ? ϱϵ衋衋 ϰǲϐϰΐ]</target>
         
       </trans-unit>
       <trans-unit id="_saveFileQuestionCaption.Text">
         <source>Save changes?</source>
-        <target>[Şȧṽḗ ƈħȧƞɠḗş? ΐǅϕǋ ǲϕ衋靐ǲϵ]</target>
+        <target>[Şȧṽḗ ƈħȧƞɠḗş? ǲ衋ϐϰ 衋ϰΐΐǅϰ]</target>
         
       </trans-unit>
       <trans-unit id="label1.Text">
@@ -490,12 +818,12 @@ defaultrebase=0</source>
 ƥřǿĵḗƈŧ=ḓḗƥȧřŧḿḗƞŧ/ƥřǿĵḗƈŧ.ɠīŧ
 ḓḗƒȧŭŀŧƀřȧƞƈħ=ḿȧşŧḗř
 ḓḗƒȧŭŀŧřḗḿǿŧḗ=řḗṽīḗẇ
-ḓḗƒȧŭŀŧřḗƀȧşḗ=0 ςϵϱΰϑſǅ ſϵϵ ςϖǈΐϰϱ靐ϖǋǋϱϰΰ ϱϑıϐǅǲ靐ϕǲſẛ鶱ẛǲ]</target>
+ḓḗƒȧŭŀŧřḗƀȧşḗ=0 ϐϐϐϰϕϕϐ ıǅ靐 ςǈſǲϐẛϑǋ衋ſϑ衋ϵ ΐſ靐ϑϰϰΐΰϖ衋ςϐϱ鶱]</target>
         
       </trans-unit>
       <trans-unit id="lnkGitReviewHelp.Text">
         <source>GitHub page for git-review</source>
-        <target>[ƓīŧĦŭƀ ƥȧɠḗ ƒǿř ɠīŧ-řḗṽīḗẇ ϰϕǋΐǅ鶱 鶱ǅ靐靐]</target>
+        <target>[ƓīŧĦŭƀ ƥȧɠḗ ƒǿř ɠīŧ-řḗṽīḗẇ ǈǈϱϐϵϱ ǲǲς衋]</target>
         
       </trans-unit>
     </body>
@@ -504,72 +832,127 @@ defaultrebase=0</source>
     <body>
       <trans-unit id="$this.Text">
         <source>Statistics</source>
-        <target>[Şŧȧŧīşŧīƈş ςϰǈΐϐϕς靐ǅϕ]</target>
+        <target>[Şŧȧŧīşŧīƈş ϱϖǈϱςẛΐǲϑ鶱]</target>
         
       </trans-unit>
       <trans-unit id="CommitStatistics.Text">
         <source>Loading..</source>
-        <target>[Ŀǿȧḓīƞɠ.. 靐ϵẛϑϑſſϖǅ]</target>
+        <target>[Ŀǿȧḓīƞɠ.. ϵϖ鶱衋衋衋衋ϖΐ]</target>
         
       </trans-unit>
       <trans-unit id="LinesOfCodePerLanguageText.Text">
         <source>Loading...</source>
-        <target>[Ŀǿȧḓīƞɠ... ϵǋΐΐǈſΰϐϵẛ]</target>
+        <target>[Ŀǿȧḓīƞɠ... ϰ鶱ϱϱϰΐϑſ衋ı]</target>
         
       </trans-unit>
       <trans-unit id="LinesOfCodePerTypeText.Text">
         <source>Loading...</source>
-        <target>[Ŀǿȧḓīƞɠ... ςϐϑſΐϖΐǈϕϰ]</target>
+        <target>[Ŀǿȧḓīƞɠ... ϰϕϕǋϑϕϵ鶱ϕ衋]</target>
         
       </trans-unit>
       <trans-unit id="LoadingLabel.Text">
         <source>Loading...</source>
-        <target>[Ŀǿȧḓīƞɠ... ϵς靐ſϱϐϰϕ衋ǅ]</target>
+        <target>[Ŀǿȧḓīƞɠ... ΐǲΐǲϐ衋鶱ǲΰΐ]</target>
         
       </trans-unit>
       <trans-unit id="TestCodeText.Text">
         <source>Loading...</source>
-        <target>[Ŀǿȧḓīƞɠ... ſςıςϱϰǈ靐ǅẛ]</target>
+        <target>[Ŀǿȧḓīƞɠ... ϑΐϰϑΰϵſϐΰϰ]</target>
         
       </trans-unit>
       <trans-unit id="TotalCommits.Text">
         <source>Total commits</source>
-        <target>[Ŧǿŧȧŀ ƈǿḿḿīŧş ſ衋靐ϐ衋 ΰϖΰẛı]</target>
+        <target>[Ŧǿŧȧŀ ƈǿḿḿīŧş ϰ衋ΐς鶱 ẛǅıſ靐]</target>
         
       </trans-unit>
       <trans-unit id="TotalLinesOfCode.Text">
         <source>Total lines of code</source>
-        <target>[Ŧǿŧȧŀ ŀīƞḗş ǿƒ ƈǿḓḗ ǋςϱıΐ ǋǋııǲ]</target>
+        <target>[Ŧǿŧȧŀ ŀīƞḗş ǿƒ ƈǿḓḗ ϱǋǅſẛ ΐϕǲ衋ǅ]</target>
         
       </trans-unit>
       <trans-unit id="TotalLinesOfCode2.Text">
         <source>Total lines of code</source>
-        <target>[Ŧǿŧȧŀ ŀīƞḗş ǿƒ ƈǿḓḗ ςẛıϱ衋 ϕςϰΐǲ]</target>
+        <target>[Ŧǿŧȧŀ ŀīƞḗş ǿƒ ƈǿḓḗ 衋ΰϖΰı ϑΰϱϐſ]</target>
         
       </trans-unit>
       <trans-unit id="TotalLinesOfTestCode.Text">
         <source>Total lines of code</source>
-        <target>[Ŧǿŧȧŀ ŀīƞḗş ǿƒ ƈǿḓḗ ϖςſϵς ϱϖǋ靐ϑ]</target>
+        <target>[Ŧǿŧȧŀ ŀīƞḗş ǿƒ ƈǿḓḗ ϕϕ鶱ſǋ ΐıǲǋϖ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_blankLinesP.Text">
+        <source>{0:N0} Blank lines ({1:P1})</source>
+        <target>[{0:Ƞ0} Ɓŀȧƞķ ŀīƞḗş ({1:Ƥ1}) 鶱ΰΐıϱϕ ǅǈΐ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_commentLinesP.Text">
+        <source>{0:N0} Comment lines ({1:P1})</source>
+        <target>[{0:Ƞ0} Ƈǿḿḿḗƞŧ ŀīƞḗş ({1:Ƥ1}) ϐΐϑẛϵ鶱 ǋϰϖı]</target>
+        
+      </trans-unit>
+      <trans-unit id="_commits.Text">
+        <source>{0:N0} Commits</source>
+        <target>[{0:Ƞ0} Ƈǿḿḿīŧş ΰϵı鶱ϐϱ ϱΰẛǲϱ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_commitsBy.Text">
+        <source>{0:N0} Commits by {1}</source>
+        <target>[{0:Ƞ0} Ƈǿḿḿīŧş ƀẏ {1} ǲϖϱſ衋ΐ ϵϐϖ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_linesOfCode.Text">
+        <source>{0:N0} Lines of code</source>
+        <target>[{0:Ƞ0} Ŀīƞḗş ǿƒ ƈǿḓḗ ΐǲǋẛ衋ϐ ϱςϐϑϐ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_linesOfCodeInFiles.Text">
+        <source>{0:N0} Lines of code in {1} files ({2:P1})</source>
+        <target>[{0:Ƞ0} Ŀīƞḗş ǿƒ ƈǿḓḗ īƞ {1} ƒīŀḗş ({2:Ƥ1}) ǈϐϵϰ鶱ϱ 靐ϐϕ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_linesOfCodeP.Text">
+        <source>{0:N0} Lines of code ({1:P1})</source>
+        <target>[{0:Ƞ0} Ŀīƞḗş ǿƒ ƈǿḓḗ ({1:Ƥ1}) ϱẛ鶱ς衋ϑ 靐鶱鶱ϐ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_linesOfDesignerFilesP.Text">
+        <source>{0:N0} Lines in designer files ({1:P1})</source>
+        <target>[{0:Ƞ0} Ŀīƞḗş īƞ ḓḗşīɠƞḗř ƒīŀḗş ({1:Ƥ1}) ıΰϐ衋ẛ衋 ΐϕς]</target>
+        
+      </trans-unit>
+      <trans-unit id="_linesOfProductionCodeP.Text">
+        <source>{0:N0} Lines of production code ({1:P1})</source>
+        <target>[{0:Ƞ0} Ŀīƞḗş ǿƒ ƥřǿḓŭƈŧīǿƞ ƈǿḓḗ ({1:Ƥ1}) 衋ǋ衋ẛϕẛ ǲϰϖ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_linesOfTestCode.Text">
+        <source>{0:N0} Lines of test code</source>
+        <target>[{0:Ƞ0} Ŀīƞḗş ǿƒ ŧḗşŧ ƈǿḓḗ 靐靐ΐ靐ǅ鶱 ΰẛ衋ǋ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_linesOfTestCodeP.Text">
+        <source>{0:N0} Lines of test code ({1:P1})</source>
+        <target>[{0:Ƞ0} Ŀīƞḗş ǿƒ ŧḗşŧ ƈǿḓḗ ({1:Ƥ1}) 衋ſǲϰϐϐ ẛǋǋ]</target>
         
       </trans-unit>
       <trans-unit id="tabPage1.Text">
         <source>Lines of code per language</source>
-        <target>[Ŀīƞḗş ǿƒ ƈǿḓḗ ƥḗř ŀȧƞɠŭȧɠḗ ϐϐΰǋǲ ϵϐ ϑϵ]</target>
+        <target>[Ŀīƞḗş ǿƒ ƈǿḓḗ ƥḗř ŀȧƞɠŭȧɠḗ ϖǈǲϑǋ ϱς ϐϵ]</target>
         
       </trans-unit>
       <trans-unit id="tabPage2.Text">
         <source>Commits per contributor</source>
-        <target>[Ƈǿḿḿīŧş ƥḗř ƈǿƞŧřīƀŭŧǿř ıǈϕı靐ςǋ ıϖϰ]</target>
+        <target>[Ƈǿḿḿīŧş ƥḗř ƈǿƞŧřīƀŭŧǿř ǋıǅϖϕϐϵ ϕ靐鶱]</target>
         
       </trans-unit>
       <trans-unit id="tabPage3.Text">
         <source>Lines of code per type</source>
-        <target>[Ŀīƞḗş ǿƒ ƈǿḓḗ ƥḗř ŧẏƥḗ ϕϰϑǲǅ ϰǋ ΰ鶱]</target>
+        <target>[Ŀīƞḗş ǿƒ ƈǿḓḗ ƥḗř ŧẏƥḗ ΐΐϖϑ靐 ǲϕ ǅ靐]</target>
         
       </trans-unit>
       <trans-unit id="tabPage4.Text">
-        <source>Lines of testcode</source>
-        <target>[Ŀīƞḗş ǿƒ ŧḗşŧƈǿḓḗ ϰǋϐǅΰ ıǋ ẛ衋ϑ]</target>
+        <source>Lines of test code</source>
+        <target>[Ŀīƞḗş ǿƒ ŧḗşŧ ƈǿḓḗ ϵẛǋϖı 鶱ſ ǲ]</target>
         
       </trans-unit>
     </body>
@@ -578,17 +961,22 @@ defaultrebase=0</source>
     <body>
       <trans-unit id="$this.Text">
         <source>Impact</source>
-        <target>[Īḿƥȧƈŧ ςϐϵ靐鶱ǋ]</target>
+        <target>[Īḿƥȧƈŧ ẛΰſςǋϑ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_authorCommits.Text">
+        <source>{0} ({1} Commits, {2} Changed Lines)</source>
+        <target>[{0} ({1} Ƈǿḿḿīŧş, {2} Ƈħȧƞɠḗḓ Ŀīƞḗş) ΐıϐ 靐ϖϑſ ϱ]</target>
         
       </trans-unit>
       <trans-unit id="cbIncludingSubmodules.Text">
         <source>Including submodules</source>
-        <target>[Īƞƈŀŭḓīƞɠ şŭƀḿǿḓŭŀḗş ϖΐ靐ϱẛẛϕϱϵ ẛϕ]</target>
+        <target>[Īƞƈŀŭḓīƞɠ şŭƀḿǿḓŭŀḗş ıΰϐǲΰΐǈϕϵ ǈΐ]</target>
         
       </trans-unit>
       <trans-unit id="lblAuthor.Text">
         <source>Author</source>
-        <target>[Ȧŭŧħǿř 靐衋ϰΰſς]</target>
+        <target>[Ȧŭŧħǿř ǋΐǈϱǈǲ]</target>
         
       </trans-unit>
     </body>
@@ -597,21 +985,45 @@ defaultrebase=0</source>
     <body>
       <trans-unit id="$this.Text">
         <source>Gerrit Plugin</source>
-        <target>[Ɠḗřřīŧ Ƥŀŭɠīƞ 鶱衋ǋſıſ ǈı靐ϱ]</target>
+        <target>[Ɠḗřřīŧ Ƥŀŭɠīƞ ΰſ鶱ǈΰϖ ϑΐϑϰ]</target>
         
       </trans-unit>
       <trans-unit id="btnClose.Text">
         <source>Close</source>
-        <target>[Ƈŀǿşḗ ǅıϱϕϐ]</target>
+        <target>[Ƈŀǿşḗ ΐ靐ẛςϖ]</target>
         
       </trans-unit>
       <trans-unit id="informationLabel.Text">
-        <source>The Gerrit plugin for GitExtensions provides integration with Gerrit for GitExtensions. This plugin has been based on the git-review tool.
+        <source>The Gerrit plugin for Git Extensions provides integration with Gerrit for Git Extensions. This plugin has been based on the git-review tool.
 
 To enable Gerrit support for a repository, a .gitreview file must be created. This can be done through the Repository | Edit .gitreview menu option. See the link below for more information on the .gitreview file and the git-review tool.</source>
-        <target>[Ŧħḗ Ɠḗřřīŧ ƥŀŭɠīƞ ƒǿř ƓīŧḖẋŧḗƞşīǿƞş ƥřǿṽīḓḗş īƞŧḗɠřȧŧīǿƞ ẇīŧħ Ɠḗřřīŧ ƒǿř ƓīŧḖẋŧḗƞşīǿƞş. Ŧħīş ƥŀŭɠīƞ ħȧş ƀḗḗƞ ƀȧşḗḓ ǿƞ ŧħḗ ɠīŧ-řḗṽīḗẇ ŧǿǿŀ.
+        <target>[Ŧħḗ Ɠḗřřīŧ ƥŀŭɠīƞ ƒǿř Ɠīŧ Ḗẋŧḗƞşīǿƞş ƥřǿṽīḓḗş īƞŧḗɠřȧŧīǿƞ ẇīŧħ Ɠḗřřīŧ ƒǿř Ɠīŧ Ḗẋŧḗƞşīǿƞş. Ŧħīş ƥŀŭɠīƞ ħȧş ƀḗḗƞ ƀȧşḗḓ ǿƞ ŧħḗ ɠīŧ-řḗṽīḗẇ ŧǿǿŀ.
 
-Ŧǿ ḗƞȧƀŀḗ Ɠḗřřīŧ şŭƥƥǿřŧ ƒǿř ȧ řḗƥǿşīŧǿřẏ, ȧ .ɠīŧřḗṽīḗẇ ƒīŀḗ ḿŭşŧ ƀḗ ƈřḗȧŧḗḓ. Ŧħīş ƈȧƞ ƀḗ ḓǿƞḗ ŧħřǿŭɠħ ŧħḗ Řḗƥǿşīŧǿřẏ | Ḗḓīŧ .ɠīŧřḗṽīḗẇ ḿḗƞŭ ǿƥŧīǿƞ. Şḗḗ ŧħḗ ŀīƞķ ƀḗŀǿẇ ƒǿř ḿǿřḗ īƞƒǿřḿȧŧīǿƞ ǿƞ ŧħḗ .ɠīŧřḗṽīḗẇ ƒīŀḗ ȧƞḓ ŧħḗ ɠīŧ-řḗṽīḗẇ ŧǿǿŀ. ϰẛς ıſǋſϵǲ ıϑΰϰϵϕ ſϑǲ ǋϵϰǈϑǅſϕϱ靐ΐϱϐ 鶱衋ǈϱ鶱ϵϰ靐 ϰϰǈẛς衋衋ϖ鶱ϐς ϖẛϱſ ϖϑςǲǈ鶱 ǋϖϵ]</target>
+Ŧǿ ḗƞȧƀŀḗ Ɠḗřřīŧ şŭƥƥǿřŧ ƒǿř ȧ řḗƥǿşīŧǿřẏ, ȧ .ɠīŧřḗṽīḗẇ ƒīŀḗ ḿŭşŧ ƀḗ ƈřḗȧŧḗḓ. Ŧħīş ƈȧƞ ƀḗ ḓǿƞḗ ŧħřǿŭɠħ ŧħḗ Řḗƥǿşīŧǿřẏ | Ḗḓīŧ .ɠīŧřḗṽīḗẇ ḿḗƞŭ ǿƥŧīǿƞ. Şḗḗ ŧħḗ ŀīƞķ ƀḗŀǿẇ ƒǿř ḿǿřḗ īƞƒǿřḿȧŧīǿƞ ǿƞ ŧħḗ .ɠīŧřḗṽīḗẇ ƒīŀḗ ȧƞḓ ŧħḗ ɠīŧ-řḗṽīḗẇ ŧǿǿŀ. 衋ςẛ ϰ鶱ςǅ靐靐 靐ϐϑΰẛ衋 ǅϰϑ ϑ靐ϖ ϱǈ靐ΐǅςΰϑΰ衋 ϑ靐ςǋϰϱϱ衋 ǅ衋ς靐ǈς鶱ſǋſϕ ϕΐǈ靐 ǲϱǈϵǋ衋 ǅſ]</target>
+        
+      </trans-unit>
+    </body>
+  </file>
+  <file datatype="plaintext" original="GerritCapabilities" source-language="en">
+    <body>
+      <trans-unit id="_publishTypeDraft.Text">
+        <source>Draft</source>
+        <target>[Ḓřȧƒŧ 衋靐ϖſı]</target>
+        
+      </trans-unit>
+      <trans-unit id="_publishTypePrivate.Text">
+        <source>Private</source>
+        <target>[Ƥřīṽȧŧḗ ǋϑϐΰϑǅı]</target>
+        
+      </trans-unit>
+      <trans-unit id="_publishTypeReview.Text">
+        <source>For Review</source>
+        <target>[Ƒǿř Řḗṽīḗẇ ΰϕϑ ςϵΰϱϐ鶱]</target>
+        
+      </trans-unit>
+      <trans-unit id="_publishTypeWip.Text">
+        <source>Work-in-Progress</source>
+        <target>[Ẇǿřķ-īƞ-Ƥřǿɠřḗşş ϕııϱ靐鶱ϐϱϱǅ鶱]</target>
         
       </trans-unit>
     </body>
@@ -620,42 +1032,52 @@ To enable Gerrit support for a repository, a .gitreview file must be created. Th
     <body>
       <trans-unit id="Description.Text">
         <source>Gerrit Code Review</source>
-        <target>[Ɠḗřřīŧ Ƈǿḓḗ Řḗṽīḗẇ ǋ靐衋ϱẛ鶱 ǅϕϐ]</target>
+        <target>[Ɠḗřřīŧ Ƈǿḓḗ Řḗṽīḗẇ ϵſϖϕǅϖ ϕǋı]</target>
         
       </trans-unit>
       <trans-unit id="_downloadGerritChange.Text">
         <source>Download Gerrit Change</source>
-        <target>[Ḓǿẇƞŀǿȧḓ Ɠḗřřīŧ Ƈħȧƞɠḗ ΐϱẛıΰıǅΰ ẛϑ]</target>
+        <target>[Ḓǿẇƞŀǿȧḓ Ɠḗřřīŧ Ƈħȧƞɠḗ ϰΐſǅϵǅΰǲ ſΰ]</target>
         
       </trans-unit>
       <trans-unit id="_editGitReview.Text">
         <source>Edit .gitreview</source>
-        <target>[Ḗḓīŧ .ɠīŧřḗṽīḗẇ ǲ鶱ıς ǲǈǅΐϱ]</target>
+        <target>[Ḗḓīŧ .ɠīŧřḗṽīḗẇ ǅ鶱ǋǋ ϱϐǋΰς]</target>
         
       </trans-unit>
       <trans-unit id="_installCommitMsgHook.Text">
         <source>Install Hook</source>
-        <target>[Īƞşŧȧŀŀ Ħǿǿķ ϐϕǲϖſ衋ϐ ǋς]</target>
+        <target>[Īƞşŧȧŀŀ Ħǿǿķ ΰſϱẛǈǅϕ 鶱ı]</target>
         
       </trans-unit>
-      <trans-unit id="_installCommitMsgHookFailed.Text">
+      <trans-unit id="_installCommitMsgHookDownloadFileFailed.Text">
         <source>Could not download the commit-msg file. Please install the commit-msg hook manually.</source>
-        <target>[Ƈǿŭŀḓ ƞǿŧ ḓǿẇƞŀǿȧḓ ŧħḗ ƈǿḿḿīŧ-ḿşɠ ƒīŀḗ. Ƥŀḗȧşḗ īƞşŧȧŀŀ ŧħḗ ƈǿḿḿīŧ-ḿşɠ ħǿǿķ ḿȧƞŭȧŀŀẏ. ϐςϖΐ靐 ẛı鶱 ϖΐǲ]</target>
+        <target>[Ƈǿŭŀḓ ƞǿŧ ḓǿẇƞŀǿȧḓ ŧħḗ ƈǿḿḿīŧ-ḿşɠ ƒīŀḗ. Ƥŀḗȧşḗ īƞşŧȧŀŀ ŧħḗ ƈǿḿḿīŧ-ḿşɠ ħǿǿķ ḿȧƞŭȧŀŀẏ. ϱΰ靐ΐǅ 衋ςϑ ςϖς]</target>
+        
+      </trans-unit>
+      <trans-unit id="_installCommitMsgHookFolderCreationFailed.Text">
+        <source>Could not create the hooks folder. Please create the folder manually and try again.</source>
+        <target>[Ƈǿŭŀḓ ƞǿŧ ƈřḗȧŧḗ ŧħḗ ħǿǿķş ƒǿŀḓḗř. Ƥŀḗȧşḗ ƈřḗȧŧḗ ŧħḗ ƒǿŀḓḗř ḿȧƞŭȧŀŀẏ ȧƞḓ ŧřẏ ȧɠȧīƞ. 靐ϕǋϐϕ ǈϕı ſϵϕ]</target>
         
       </trans-unit>
       <trans-unit id="_installCommitMsgHookMessage.Text">
         <source>Gerrit requires a commit-msg hook to be installed. Do you want to install the commit-msg hook into your repository?</source>
-        <target>[Ɠḗřřīŧ řḗɋŭīřḗş ȧ ƈǿḿḿīŧ-ḿşɠ ħǿǿķ ŧǿ ƀḗ īƞşŧȧŀŀḗḓ. Ḓǿ ẏǿŭ ẇȧƞŧ ŧǿ īƞşŧȧŀŀ ŧħḗ ƈǿḿḿīŧ-ḿşɠ ħǿǿķ īƞŧǿ ẏǿŭř řḗƥǿşīŧǿřẏ? ϵϱϱϵϱ靐 靐ΐ靐ı靐ǋǋſ ǅ ǅΰ]</target>
+        <target>[Ɠḗřřīŧ řḗɋŭīřḗş ȧ ƈǿḿḿīŧ-ḿşɠ ħǿǿķ ŧǿ ƀḗ īƞşŧȧŀŀḗḓ. Ḓǿ ẏǿŭ ẇȧƞŧ ŧǿ īƞşŧȧŀŀ ŧħḗ ƈǿḿḿīŧ-ḿşɠ ħǿǿķ īƞŧǿ ẏǿŭř řḗƥǿşīŧǿřẏ? ϑϕ衋衋ϵς ϱςϑΐǲϱϐϕ ϑ ǋϖ]</target>
         
       </trans-unit>
       <trans-unit id="_installCommitMsgHookShortText.Text">
         <source>Install commit-msg hook</source>
-        <target>[Īƞşŧȧŀŀ ƈǿḿḿīŧ-ḿşɠ ħǿǿķ ϐΰǈǋ鶱ςẛ ıϱϑ]</target>
+        <target>[Īƞşŧȧŀŀ ƈǿḿḿīŧ-ḿşɠ ħǿǿķ ΐǅϰ鶱ϕǈϖ ẛıϐ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_predefinedGerritVersion.Caption">
+        <source>Treat Gerrit as having version</source>
+        <target>[Ŧřḗȧŧ Ɠḗřřīŧ ȧş ħȧṽīƞɠ ṽḗřşīǿƞ ϑǈẛϖϵ ϕǈſϱ]</target>
         
       </trans-unit>
       <trans-unit id="_publishGerritChange.Text">
         <source>Publish Gerrit Change</source>
-        <target>[Ƥŭƀŀīşħ Ɠḗřřīŧ Ƈħȧƞɠḗ ςΰϖǲΰǅ衋 ΰϱ]</target>
+        <target>[Ƥŭƀŀīşħ Ɠḗřřīŧ Ƈħȧƞɠḗ ϱǈǋϵΰΰ鶱 ϑϐ]</target>
         
       </trans-unit>
     </body>
@@ -664,32 +1086,32 @@ To enable Gerrit support for a repository, a .gitreview file must be created. Th
     <body>
       <trans-unit id="_settingsError.Text">
         <source>Error loading .gitreview file.</source>
-        <target>[Ḗřřǿř ŀǿȧḓīƞɠ .ɠīŧřḗṽīḗẇ ƒīŀḗ. 鶱ǈ靐ΰſ ǲǈǲϱ]</target>
+        <target>[Ḗřřǿř ŀǿȧḓīƞɠ .ɠīŧřḗṽīḗẇ ƒīŀḗ. 衋ϖı靐ſ ϑǅϕſ]</target>
         
       </trans-unit>
       <trans-unit id="_settingsErrorDefaultRemoteNotPresent.Text">
         <source>The remote &quot;{0}&quot; specified with the &quot;defaultremote&quot; setting in the .gitreview file does not refer to a configured remote. Either create this remote or change the setting in the .gitreview file.</source>
-        <target>[Ŧħḗ řḗḿǿŧḗ &quot;{0}&quot; şƥḗƈīƒīḗḓ ẇīŧħ ŧħḗ &quot;ḓḗƒȧŭŀŧřḗḿǿŧḗ&quot; şḗŧŧīƞɠ īƞ ŧħḗ .ɠīŧřḗṽīḗẇ ƒīŀḗ ḓǿḗş ƞǿŧ řḗƒḗř ŧǿ ȧ ƈǿƞƒīɠŭřḗḓ řḗḿǿŧḗ. Ḗīŧħḗř ƈřḗȧŧḗ ŧħīş řḗḿǿŧḗ ǿř ƈħȧƞɠḗ ŧħḗ şḗŧŧīƞɠ īƞ ŧħḗ .ɠīŧřḗṽīḗẇ ƒīŀḗ. ΐ靐ϕ ϖςſ鶱ǈϖ ǲϵϖϵſſϑẛ衋鶱ϰ鶱鶱鶱ǋ ϱςſǲΐ靐ϰǈϰ ϖϖ]</target>
+        <target>[Ŧħḗ řḗḿǿŧḗ &quot;{0}&quot; şƥḗƈīƒīḗḓ ẇīŧħ ŧħḗ &quot;ḓḗƒȧŭŀŧřḗḿǿŧḗ&quot; şḗŧŧīƞɠ īƞ ŧħḗ .ɠīŧřḗṽīḗẇ ƒīŀḗ ḓǿḗş ƞǿŧ řḗƒḗř ŧǿ ȧ ƈǿƞƒīɠŭřḗḓ řḗḿǿŧḗ. Ḗīŧħḗř ƈřḗȧŧḗ ŧħīş řḗḿǿŧḗ ǿř ƈħȧƞɠḗ ŧħḗ şḗŧŧīƞɠ īƞ ŧħḗ .ɠīŧřḗṽīḗẇ ƒīŀḗ. ϵı衋 ǲǋϱςǈΰ ſ靐ǈ衋ǈẛ鶱ϐ衋ıẛſΰςΰ ǅǋϖϕϰ鶱ΐǲ衋 鶱ΰ]</target>
         
       </trans-unit>
       <trans-unit id="_settingsErrorFileNotFound.Text">
         <source>Cannot find the &quot;.gitreview&quot; file in the working directory.</source>
-        <target>[Ƈȧƞƞǿŧ ƒīƞḓ ŧħḗ &quot;.ɠīŧřḗṽīḗẇ&quot; ƒīŀḗ īƞ ŧħḗ ẇǿřķīƞɠ ḓīřḗƈŧǿřẏ. 靐ǈıẛΰǲ ς衋ϑ]</target>
+        <target>[Ƈȧƞƞǿŧ ƒīƞḓ ŧħḗ &quot;.ɠīŧřḗṽīḗẇ&quot; ƒīŀḗ īƞ ŧħḗ ẇǿřķīƞɠ ḓīřḗƈŧǿřẏ. ǋΰǲςϰǲ ǲǅǅ]</target>
         
       </trans-unit>
       <trans-unit id="_settingsErrorHostNotEntered.Text">
         <source>The &quot;host&quot; setting in the .gitreview file is mandatory.</source>
-        <target>[Ŧħḗ &quot;ħǿşŧ&quot; şḗŧŧīƞɠ īƞ ŧħḗ .ɠīŧřḗṽīḗẇ ƒīŀḗ īş ḿȧƞḓȧŧǿřẏ. ẛϐς ϑǅıϱϖſ]</target>
+        <target>[Ŧħḗ &quot;ħǿşŧ&quot; şḗŧŧīƞɠ īƞ ŧħḗ .ɠīŧřḗṽīḗẇ ƒīŀḗ īş ḿȧƞḓȧŧǿřẏ. ΰΐı ϵϑ衋ϱΐς]</target>
         
       </trans-unit>
       <trans-unit id="_settingsErrorPortNotNumeric.Text">
         <source>The &quot;port&quot; specified in the .gitreview file may only contain digits.</source>
-        <target>[Ŧħḗ &quot;ƥǿřŧ&quot; şƥḗƈīƒīḗḓ īƞ ŧħḗ .ɠīŧřḗṽīḗẇ ƒīŀḗ ḿȧẏ ǿƞŀẏ ƈǿƞŧȧīƞ ḓīɠīŧş. ϱϑẛ ſǅΰϰ鶱ẛ衋ϕ]</target>
+        <target>[Ŧħḗ &quot;ƥǿřŧ&quot; şƥḗƈīƒīḗḓ īƞ ŧħḗ .ɠīŧřḗṽīḗẇ ƒīŀḗ ḿȧẏ ǿƞŀẏ ƈǿƞŧȧīƞ ḓīɠīŧş. ıϖı ϱϱǲςϐΰΰ鶱]</target>
         
       </trans-unit>
       <trans-unit id="_settingsErrorProjectNotEntered.Text">
         <source>The &quot;project&quot; setting in the .gitreview file is mandatory.</source>
-        <target>[Ŧħḗ &quot;ƥřǿĵḗƈŧ&quot; şḗŧŧīƞɠ īƞ ŧħḗ .ɠīŧřḗṽīḗẇ ƒīŀḗ īş ḿȧƞḓȧŧǿřẏ. ǈıſ 鶱ẛϖϵϕ衋]</target>
+        <target>[Ŧħḗ &quot;ƥřǿĵḗƈŧ&quot; şḗŧŧīƞɠ īƞ ŧħḗ .ɠīŧřḗṽīḗẇ ƒīŀḗ īş ḿȧƞḓȧŧǿřẏ. ΐǋǲ 衋ǈϱϖıϵ]</target>
         
       </trans-unit>
     </body>
@@ -698,97 +1120,122 @@ To enable Gerrit support for a repository, a .gitreview file must be created. Th
     <body>
       <trans-unit id="$this.Text">
         <source>GitFlow</source>
-        <target>[ƓīŧƑŀǿẇ ϰǋΰǲϰΐ靐]</target>
+        <target>[ƓīŧƑŀǿẇ ϖ靐ϰϑϵ鶱ϐ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_gitFlowTooltip.Text">
+        <source>A good branch model for your project with Git...</source>
+        <target>[Ȧ ɠǿǿḓ ƀřȧƞƈħ ḿǿḓḗŀ ƒǿř ẏǿŭř ƥřǿĵḗƈŧ ẇīŧħ Ɠīŧ... ΰ ǋǅϕϰ 鶱ǈſ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_loading.Text">
+        <source>Loading...</source>
+        <target>[Ŀǿȧḓīƞɠ... ẛǋǅẛϑΐςϖϵϰ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_noBranchExist.Text">
+        <source>No {0} branches exist.</source>
+        <target>[Ƞǿ {0} ƀřȧƞƈħḗş ḗẋīşŧ. ϑ鶱 ǲςϕ ǈϖϑı]</target>
         
       </trans-unit>
       <trans-unit id="btnClose.Text">
         <source>Close</source>
-        <target>[Ƈŀǿşḗ ıϖǈǅǲ]</target>
+        <target>[Ƈŀǿşḗ ϱΐẛǈϕ]</target>
         
       </trans-unit>
       <trans-unit id="btnCreateBranch.Text">
         <source>Start!</source>
-        <target>[Şŧȧřŧ! 靐ǅǅϑϱς]</target>
+        <target>[Şŧȧřŧ! ϰſϰ靐ΰϱ]</target>
         
       </trans-unit>
       <trans-unit id="btnFinish.Text">
         <source>Finish</source>
-        <target>[Ƒīƞīşħ ẛẛϰẛϑς]</target>
+        <target>[Ƒīƞīşħ ϖ衋ϑϑſı]</target>
         
       </trans-unit>
       <trans-unit id="btnInit.Text">
         <source>Init GitFlow</source>
-        <target>[Īƞīŧ ƓīŧƑŀǿẇ ΐϐıſ ϱǲǈ衋ϱ]</target>
+        <target>[Īƞīŧ ƓīŧƑŀǿẇ ǋϖΐϕ 衋ǲǲΰſ]</target>
         
       </trans-unit>
       <trans-unit id="btnPublish.Text">
         <source>Publish</source>
-        <target>[Ƥŭƀŀīşħ 靐ΰǈϰǋςǲ]</target>
+        <target>[Ƥŭƀŀīşħ 靐ΰϵϖϵ鶱ſ]</target>
         
       </trans-unit>
       <trans-unit id="btnPull.Text">
         <source>Pull</source>
-        <target>[Ƥŭŀŀ ǈ鶱ǲϰ]</target>
+        <target>[Ƥŭŀŀ ǲ鶱ϱǲ]</target>
         
       </trans-unit>
       <trans-unit id="cbBasedOn.Text">
         <source>based on:</source>
-        <target>[ƀȧşḗḓ ǿƞ: ϕǋς衋ϕ 靐ϱΰ]</target>
+        <target>[ƀȧşḗḓ ǿƞ: ǋϵǅſϵ ϖϐϐ]</target>
+        
+      </trans-unit>
+      <trans-unit id="cbPushAfterFinish.Text">
+        <source>Push after finish</source>
+        <target>[Ƥŭşħ ȧƒŧḗř ƒīƞīşħ ςϕΰϵ ϵςϑϖϰ 鶱]</target>
+        
+      </trans-unit>
+      <trans-unit id="cbSquash.Text">
+        <source>Squash</source>
+        <target>[Şɋŭȧşħ ǋǋẛǈϕς]</target>
         
       </trans-unit>
       <trans-unit id="gbManage.Text">
         <source>Manage existing branches:</source>
-        <target>[Ḿȧƞȧɠḗ ḗẋīşŧīƞɠ ƀřȧƞƈħḗş: ϵς衋ϵ靐衋 ǋϕϑǅ]</target>
+        <target>[Ḿȧƞȧɠḗ ḗẋīşŧīƞɠ ƀřȧƞƈħḗş: ϱıϐϐǲϕ 衋衋ǈ鶱]</target>
         
       </trans-unit>
       <trans-unit id="gbStart.Text">
         <source>Start branch:</source>
-        <target>[Şŧȧřŧ ƀřȧƞƈħ: ϖϑẛſı ϰϰẛıǅ]</target>
+        <target>[Şŧȧřŧ ƀřȧƞƈħ: ǅΰϖϰẛ ǈ靐ǋΰϖ]</target>
         
       </trans-unit>
       <trans-unit id="label1.Text">
         <source>branch:</source>
-        <target>[ƀřȧƞƈħ: ςϕı鶱衋ϰϰ]</target>
+        <target>[ƀřȧƞƈħ: ϑϱ衋ǋϕϐϵ]</target>
         
       </trans-unit>
       <trans-unit id="label10.Text">
         <source>Expected name:</source>
-        <target>[Ḗẋƥḗƈŧḗḓ ƞȧḿḗ: ẛΰ鶱ϵϕıϐϰ ϵϖϑ]</target>
+        <target>[Ḗẋƥḗƈŧḗḓ ƞȧḿḗ: ςΰǋ衋ϑǲſ靐 ı靐ẛ]</target>
         
       </trans-unit>
       <trans-unit id="label2.Text">
         <source>command:</source>
-        <target>[ƈǿḿḿȧƞḓ: ẛϱſǈ靐ǋǈϕ]</target>
+        <target>[ƈǿḿḿȧƞḓ: ϵςǈ靐ϕ鶱ϕϑ]</target>
         
       </trans-unit>
       <trans-unit id="label9.Text">
         <source>Remote to pull from :</source>
-        <target>[Řḗḿǿŧḗ ŧǿ ƥŭŀŀ ƒřǿḿ : 靐ϖϵϵſΐ ǋΰ]</target>
+        <target>[Řḗḿǿŧḗ ŧǿ ƥŭŀŀ ƒřǿḿ : ǋ靐ΰςΐ鶱 ǋΐ]</target>
         
       </trans-unit>
       <trans-unit id="lblCaptionHead.Text">
         <source>HEAD:</source>
-        <target>[ĦḖȦḒ: ςΰϵǈϖ]</target>
+        <target>[ĦḖȦḒ: ϱςϑǈǲ]</target>
         
       </trans-unit>
       <trans-unit id="lblHead.Text">
         <source>ref/...</source>
-        <target>[řḗƒ/... ı靐ǅıǋΐϱ]</target>
+        <target>[řḗƒ/... ẛǈΰϕϰǲ衋]</target>
         
       </trans-unit>
       <trans-unit id="lblPrefixName.Text">
         <source>[prefix]/</source>
-        <target>[[ƥřḗƒīẋ]/ ΰǋϕΰſıϑϕΐ]</target>
+        <target>[[ƥřḗƒīẋ]/ ϕǲϵϵϕϑΐϕϵ]</target>
         
       </trans-unit>
       <trans-unit id="lnkGitFlow.Text">
         <source>About GitFlow</source>
-        <target>[Ȧƀǿŭŧ ƓīŧƑŀǿẇ 鶱ǈϰẛς ẛ鶱ϰẛϑ]</target>
+        <target>[Ȧƀǿŭŧ ƓīŧƑŀǿẇ ǈẛΐϱǅ ϑϖΰ靐ϰ]</target>
         
       </trans-unit>
       <trans-unit id="panel3.Text">
         <source>Result of git flow command run</source>
-        <target>[Řḗşŭŀŧ ǿƒ ɠīŧ ƒŀǿẇ ƈǿḿḿȧƞḓ řŭƞ ΐϕǅǲΰϕ ϑı]</target>
+        <target>[Řḗşŭŀŧ ǿƒ ɠīŧ ƒŀǿẇ ƈǿḿḿȧƞḓ řŭƞ 衋衋ϵϰıϐ ϰǲ]</target>
         
       </trans-unit>
     </body>
@@ -797,16 +1244,31 @@ To enable Gerrit support for a repository, a .gitreview file must be created. Th
     <body>
       <trans-unit id="Description.Text">
         <source>GitFlow</source>
-        <target>[ƓīŧƑŀǿẇ ϐΰ靐ǋıΰǋ]</target>
+        <target>[ƓīŧƑŀǿẇ ϵǅſϕǋǈǋ]</target>
         
       </trans-unit>
     </body>
   </file>
-  <file datatype="plaintext" original="Github3Plugin" source-language="en">
+  <file datatype="plaintext" original="GitHub3Plugin" source-language="en">
     <body>
       <trans-unit id="Description.Text">
-        <source>Github</source>
-        <target>[Ɠīŧħŭƀ 鶱ſϵϐϐϰ]</target>
+        <source>GitHub</source>
+        <target>[ƓīŧĦŭƀ 衋ϕΐıǋ鶱]</target>
+        
+      </trans-unit>
+      <trans-unit id="GitHubApiEndpoint.Caption">
+        <source>GitHub (Enterprise) API endpoint</source>
+        <target>[ƓīŧĦŭƀ (Ḗƞŧḗřƥřīşḗ) ȦƤĪ ḗƞḓƥǿīƞŧ ǈϐΐẛſϰ ſϕϐϰ]</target>
+        
+      </trans-unit>
+      <trans-unit id="OAuthToken.Caption">
+        <source>OAuth Token</source>
+        <target>[ǾȦŭŧħ Ŧǿķḗƞ ǲΐẛϖǋ 鶱ϱϐΐϕ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_tokenAlreadyExist.Text">
+        <source>You already have an OAuth token. To get a new one, delete your old one in Plugins &gt; Settings first.</source>
+        <target>[Ẏǿŭ ȧŀřḗȧḓẏ ħȧṽḗ ȧƞ ǾȦŭŧħ ŧǿķḗƞ. Ŧǿ ɠḗŧ ȧ ƞḗẇ ǿƞḗ, ḓḗŀḗŧḗ ẏǿŭř ǿŀḓ ǿƞḗ īƞ Ƥŀŭɠīƞş &gt; Şḗŧŧīƞɠş ƒīřşŧ. 鶱鶱ϱ ǅ衋ϖſϕϰǲ ǲΰςẛ]</target>
         
       </trans-unit>
     </body>
@@ -815,31 +1277,31 @@ To enable Gerrit support for a repository, a .gitreview file must be created. Th
     <body>
       <trans-unit id="Description.Text">
         <source>Impact Graph</source>
-        <target>[Īḿƥȧƈŧ Ɠřȧƥħ 衋ǲϕſǲı ǋϐǈ]</target>
+        <target>[Īḿƥȧƈŧ Ɠřȧƥħ ıſ衋衋ǅϰ ǋςϕ]</target>
         
       </trans-unit>
     </body>
   </file>
   <file datatype="plaintext" original="GitStatisticsPlugin" source-language="en">
     <body>
-      <trans-unit id="CodeFiles.Caption">
-        <source>Code files</source>
-        <target>[Ƈǿḓḗ ƒīŀḗş ϕſ鶱ϐ ϱ鶱ǲϐϵ]</target>
-        
-      </trans-unit>
       <trans-unit id="Description.Text">
         <source>Statistics</source>
-        <target>[Şŧȧŧīşŧīƈş ϵ鶱ϑϐǋẛǲϰſı]</target>
+        <target>[Şŧȧŧīşŧīƈş ǲς衋ϐϕǅǋϱϱ鶱]</target>
         
       </trans-unit>
-      <trans-unit id="IgnoreDirectories.Caption">
+      <trans-unit id="_codeFiles.Caption">
+        <source>Code files</source>
+        <target>[Ƈǿḓḗ ƒīŀḗş ςϑΐẛ ǈ衋衋靐ϕ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_ignoreDirectories.Caption">
         <source>Directories to ignore (EndsWith)</source>
-        <target>[Ḓīřḗƈŧǿřīḗş ŧǿ īɠƞǿřḗ (ḖƞḓşẆīŧħ) ǋΐǅϖ靐ϖıϐǋϑǋ]</target>
+        <target>[Ḓīřḗƈŧǿřīḗş ŧǿ īɠƞǿřḗ (ḖƞḓşẆīŧħ) ϵẛΰǈϑǲẛϵς靐ϐ]</target>
         
       </trans-unit>
-      <trans-unit id="IgnoreSubmodules.Caption">
+      <trans-unit id="_ignoreSubmodules.Caption">
         <source>Ignore submodules</source>
-        <target>[Īɠƞǿřḗ şŭƀḿǿḓŭŀḗş 靐ſſ鶱ẛẛ ǲı鶱ΰϱ]</target>
+        <target>[Īɠƞǿřḗ şŭƀḿǿḓŭŀḗş ǈ衋ǋϱϱς 衋ϰ鶱鶱衋]</target>
         
       </trans-unit>
     </body>
@@ -848,17 +1310,78 @@ To enable Gerrit support for a repository, a .gitreview file must be created. Th
     <body>
       <trans-unit id="Description.Text">
         <source>Gource</source>
-        <target>[Ɠǿŭřƈḗ ϐϵǲ靐衋ϰ]</target>
+        <target>[Ɠǿŭřƈḗ ǅΰǋıϰϰ]</target>
         
       </trans-unit>
-      <trans-unit id="GourceArguments.Caption">
+      <trans-unit id="_bytesDownloaded.Text">
+        <source>{0} bytes downloaded.</source>
+        <target>[{0} ƀẏŧḗş ḓǿẇƞŀǿȧḓḗḓ. ς靐ϖ ϖ鶱ẛϵΰ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_cannotFindGource.Text">
+        <source>Cannot find Gource.
+Please download Gource and set the path in the plugins settings dialog.</source>
+        <target>[Ƈȧƞƞǿŧ ƒīƞḓ Ɠǿŭřƈḗ.
+Ƥŀḗȧşḗ ḓǿẇƞŀǿȧḓ Ɠǿŭřƈḗ ȧƞḓ şḗŧ ŧħḗ ƥȧŧħ īƞ ŧħḗ ƥŀŭɠīƞş şḗŧŧīƞɠş ḓīȧŀǿɠ. ẛϕſẛǲ鶱 ϵϰǲϖ ϑǅΰ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_currentDirectoryIsNotValidGit.Text">
+        <source>The current directory is not a valid git repository.
+
+Gource can be only be started from a valid git repository.</source>
+        <target>[Ŧħḗ ƈŭřřḗƞŧ ḓīřḗƈŧǿřẏ īş ƞǿŧ ȧ ṽȧŀīḓ ɠīŧ řḗƥǿşīŧǿřẏ.
+
+Ɠǿŭřƈḗ ƈȧƞ ƀḗ ǿƞŀẏ ƀḗ şŧȧřŧḗḓ ƒřǿḿ ȧ ṽȧŀīḓ ɠīŧ řḗƥǿşīŧǿřẏ. ϐ靐ǈ ǅ靐ΐΰϰıϐ ſΰΰϖǈǲϖ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_doYouWantDownloadGource.Text">
+        <source>There is no path to Gource configured.
+
+Do you want to automatically download Gource?</source>
+        <target>[Ŧħḗřḗ īş ƞǿ ƥȧŧħ ŧǿ Ɠǿŭřƈḗ ƈǿƞƒīɠŭřḗḓ.
+
+Ḓǿ ẏǿŭ ẇȧƞŧ ŧǿ ȧŭŧǿḿȧŧīƈȧŀŀẏ ḓǿẇƞŀǿȧḓ Ɠǿŭřƈḗ? ϱǲ鶱ςϑ ΐϱ ϖϕ 衋ϖ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_download.Text">
+        <source>Download</source>
+        <target>[Ḓǿẇƞŀǿȧḓ ıΐϕẛǋǅϖẛ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_downloadingFailed.Text">
+        <source>Downloading failed.
+Please download Gource and set the path in the plugins settings dialog.</source>
+        <target>[Ḓǿẇƞŀǿȧḓīƞɠ ƒȧīŀḗḓ.
+Ƥŀḗȧşḗ ḓǿẇƞŀǿȧḓ Ɠǿŭřƈḗ ȧƞḓ şḗŧ ŧħḗ ƥȧŧħ īƞ ŧħḗ ƥŀŭɠīƞş şḗŧŧīƞɠş ḓīȧŀǿɠ. ǋϖǲǲϕςςǋϰϑϑ ϑǋϖ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_gource.Text">
+        <source>Gource</source>
+        <target>[Ɠǿŭřƈḗ ΰϖΐϐϱς]</target>
+        
+      </trans-unit>
+      <trans-unit id="_gourceArguments.Caption">
         <source>Arguments</source>
-        <target>[Ȧřɠŭḿḗƞŧş ſǋſϐǅϖϐǈΰ]</target>
+        <target>[Ȧřɠŭḿḗƞŧş ϑΐϵǋǋǲ鶱ǲẛ]</target>
         
       </trans-unit>
-      <trans-unit id="GourcePath.Caption">
-        <source>Path to &quot;gource&quot;</source>
-        <target>[Ƥȧŧħ ŧǿ &quot;ɠǿŭřƈḗ&quot; ſΐϵ鶱 衋ϱ ϱẛΰ]</target>
+      <trans-unit id="_gourceDownloadedAndUnzipped.Text">
+        <source>Gource has been downloaded and unzipped.</source>
+        <target>[Ɠǿŭřƈḗ ħȧş ƀḗḗƞ ḓǿẇƞŀǿȧḓḗḓ ȧƞḓ ŭƞzīƥƥḗḓ. ΐϰǅ靐ΐǅ ϱǅϵ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_gourcePath.Caption">
+        <source>Path to Gource</source>
+        <target>[Ƥȧŧħ ŧǿ Ɠǿŭřƈḗ ǅẛǈẛ ϖſ ςϵǲſ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_resetConfigPath.Text">
+        <source>Cannot find Gource in the configured path: {0}.
+
+Do you want to reset the configured path?</source>
+        <target>[Ƈȧƞƞǿŧ ƒīƞḓ Ɠǿŭřƈḗ īƞ ŧħḗ ƈǿƞƒīɠŭřḗḓ ƥȧŧħ: {0}.
+
+Ḓǿ ẏǿŭ ẇȧƞŧ ŧǿ řḗşḗŧ ŧħḗ ƈǿƞƒīɠŭřḗḓ ƥȧŧħ? ϵϖϐςϱϕ ϑϵǅϐ ϱẛϖ]</target>
         
       </trans-unit>
     </body>
@@ -867,179 +1390,140 @@ To enable Gerrit support for a repository, a .gitreview file must be created. Th
     <body>
       <trans-unit id="$this.Text">
         <source>Gource</source>
-        <target>[Ɠǿŭřƈḗ ΐ鶱ϰſſ靐]</target>
+        <target>[Ɠǿŭřƈḗ ϱϐϰıΰǲ]</target>
         
       </trans-unit>
       <trans-unit id="ArgumentsLabel.Text">
         <source>Arguments</source>
-        <target>[Ȧřɠŭḿḗƞŧş ϱΰϐϕϕǲ衋ϕς]</target>
+        <target>[Ȧřɠŭḿḗƞŧş ςϵϑςϐǲǋϱ靐]</target>
         
       </trans-unit>
       <trans-unit id="GourceBrowse.Text">
         <source>Browse</source>
-        <target>[Ɓřǿẇşḗ 靐ıǈΐǈΰ]</target>
+        <target>[Ɓřǿẇşḗ ϵΐǋ衋ϱ靐]</target>
         
       </trans-unit>
       <trans-unit id="WorkingDirBrowse.Text">
         <source>Browse</source>
-        <target>[Ɓřǿẇşḗ ǈΰϐǲϕẛ]</target>
+        <target>[Ɓřǿẇşḗ 靐ΐıϰϱ鶱]</target>
         
       </trans-unit>
       <trans-unit id="button1.Text">
         <source>Start</source>
-        <target>[Şŧȧřŧ 靐ΐΰΰϐ]</target>
+        <target>[Şŧȧřŧ ϐΐϐϑ靐]</target>
         
       </trans-unit>
       <trans-unit id="label1.Text">
-        <source>Path to gource</source>
-        <target>[Ƥȧŧħ ŧǿ ɠǿŭřƈḗ ǲ衋ǈϱ ϱϑ ǋ鶱ΰϑ]</target>
+        <source>Path to Gource</source>
+        <target>[Ƥȧŧħ ŧǿ Ɠǿŭřƈḗ 鶱ǅıϐ 靐ϖ ϑϵϱϕ]</target>
         
       </trans-unit>
       <trans-unit id="label2.Text">
         <source>Repository</source>
-        <target>[Řḗƥǿşīŧǿřẏ ϕǈǋ衋ϖΐςϖϱϵ]</target>
+        <target>[Řḗƥǿşīŧǿřẏ ΐΐǈϕſǋϖϱ靐ΐ]</target>
         
       </trans-unit>
       <trans-unit id="linkLabel1.Text">
-        <source>gource project</source>
-        <target>[ɠǿŭřƈḗ ƥřǿĵḗƈŧ ẛϑǲ靐ǈϱ ΰıẛıẛ]</target>
+        <source>Gource project</source>
+        <target>[Ɠǿŭřƈḗ ƥřǿĵḗƈŧ ϖſϑǅϖǋ ϖϱǅϑǲ]</target>
         
       </trans-unit>
-      <trans-unit id="textBox1.Text">
-        <source>  -h, --help                       Help
-
-  -WIDTHxHEIGHT                    Set window size
-  -f                               Fullscreen
-
-  -p, --start-position POSITION    Begin at some position in the log (0.0-1.0)
-      --stop-position  POSITION    Stop at some position
-      --stop-on-idle               Stop on break in activity
-      --stop-at-end                Stop at end of the log
-      --loop                       Loop at the end of the log
-
-  -a, --auto-skip-seconds SECONDS  Auto skip to next entry if nothing happens
-                                   for a number of seconds (default: 3)
-  -s, --seconds-per-day SECONDS    Speed in seconds per day (default: 4)
-      --realtime                   Realtime playback speed
-  -i, --file-idle-time SECONDS     Time files remain idle (default: 60)
-  -e, --elasticity FLOAT           Elasticity of nodes
-  -b, --background FFFFFF          Background colour in hex
-
-  --user-image-dir DIRECTORY       Dir containing images to use as avatars
-  --default-user-image IMAGE       Default user image file
-  --colour-images                  Colourize user images
-
-  --date-format FORMAT             Specify display date string (strftime format)
-  --log-format  FORMAT             Specify format of log (git,cvs,hg,bzr,custom)
-  --git-branch                     Get the git log of a particular branch
-  --git-log-command                Show git log command used by gource
-  --cvs-exp-command                Show cvs-exp.pl log command used by gource
-  --hg-log-command                 Show hg log (Mercurial) command used by gource
-  --bzr-log-command                Show bzr log (Bazaar) command used by gource
-
-  --multi-sampling                 Enable multi-sampling
-  --crop AXIS                      Crop view on an axis (vertical,horizontal)
-
-  --bloom-multiplier               Adjust the amount of bloom (default: 1.0)
-  --bloom-intensity                Adjust the intensity of the bloom (default: 0.75)
-
-  --disable-auto-skip              Disable auto skipping
-  --disable-progress               Disable the progress bar
-  --disable-bloom                  Disable bloom effect
-
-  --hide DISPLAY_ELEMENT           date,users,files,tree,usernames,filenames,dirnames
-
-  --max-files NUMBER               Max number of active files (default: 1000)
-  --max-file-lag SECONDS           Max time files of a commit can take to appear
-
-  --max-user-speed UNITS           Speed users can travel per second (default: 500)
-
-  --user-friction SECONDS          Time users come to a complete hault (default: 0.67)
-  --user-scale SCALE               Change scale of users (default: 1.0)
-
-  --camera-mode MODE               Camera mode (overview,track)
-
-  --follow-user USER               Camera will automatically follow this user
-  --highlight-user USER            Highlight the names of a particular user
-  --highlight-all-users            Highlight the names of all users
-  --file-filter REGEX              Ignore files matching this regexe
-
-  --output-ppm-stream FILE         Write frames as PPM to a file ('-' for STDOUT)
-  --output-framerate FPS           Framerate of output (25,30,60)</source>
-        <target>[  -ħ, --ħḗŀƥ                       Ħḗŀƥ
-
-  -ẆĪḒŦĦẋĦḖĪƓĦŦ                    Şḗŧ ẇīƞḓǿẇ şīzḗ
-  -ƒ                               Ƒŭŀŀşƈřḗḗƞ
-
-  -ƥ, --şŧȧřŧ-ƥǿşīŧīǿƞ ƤǾŞĪŦĪǾȠ    Ɓḗɠīƞ ȧŧ şǿḿḗ ƥǿşīŧīǿƞ īƞ ŧħḗ ŀǿɠ (0.0-1.0)
-      --şŧǿƥ-ƥǿşīŧīǿƞ  ƤǾŞĪŦĪǾȠ    Şŧǿƥ ȧŧ şǿḿḗ ƥǿşīŧīǿƞ
-      --şŧǿƥ-ǿƞ-īḓŀḗ               Şŧǿƥ ǿƞ ƀřḗȧķ īƞ ȧƈŧīṽīŧẏ
-      --şŧǿƥ-ȧŧ-ḗƞḓ                Şŧǿƥ ȧŧ ḗƞḓ ǿƒ ŧħḗ ŀǿɠ
-      --ŀǿǿƥ                       Ŀǿǿƥ ȧŧ ŧħḗ ḗƞḓ ǿƒ ŧħḗ ŀǿɠ
-
-  -ȧ, --ȧŭŧǿ-şķīƥ-şḗƈǿƞḓş ŞḖƇǾȠḒŞ  Ȧŭŧǿ şķīƥ ŧǿ ƞḗẋŧ ḗƞŧřẏ īƒ ƞǿŧħīƞɠ ħȧƥƥḗƞş
-                                   ƒǿř ȧ ƞŭḿƀḗř ǿƒ şḗƈǿƞḓş (ḓḗƒȧŭŀŧ: 3)
-  -ş, --şḗƈǿƞḓş-ƥḗř-ḓȧẏ ŞḖƇǾȠḒŞ    Şƥḗḗḓ īƞ şḗƈǿƞḓş ƥḗř ḓȧẏ (ḓḗƒȧŭŀŧ: 4)
-      --řḗȧŀŧīḿḗ                   Řḗȧŀŧīḿḗ ƥŀȧẏƀȧƈķ şƥḗḗḓ
-  -ī, --ƒīŀḗ-īḓŀḗ-ŧīḿḗ ŞḖƇǾȠḒŞ     Ŧīḿḗ ƒīŀḗş řḗḿȧīƞ īḓŀḗ (ḓḗƒȧŭŀŧ: 60)
-  -ḗ, --ḗŀȧşŧīƈīŧẏ ƑĿǾȦŦ           Ḗŀȧşŧīƈīŧẏ ǿƒ ƞǿḓḗş
-  -ƀ, --ƀȧƈķɠřǿŭƞḓ ƑƑƑƑƑƑ          Ɓȧƈķɠřǿŭƞḓ ƈǿŀǿŭř īƞ ħḗẋ
-
-  --ŭşḗř-īḿȧɠḗ-ḓīř ḒĪŘḖƇŦǾŘẎ       Ḓīř ƈǿƞŧȧīƞīƞɠ īḿȧɠḗş ŧǿ ŭşḗ ȧş ȧṽȧŧȧřş
-  --ḓḗƒȧŭŀŧ-ŭşḗř-īḿȧɠḗ ĪḾȦƓḖ       Ḓḗƒȧŭŀŧ ŭşḗř īḿȧɠḗ ƒīŀḗ
-  --ƈǿŀǿŭř-īḿȧɠḗş                  Ƈǿŀǿŭřīzḗ ŭşḗř īḿȧɠḗş
-
-  --ḓȧŧḗ-ƒǿřḿȧŧ ƑǾŘḾȦŦ             Şƥḗƈīƒẏ ḓīşƥŀȧẏ ḓȧŧḗ şŧřīƞɠ (şŧřƒŧīḿḗ ƒǿřḿȧŧ)
-  --ŀǿɠ-ƒǿřḿȧŧ  ƑǾŘḾȦŦ             Şƥḗƈīƒẏ ƒǿřḿȧŧ ǿƒ ŀǿɠ (ɠīŧ,ƈṽş,ħɠ,ƀzř,ƈŭşŧǿḿ)
-  --ɠīŧ-ƀřȧƞƈħ                     Ɠḗŧ ŧħḗ ɠīŧ ŀǿɠ ǿƒ ȧ ƥȧřŧīƈŭŀȧř ƀřȧƞƈħ
-  --ɠīŧ-ŀǿɠ-ƈǿḿḿȧƞḓ                Şħǿẇ ɠīŧ ŀǿɠ ƈǿḿḿȧƞḓ ŭşḗḓ ƀẏ ɠǿŭřƈḗ
-  --ƈṽş-ḗẋƥ-ƈǿḿḿȧƞḓ                Şħǿẇ ƈṽş-ḗẋƥ.ƥŀ ŀǿɠ ƈǿḿḿȧƞḓ ŭşḗḓ ƀẏ ɠǿŭřƈḗ
-  --ħɠ-ŀǿɠ-ƈǿḿḿȧƞḓ                 Şħǿẇ ħɠ ŀǿɠ (Ḿḗřƈŭřīȧŀ) ƈǿḿḿȧƞḓ ŭşḗḓ ƀẏ ɠǿŭřƈḗ
-  --ƀzř-ŀǿɠ-ƈǿḿḿȧƞḓ                Şħǿẇ ƀzř ŀǿɠ (Ɓȧzȧȧř) ƈǿḿḿȧƞḓ ŭşḗḓ ƀẏ ɠǿŭřƈḗ
-
-  --ḿŭŀŧī-şȧḿƥŀīƞɠ                 Ḗƞȧƀŀḗ ḿŭŀŧī-şȧḿƥŀīƞɠ
-  --ƈřǿƥ ȦẊĪŞ                      Ƈřǿƥ ṽīḗẇ ǿƞ ȧƞ ȧẋīş (ṽḗřŧīƈȧŀ,ħǿřīzǿƞŧȧŀ)
-
-  --ƀŀǿǿḿ-ḿŭŀŧīƥŀīḗř               Ȧḓĵŭşŧ ŧħḗ ȧḿǿŭƞŧ ǿƒ ƀŀǿǿḿ (ḓḗƒȧŭŀŧ: 1.0)
-  --ƀŀǿǿḿ-īƞŧḗƞşīŧẏ                Ȧḓĵŭşŧ ŧħḗ īƞŧḗƞşīŧẏ ǿƒ ŧħḗ ƀŀǿǿḿ (ḓḗƒȧŭŀŧ: 0.75)
-
-  --ḓīşȧƀŀḗ-ȧŭŧǿ-şķīƥ              Ḓīşȧƀŀḗ ȧŭŧǿ şķīƥƥīƞɠ
-  --ḓīşȧƀŀḗ-ƥřǿɠřḗşş               Ḓīşȧƀŀḗ ŧħḗ ƥřǿɠřḗşş ƀȧř
-  --ḓīşȧƀŀḗ-ƀŀǿǿḿ                  Ḓīşȧƀŀḗ ƀŀǿǿḿ ḗƒƒḗƈŧ
-
-  --ħīḓḗ ḒĪŞƤĿȦẎ_ḖĿḖḾḖȠŦ           ḓȧŧḗ,ŭşḗřş,ƒīŀḗş,ŧřḗḗ,ŭşḗřƞȧḿḗş,ƒīŀḗƞȧḿḗş,ḓīřƞȧḿḗş
-
-  --ḿȧẋ-ƒīŀḗş ȠŬḾƁḖŘ               Ḿȧẋ ƞŭḿƀḗř ǿƒ ȧƈŧīṽḗ ƒīŀḗş (ḓḗƒȧŭŀŧ: 1000)
-  --ḿȧẋ-ƒīŀḗ-ŀȧɠ ŞḖƇǾȠḒŞ           Ḿȧẋ ŧīḿḗ ƒīŀḗş ǿƒ ȧ ƈǿḿḿīŧ ƈȧƞ ŧȧķḗ ŧǿ ȧƥƥḗȧř
-
-  --ḿȧẋ-ŭşḗř-şƥḗḗḓ ŬȠĪŦŞ           Şƥḗḗḓ ŭşḗřş ƈȧƞ ŧřȧṽḗŀ ƥḗř şḗƈǿƞḓ (ḓḗƒȧŭŀŧ: 500)
-
-  --ŭşḗř-ƒřīƈŧīǿƞ ŞḖƇǾȠḒŞ          Ŧīḿḗ ŭşḗřş ƈǿḿḗ ŧǿ ȧ ƈǿḿƥŀḗŧḗ ħȧŭŀŧ (ḓḗƒȧŭŀŧ: 0.67)
-  --ŭşḗř-şƈȧŀḗ ŞƇȦĿḖ               Ƈħȧƞɠḗ şƈȧŀḗ ǿƒ ŭşḗřş (ḓḗƒȧŭŀŧ: 1.0)
-
-  --ƈȧḿḗřȧ-ḿǿḓḗ ḾǾḒḖ               Ƈȧḿḗřȧ ḿǿḓḗ (ǿṽḗřṽīḗẇ,ŧřȧƈķ)
-
-  --ƒǿŀŀǿẇ-ŭşḗř ŬŞḖŘ               Ƈȧḿḗřȧ ẇīŀŀ ȧŭŧǿḿȧŧīƈȧŀŀẏ ƒǿŀŀǿẇ ŧħīş ŭşḗř
-  --ħīɠħŀīɠħŧ-ŭşḗř ŬŞḖŘ            Ħīɠħŀīɠħŧ ŧħḗ ƞȧḿḗş ǿƒ ȧ ƥȧřŧīƈŭŀȧř ŭşḗř
-  --ħīɠħŀīɠħŧ-ȧŀŀ-ŭşḗřş            Ħīɠħŀīɠħŧ ŧħḗ ƞȧḿḗş ǿƒ ȧŀŀ ŭşḗřş
-  --ƒīŀḗ-ƒīŀŧḗř ŘḖƓḖẊ              Īɠƞǿřḗ ƒīŀḗş ḿȧŧƈħīƞɠ ŧħīş řḗɠḗẋḗ
-
-  --ǿŭŧƥŭŧ-ƥƥḿ-şŧřḗȧḿ ƑĪĿḖ         Ẇřīŧḗ ƒřȧḿḗş ȧş ƤƤḾ ŧǿ ȧ ƒīŀḗ ('-' ƒǿř ŞŦḒǾŬŦ)
-  --ǿŭŧƥŭŧ-ƒřȧḿḗřȧŧḗ ƑƤŞ           Ƒřȧḿḗřȧŧḗ ǿƒ ǿŭŧƥŭŧ (25,30,60) ıϰς ǅǅϑǲǋẛ                       靐ǈϐΐ衋ϵ  ıϱ衋ϑ鶱鶱靐靐ǲϕϵϵǈ                    ǲϰǈ ǅıς衋ϱς ẛǋıϰϖ  ϵς                               ẛϐϵıϐſϐſǅǲϑς  ǲǋϖ ϖ靐ϐ鶱ǲ靐ΐϖǈϐǈϱẛǋǅϕ ΰ靐ΰſǈſϰΰ    ẛϐϑϱϖ ǈϕ ϕǈϱǈ ϱẛϖϵΐϵϑǈ ϐı ẛǲẛ ǈϕǋ ΐ衋ǋǲϱǋǲϖϖϕ      ǅǅǅϰϱϖϱϑ衋ΐϖſǈǅϖ  ϱǋ衋ϱϕϐ鶱ϐ    ſǲϰǈ ςǲ ıǲΰı ΰϕϱϑΰςẛǋϰ      ẛςϑϑΰϐǅ鶱ıςΰϰϕϑ               鶱ǋǋϵ ϵǲ ϑ衋ǅǲ靐 衋ϑ ϑǲǲϐϑϖϵ衋ϱ      ǲı衋ǋϱǅ鶱ǈı鶱ǋẛϵ                ϕǲϑ鶱 鶱ΰ ǅǈſ ϱϰ ϕϰǲ ϵſϐς      ϰǈϵΐ鶱衋                       ẛſϐΐ ſẛ ΰǅϐ 衋ϱϰ ǲǅ ϖ衋ϑ ſǅςẛ鶱  ıϕ鶱 ſϱǲϕςϑǈǈǋςΰϖϐΐΰϑ鶱ǲǅ ſϖϕςϕẛΐ  ϕ鶱ıϰ ϕϕϕϱ ϱϕ ϕǅ鶱ϑ ẛϵ鶱ǅǅ ΰϵ 鶱ϖϕϑϰϑΐ ΐϐı衋靐靐ǲϖ                                   ǋǋǈ ϕ 衋ΐǈ鶱ϐſ ϖ衋 靐ϵẛ靐ıϐΐ ϐǈΰ靐ϵϕΐſς ǅϱϕ  靐ǋϰ ǲςϖǲǈ衋靐ǅϰǈϐΐǅ]</target>
+      <trans-unit id="linkLabel2.Text">
+        <source>Gource command line</source>
+        <target>[Ɠǿŭřƈḗ ƈǿḿḿȧƞḓ ŀīƞḗ ϐΐǅςϰẛ ǋΐ鶱ΰ]</target>
         
       </trans-unit>
     </body>
   </file>
   <file datatype="plaintext" original="JenkinsSettingsUserControl" source-language="en">
     <body>
-      <trans-unit id="label1.Text">
-        <source>Project name</source>
-        <target>[Ƥřǿĵḗƈŧ ƞȧḿḗ ΐϖϰı靐ẛϵ ǈǲ]</target>
+      <trans-unit id="lblIgnoreBuildBranch.Text">
+        <source>Ignore build for branch</source>
+        <target>[Īɠƞǿřḗ ƀŭīŀḓ ƒǿř ƀřȧƞƈħ ǲſΰǅϑς ϖǲẛẛ]</target>
         
       </trans-unit>
-      <trans-unit id="label13.Text">
+      <trans-unit id="lblJenkinsServerUrl.Text">
         <source>Jenkins server URL</source>
-        <target>[Ĵḗƞķīƞş şḗřṽḗř ŬŘĿ ſǅẛǲ靐ϖϕ ıǅ]</target>
+        <target>[Ĵḗƞķīƞş şḗřṽḗř ŬŘĿ ſẛǋΐǈϱ衋 衋ϱ]</target>
+        
+      </trans-unit>
+      <trans-unit id="lblProjectName.Text">
+        <source>Project name</source>
+        <target>[Ƥřǿĵḗƈŧ ƞȧḿḗ ǋǈ鶱ǋ靐ſϐ ϑǅ]</target>
+        
+      </trans-unit>
+    </body>
+  </file>
+  <file datatype="plaintext" original="JiraCommitHintPlugin" source-language="en">
+    <body>
+      <trans-unit id="Description.Text">
+        <source>Jira Commit Hint</source>
+        <target>[Ĵīřȧ Ƈǿḿḿīŧ Ħīƞŧ 衋衋ϑΰ ϰ衋ϕϵſϱ]</target>
+        
+      </trans-unit>
+      <trans-unit id="EmptyQueryResultCaption.Text">
+        <source>First Task Preview</source>
+        <target>[Ƒīřşŧ Ŧȧşķ Ƥřḗṽīḗẇ ϱ衋ϕǋϵ 鶱衋ǋϑ]</target>
+        
+      </trans-unit>
+      <trans-unit id="EmptyQueryResultMessage.Text">
+        <source>[Empty Jira Query Result]</source>
+        <target>[[Ḗḿƥŧẏ Ĵīřȧ Ɋŭḗřẏ Řḗşŭŀŧ] ǈǋẛǋ鶱ΐ ſẛ鶱ẛ]</target>
+        
+      </trans-unit>
+      <trans-unit id="InvalidUrlCaption.Text">
+        <source>Invalid Jira url</source>
+        <target>[Īƞṽȧŀīḓ Ĵīřȧ ŭřŀ ſ靐靐ǈſϑǅ ſǅı]</target>
+        
+      </trans-unit>
+      <trans-unit id="InvalidUrlMessage.Text">
+        <source>A valid url is required to launch the Jira query helper</source>
+        <target>[Ȧ ṽȧŀīḓ ŭřŀ īş řḗɋŭīřḗḓ ŧǿ ŀȧŭƞƈħ ŧħḗ Ĵīřȧ ɋŭḗřẏ ħḗŀƥḗř ǈ ϕΰ衋ǅΐ]</target>
+        
+      </trans-unit>
+      <trans-unit id="JiraFieldsLabel.Text">
+        <source>Jira fields</source>
+        <target>[Ĵīřȧ ƒīḗŀḓş ϑǋΐϑ ϕıϖ鶱ΐϱ]</target>
+        
+      </trans-unit>
+      <trans-unit id="PreviewButtonText.Text">
+        <source>Preview</source>
+        <target>[Ƥřḗṽīḗẇ ǋϑϱϖẛΐϐ]</target>
+        
+      </trans-unit>
+      <trans-unit id="QueryHelperLinkText.Text">
+        <source>Open the query helper inside Jira</source>
+        <target>[Ǿƥḗƞ ŧħḗ ɋŭḗřẏ ħḗŀƥḗř īƞşīḓḗ Ĵīřȧ ǲϖǲǅ ǅϖẛ ǈ]</target>
+        
+      </trans-unit>
+      <trans-unit id="QueryHelperOpenErrorText.Text">
+        <source>Unable to open Jira query helper</source>
+        <target>[Ŭƞȧƀŀḗ ŧǿ ǿƥḗƞ Ĵīřȧ ɋŭḗřẏ ħḗŀƥḗř ϑϑΰǋſǋ ΐς ǈ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_credentialsSettings.Caption">
+        <source>Jira credentials</source>
+        <target>[Ĵīřȧ ƈřḗḓḗƞŧīȧŀş ſϑ衋ẛ ϕΰϱϑϰϰ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_enabledSettings.Caption">
+        <source>Jira hint plugin enabled</source>
+        <target>[Ĵīřȧ ħīƞŧ ƥŀŭɠīƞ ḗƞȧƀŀḗḓ ϐǲǲϵ ẛſıϖ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_jqlQuerySettings.Caption">
+        <source>JQL Query</source>
+        <target>[ĴɊĿ Ɋŭḗřẏ ϰſϱ ΰϐıǲΐ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_stringTemplateSetting.Caption">
+        <source>Message Template</source>
+        <target>[Ḿḗşşȧɠḗ Ŧḗḿƥŀȧŧḗ ςϖϕςϐϕϖ ϖςϖ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_urlSettings.Caption">
+        <source>Jira URL</source>
+        <target>[Ĵīřȧ ŬŘĿ ϕϰǈϰ ϐϐǲ]</target>
         
       </trans-unit>
     </body>
@@ -1048,42 +1532,42 @@ To enable Gerrit support for a repository, a .gitreview file must be created. Th
     <body>
       <trans-unit id="$this.Text">
         <source>Proxy Switcher</source>
-        <target>[Ƥřǿẋẏ Şẇīŧƈħḗř 靐ǲıϑϐ ǲϐ靐衋ẛ靐]</target>
+        <target>[Ƥřǿẋẏ Şẇīŧƈħḗř ſı衋ǅı ϵϕϰſſϐ]</target>
         
       </trans-unit>
       <trans-unit id="ApplyGlobally_CheckBox.Text">
         <source>Apply globally</source>
-        <target>[Ȧƥƥŀẏ ɠŀǿƀȧŀŀẏ ϕẛǲſϰ ςΐΰ鶱ΰϕ]</target>
+        <target>[Ȧƥƥŀẏ ɠŀǿƀȧŀŀẏ ϵ衋ϑ鶱ı ϰ靐ıϑıϐ]</target>
         
       </trans-unit>
       <trans-unit id="GlobalHttpProxy_Label.Text">
         <source>Global http.proxy:</source>
-        <target>[Ɠŀǿƀȧŀ ħŧŧƥ.ƥřǿẋẏ: ǅǲ衋ǈς衋 ϕϑ靐]</target>
+        <target>[Ɠŀǿƀȧŀ ħŧŧƥ.ƥřǿẋẏ: ϕϱςϱϑΐ ϕϵ衋]</target>
         
       </trans-unit>
       <trans-unit id="LocalHttpProxy_Label.Text">
         <source>Local http.proxy:</source>
-        <target>[Ŀǿƈȧŀ ħŧŧƥ.ƥřǿẋẏ: ϖ衋ΰẛΰ ϱΰϖǲı衋]</target>
+        <target>[Ŀǿƈȧŀ ħŧŧƥ.ƥřǿẋẏ: 靐ΐϵǋẛ ς衋ϰϖϑǲ]</target>
         
       </trans-unit>
       <trans-unit id="SetProxy_Button.Text">
         <source>Set proxy</source>
-        <target>[Şḗŧ ƥřǿẋẏ 鶱ϖϑ ẛϑẛϖϐ]</target>
+        <target>[Şḗŧ ƥřǿẋẏ ſıϖ 鶱ǈſı衋]</target>
         
       </trans-unit>
       <trans-unit id="UnsetProxy_Button.Text">
         <source>Unset proxy</source>
-        <target>[Ŭƞşḗŧ ƥřǿẋẏ ϐϖΰǈ靐 ϵ靐ſẛı]</target>
+        <target>[Ŭƞşḗŧ ƥřǿẋẏ ϐıϵϑ衋 ΐϖſϖſ]</target>
         
       </trans-unit>
       <trans-unit id="_pleaseSetProxy.Text">
         <source>There is no proxy configured. Please set the proxy host in the plugin settings.</source>
-        <target>[Ŧħḗřḗ īş ƞǿ ƥřǿẋẏ ƈǿƞƒīɠŭřḗḓ. Ƥŀḗȧşḗ şḗŧ ŧħḗ ƥřǿẋẏ ħǿşŧ īƞ ŧħḗ ƥŀŭɠīƞ şḗŧŧīƞɠş. ǋϑϕϱẛ ıſ 鶱ẛ]</target>
+        <target>[Ŧħḗřḗ īş ƞǿ ƥřǿẋẏ ƈǿƞƒīɠŭřḗḓ. Ƥŀḗȧşḗ şḗŧ ŧħḗ ƥřǿẋẏ ħǿşŧ īƞ ŧħḗ ƥŀŭɠīƞ şḗŧŧīƞɠş. ϑ靐靐ϵϐ ϑ衋 ϰ鶱]</target>
         
       </trans-unit>
       <trans-unit id="_pluginDescription.Text">
         <source>Proxy Switcher</source>
-        <target>[Ƥřǿẋẏ Şẇīŧƈħḗř ΰǋΐϖẛ ẛǅẛϵϖſ]</target>
+        <target>[Ƥřǿẋẏ Şẇīŧƈħḗř 靐ǲıϑϱ ǅǅǋǈı鶱]</target>
         
       </trans-unit>
     </body>
@@ -1092,7 +1576,27 @@ To enable Gerrit support for a repository, a .gitreview file must be created. Th
     <body>
       <trans-unit id="Description.Text">
         <source>Proxy Switcher</source>
-        <target>[Ƥřǿẋẏ Şẇīŧƈħḗř ǈǋϐϕϰ ϰǅǅ衋ϵſ]</target>
+        <target>[Ƥřǿẋẏ Şẇīŧƈħḗř ſΰΰϱϕ ς衋ǅϕẛẛ]</target>
+        
+      </trans-unit>
+      <trans-unit id="HttpProxy.Caption">
+        <source>HTTP proxy</source>
+        <target>[ĦŦŦƤ ƥřǿẋẏ ǅςς衋 ϐϖςǅϱ]</target>
+        
+      </trans-unit>
+      <trans-unit id="HttpProxyPort.Caption">
+        <source>HTTP proxy port</source>
+        <target>[ĦŦŦƤ ƥřǿẋẏ ƥǿřŧ ǅϖı鶱 ϵǅıϱϕ]</target>
+        
+      </trans-unit>
+      <trans-unit id="Password.Caption">
+        <source>Password</source>
+        <target>[Ƥȧşşẇǿřḓ ǲǅΰ鶱ΐıϰı]</target>
+        
+      </trans-unit>
+      <trans-unit id="Username.Caption">
+        <source>Username</source>
+        <target>[Ŭşḗřƞȧḿḗ ǅΰſſıϵϰϕ]</target>
         
       </trans-unit>
     </body>
@@ -1101,108 +1605,126 @@ To enable Gerrit support for a repository, a .gitreview file must be created. Th
     <body>
       <trans-unit id="$this.Text">
         <source>Release Notes Generator</source>
-        <target>[Řḗŀḗȧşḗ Ƞǿŧḗş Ɠḗƞḗřȧŧǿř ϑϵǋǲẛẛǲ ıϰǈ]</target>
+        <target>[Řḗŀḗȧşḗ Ƞǿŧḗş Ɠḗƞḗřȧŧǿř ǅϰϖϕϑǅϐ ΰΐǲ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_caption.Text">
+        <source>Invalid input</source>
+        <target>[Īƞṽȧŀīḓ īƞƥŭŧ ϵǋǈϖϱẛϕ ǲΰϖ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_commitLogFrom.Text">
+        <source>Commit log from '{0}' to '{1}' ({2}):</source>
+        <target>[Ƈǿḿḿīŧ ŀǿɠ ƒřǿḿ '{0}' ŧǿ '{1}' ({2}): ϖ靐ςς靐ϑ ſ]</target>
+        
+      </trans-unit>
+      <trans-unit id="_fromCommitNotSpecified.Text">
+        <source>'From' commit must be specified</source>
+        <target>['Ƒřǿḿ' ƈǿḿḿīŧ ḿŭşŧ ƀḗ şƥḗƈīƒīḗḓ 鶱ϱϑſςǅ衋ǈϰẛς]</target>
+        
+      </trans-unit>
+      <trans-unit id="_toCommitNotSpecified.Text">
+        <source>'To' commit must be specified</source>
+        <target>['Ŧǿ' ƈǿḿḿīŧ ḿŭşŧ ƀḗ şƥḗƈīƒīḗḓ ıϵǲςϵϰ鶱ǋϰς]</target>
         
       </trans-unit>
       <trans-unit id="buttonCopyAsHtml.Text">
         <source>as HTML table</source>
-        <target>[ȧş ĦŦḾĿ ŧȧƀŀḗ ϖϵ ǅıϵǅ 鶱ẛǲ]</target>
+        <target>[ȧş ĦŦḾĿ ŧȧƀŀḗ ΐſ ΰϰΐΰ ǈ靐ẛ]</target>
         
       </trans-unit>
       <trans-unit id="buttonCopyAsTextTableSpace.Text">
         <source>as text table (spaces)</source>
-        <target>[ȧş ŧḗẋŧ ŧȧƀŀḗ (şƥȧƈḗş) ΐ靐 ǋſϖǲ ſ鶱ϑ]</target>
+        <target>[ȧş ŧḗẋŧ ŧȧƀŀḗ (şƥȧƈḗş) 衋ẛ ΐǋϐ靐 ǅ靐ϰ]</target>
         
       </trans-unit>
       <trans-unit id="buttonCopyAsTextTableTab.Text">
         <source>as text table (tabs)</source>
-        <target>[ȧş ŧḗẋŧ ŧȧƀŀḗ (ŧȧƀş) ǋı ΐϖϕϐ ǈſ靐ı]</target>
+        <target>[ȧş ŧḗẋŧ ŧȧƀŀḗ (ŧȧƀş) ϕϱ ϕϱ靐ς 靐ϕϑǲ]</target>
         
       </trans-unit>
       <trans-unit id="buttonCopyOrigOutput.Text">
         <source>original output</source>
-        <target>[ǿřīɠīƞȧŀ ǿŭŧƥŭŧ ǈǋϵϱẛςẛϱ ẛ]</target>
+        <target>[ǿřīɠīƞȧŀ ǿŭŧƥŭŧ 衋ϕ靐ϐſΰϵǈ ϕ]</target>
         
       </trans-unit>
       <trans-unit id="buttonGenerate.Text">
         <source>Generate</source>
-        <target>[Ɠḗƞḗřȧŧḗ ΐ靐ſϰǈǅǈǋ]</target>
+        <target>[Ɠḗƞḗřȧŧḗ ϕ衋衋ϕϱϵ衋ϵ]</target>
         
       </trans-unit>
       <trans-unit id="groupBox1.Text">
         <source>Result</source>
-        <target>[Řḗşŭŀŧ ϑϕΰΐϱϑ]</target>
+        <target>[Řḗşŭŀŧ ϕıςϕϖǅ]</target>
         
       </trans-unit>
       <trans-unit id="groupBoxCopy.Text">
         <source>Copy to clipboard</source>
-        <target>[Ƈǿƥẏ ŧǿ ƈŀīƥƀǿȧřḓ ϕϵıẛ ǈϵ ΐǋΐẛ]</target>
+        <target>[Ƈǿƥẏ ŧǿ ƈŀīƥƀǿȧřḓ ǈıϰϕ ϰΐ ϵıϵϱ]</target>
         
       </trans-unit>
       <trans-unit id="label1.Text">
         <source>Commit expression &quot;To&quot; (including):</source>
-        <target>[Ƈǿḿḿīŧ ḗẋƥřḗşşīǿƞ &quot;Ŧǿ&quot; (īƞƈŀŭḓīƞɠ): ϰϵǈϑǈǅ ǋΐ衋]</target>
+        <target>[Ƈǿḿḿīŧ ḗẋƥřḗşşīǿƞ &quot;Ŧǿ&quot; (īƞƈŀŭḓīƞɠ): ǈııςǲı ϑı鶱]</target>
         
       </trans-unit>
       <trans-unit id="label10.Text">
         <source>separate columns with spaces</source>
-        <target>[şḗƥȧřȧŧḗ ƈǿŀŭḿƞş ẇīŧħ şƥȧƈḗş ǋϑ鶱ΐΐı鶱ǈ ϰϱ]</target>
+        <target>[şḗƥȧřȧŧḗ ƈǿŀŭḿƞş ẇīŧħ şƥȧƈḗş ΰΰ衋ẛςΐϕǲ ſǅ]</target>
         
       </trans-unit>
       <trans-unit id="label11.Text">
         <source>Clipboard will contain HTML code (plain text) and HTML format
-which can be pasted to programs like MS Word or LibreOffice Writer.
-</source>
+which can be pasted to programs like MS Word or LibreOffice Writer.</source>
         <target>[Ƈŀīƥƀǿȧřḓ ẇīŀŀ ƈǿƞŧȧīƞ ĦŦḾĿ ƈǿḓḗ (ƥŀȧīƞ ŧḗẋŧ) ȧƞḓ ĦŦḾĿ ƒǿřḿȧŧ
-ẇħīƈħ ƈȧƞ ƀḗ ƥȧşŧḗḓ ŧǿ ƥřǿɠřȧḿş ŀīķḗ ḾŞ Ẇǿřḓ ǿř ĿīƀřḗǾƒƒīƈḗ Ẇřīŧḗř.
- ςǈǲϵǅϕϰ靐ǋ ǈϰϑϰ ϵǋẛςǲ靐ς]</target>
+ẇħīƈħ ƈȧƞ ƀḗ ƥȧşŧḗḓ ŧǿ ƥřǿɠřȧḿş ŀīķḗ ḾŞ Ẇǿřḓ ǿř ĿīƀřḗǾƒƒīƈḗ Ẇřīŧḗř. ΐϕΐϑϑǋΰϖΰ 衋靐ǅ靐 ΐſ靐ǲϕϕϑ]</target>
         
       </trans-unit>
       <trans-unit id="label2.Text">
         <source>Commit expression &quot;From&quot; (excluding):</source>
-        <target>[Ƈǿḿḿīŧ ḗẋƥřḗşşīǿƞ &quot;Ƒřǿḿ&quot; (ḗẋƈŀŭḓīƞɠ): ǅςııϕΐ ıẛς]</target>
+        <target>[Ƈǿḿḿīŧ ḗẋƥřḗşşīǿƞ &quot;Ƒřǿḿ&quot; (ḗẋƈŀŭḓīƞɠ): ϰẛẛǈϱΰ ẛẛϕ]</target>
         
       </trans-unit>
       <trans-unit id="label3.Text">
         <source>git log arguments:</source>
-        <target>[ɠīŧ ŀǿɠ ȧřɠŭḿḗƞŧş: ϖϰǋ ſϰǲ ΐΐ]</target>
+        <target>[ɠīŧ ŀǿɠ ȧřɠŭḿḗƞŧş: ΐ衋ǲ ǅϕϕ ϰ靐]</target>
         
       </trans-unit>
       <trans-unit id="label4.Text">
         <source>{0} = from; {1} = to</source>
-        <target>[{0} = ƒřǿḿ; {1} = ŧǿ ıǋς ı ẛΐϱſǋ]</target>
+        <target>[{0} = ƒřǿḿ; {1} = ŧǿ ΐıı ſ ϑϵςΰǅ]</target>
         
       </trans-unit>
       <trans-unit id="label5.Text">
         <source>Sorting: Most recent revisions are listed on top.</source>
-        <target>[Şǿřŧīƞɠ: Ḿǿşŧ řḗƈḗƞŧ řḗṽīşīǿƞş ȧřḗ ŀīşŧḗḓ ǿƞ ŧǿƥ. ϐ鶱ϵſ鶱ſǋǅ ϰ]</target>
+        <target>[Şǿřŧīƞɠ: Ḿǿşŧ řḗƈḗƞŧ řḗṽīşīǿƞş ȧřḗ ŀīşŧḗḓ ǿƞ ŧǿƥ. ϖǅ衋ϖẛϕΰǋ 靐]</target>
         
       </trans-unit>
       <trans-unit id="label6.Text">
         <source>Revisions count = </source>
-        <target>[Řḗṽīşīǿƞş ƈǿŭƞŧ =  ϵςϐǲΰǈΐ鶱ǅ]</target>
+        <target>[Řḗṽīşīǿƞş ƈǿŭƞŧ =  ϖſẛςϰǅΐǅϱ]</target>
         
       </trans-unit>
       <trans-unit id="label7.Text">
         <source>(Commit expressions can be commit hashes,
 branch names, tag names)</source>
         <target>[(Ƈǿḿḿīŧ ḗẋƥřḗşşīǿƞş ƈȧƞ ƀḗ ƈǿḿḿīŧ ħȧşħḗş,
-ƀřȧƞƈħ ƞȧḿḗş, ŧȧɠ ƞȧḿḗş) 衋鶱ǈϵ靐ϕϖ ǲϵ]</target>
+ƀřȧƞƈħ ƞȧḿḗş, ŧȧɠ ƞȧḿḗş) ϱ鶱ǈẛϱǈǲ ϑς]</target>
         
       </trans-unit>
       <trans-unit id="label8.Text">
         <source>as is</source>
-        <target>[ȧş īş ǲǅ ẛẛ]</target>
+        <target>[ȧş īş ΐϖ ǲΐ]</target>
         
       </trans-unit>
       <trans-unit id="label9.Text">
         <source>separate columns with tabs</source>
-        <target>[şḗƥȧřȧŧḗ ƈǿŀŭḿƞş ẇīŧħ ŧȧƀş ΐϕϑǈ衋ϑǋς ǲ鶱]</target>
+        <target>[şḗƥȧřȧŧḗ ƈǿŀŭḿƞş ẇīŧħ ŧȧƀş ǲΰıς鶱ǲϰϑ ǋẛ]</target>
         
       </trans-unit>
       <trans-unit id="labelRevCount.Text">
         <source>n/a</source>
-        <target>[ƞ/ȧ ϑΐẛ]</target>
+        <target>[ƞ/ȧ ϑſǈ]</target>
         
       </trans-unit>
     </body>
@@ -1211,225 +1733,132 @@ branch names, tag names)</source>
     <body>
       <trans-unit id="Description.Text">
         <source>Release Notes Generator</source>
-        <target>[Řḗŀḗȧşḗ Ƞǿŧḗş Ɠḗƞḗřȧŧǿř ϕſϖ衋衋靐ẛ ϰſϑ]</target>
+        <target>[Řḗŀḗȧşḗ Ƞǿŧḗş Ɠḗƞḗřȧŧǿř ΐ鶱ϵϑ衋ϕ衋 ıϖϰ]</target>
         
       </trans-unit>
     </body>
   </file>
-  <file datatype="plaintext" original="StashPlugin" source-language="en">
+  <file datatype="plaintext" original="SettingsUserControl" source-language="en">
     <body>
-      <trans-unit id="Description.Text">
-        <source>Create Stash Pull Request</source>
-        <target>[Ƈřḗȧŧḗ Şŧȧşħ Ƥŭŀŀ Řḗɋŭḗşŧ ϵϐǅẛ鶱ϕ ϰςϕΰ]</target>
+      <trans-unit id="ExtractLink.Text">
+        <source>Extract data from a build result url copied in the clipboard</source>
+        <target>[Ḗẋŧřȧƈŧ ḓȧŧȧ ƒřǿḿ ȧ ƀŭīŀḓ řḗşŭŀŧ ŭřŀ ƈǿƥīḗḓ īƞ ŧħḗ ƈŀīƥƀǿȧřḓ ςıΰϰϱǅǲ 靐]</target>
         
       </trans-unit>
-    </body>
-  </file>
-  <file datatype="plaintext" original="StashPullRequestForm" source-language="en">
-    <body>
-      <trans-unit id="$this.Text">
-        <source>Create Pull Request</source>
-        <target>[Ƈřḗȧŧḗ Ƥŭŀŀ Řḗɋŭḗşŧ ſſϑϑϑǲ ſϖ衋ǈ]</target>
+      <trans-unit id="TokenManagementLink.Text">
+        <source>Go to token management page</source>
+        <target>[Ɠǿ ŧǿ ŧǿķḗƞ ḿȧƞȧɠḗḿḗƞŧ ƥȧɠḗ ǅı ǈǋ ΐǋςϑ]</target>
         
       </trans-unit>
-      <trans-unit id="GridColumnName.HeaderText">
-        <source>Name</source>
-        <target>[Ƞȧḿḗ ẛǲϰΰ]</target>
+      <trans-unit id="_failToExtractDataFromClipboardCaption.Text">
+        <source>Could not extract data</source>
+        <target>[Ƈǿŭŀḓ ƞǿŧ ḗẋŧřȧƈŧ ḓȧŧȧ ϖΐǅǋǈ ẛ靐衋 靐]</target>
         
       </trans-unit>
-      <trans-unit id="btnApprove.Text">
-        <source>Approve</source>
-        <target>[Ȧƥƥřǿṽḗ ϰϱ鶱ſϵıϕ]</target>
+      <trans-unit id="_failToExtractDataFromClipboardMessage.Text">
+        <source>The clipboard doesn't contain a valid build url.
+
+Please copy the url of the build into the clipboard before retrying.
+(Should contain at least the &quot;buildId&quot; parameter)</source>
+        <target>[Ŧħḗ ƈŀīƥƀǿȧřḓ ḓǿḗşƞ'ŧ ƈǿƞŧȧīƞ ȧ ṽȧŀīḓ ƀŭīŀḓ ŭřŀ.
+
+Ƥŀḗȧşḗ ƈǿƥẏ ŧħḗ ŭřŀ ǿƒ ŧħḗ ƀŭīŀḓ īƞŧǿ ŧħḗ ƈŀīƥƀǿȧřḓ ƀḗƒǿřḗ řḗŧřẏīƞɠ.
+(Şħǿŭŀḓ ƈǿƞŧȧīƞ ȧŧ ŀḗȧşŧ ŧħḗ &quot;ƀŭīŀḓĪḓ&quot; ƥȧřȧḿḗŧḗř) ϱ鶱ẛ ϖϵϖ靐ǅǋ鶱ſ鶱 ǲıΐẛϵϱϰǋϱΐǲ衋 ǅΐϐẛǋϕ]</target>
         
       </trans-unit>
-      <trans-unit id="btnCreate.Text">
-        <source>Create</source>
-        <target>[Ƈřḗȧŧḗ ϑΰΐıΰϐ]</target>
+      <trans-unit id="_failToLoadBuildDefinitionInfoMessage.Text">
+        <source>Error while trying to retrieve build definition information from url.
+
+Please ensure that the url is valid and that the API token has access to build and project information.</source>
+        <target>[Ḗřřǿř ẇħīŀḗ ŧřẏīƞɠ ŧǿ řḗŧřīḗṽḗ ƀŭīŀḓ ḓḗƒīƞīŧīǿƞ īƞƒǿřḿȧŧīǿƞ ƒřǿḿ ŭřŀ.
+
+Ƥŀḗȧşḗ ḗƞşŭřḗ ŧħȧŧ ŧħḗ ŭřŀ īş ṽȧŀīḓ ȧƞḓ ŧħȧŧ ŧħḗ ȦƤĪ ŧǿķḗƞ ħȧş ȧƈƈḗşş ŧǿ ƀŭīŀḓ ȧƞḓ ƥřǿĵḗƈŧ īƞƒǿřḿȧŧīǿƞ. ϐǲ鶱ſı ǅǋıǋϖ ςΐς靐ſΰ ΐǲ ẛǋǅǈſϵ鶱ϑ]</target>
         
       </trans-unit>
-      <trans-unit id="btnMerge.Text">
-        <source>Merge</source>
-        <target>[Ḿḗřɠḗ ſΰſϖı]</target>
-        
-      </trans-unit>
-      <trans-unit id="groupBox1.Text">
-        <source>Source</source>
-        <target>[Şǿŭřƈḗ ϑΐϐϱ衋ǅ]</target>
-        
-      </trans-unit>
-      <trans-unit id="groupBox2.Text">
-        <source>Target</source>
-        <target>[Ŧȧřɠḗŧ ſϑẛςϕ靐]</target>
-        
-      </trans-unit>
-      <trans-unit id="groupBox3.Text">
-        <source>Pull Request Info</source>
-        <target>[Ƥŭŀŀ Řḗɋŭḗşŧ Īƞƒǿ ςΐϵϖ ǈϱΐΐϐǅϐ]</target>
-        
-      </trans-unit>
-      <trans-unit id="groupBox4.Text">
-        <source>Source</source>
-        <target>[Şǿŭřƈḗ ǈςϐΐ鶱靐]</target>
-        
-      </trans-unit>
-      <trans-unit id="groupBox5.Text">
-        <source>Target</source>
-        <target>[Ŧȧřɠḗŧ ǅςϑϱǲΐ]</target>
-        
-      </trans-unit>
-      <trans-unit id="groupBox6.Text">
-        <source>Pull Request Info</source>
-        <target>[Ƥŭŀŀ Řḗɋŭḗşŧ Īƞƒǿ 靐ϖẛǋ ǋϕ鶱ıς靐ς]</target>
-        
-      </trans-unit>
-      <trans-unit id="groupBox9.Text">
-        <source>Information</source>
-        <target>[Īƞƒǿřḿȧŧīǿƞ ϰǲς衋ϐıϱ鶱ǅϐς]</target>
+      <trans-unit id="_infoNoApiTokenMessage.Text">
+        <source>Unable to retrieve build definition information without API token. Field will be left blank.</source>
+        <target>[Ŭƞȧƀŀḗ ŧǿ řḗŧřīḗṽḗ ƀŭīŀḓ ḓḗƒīƞīŧīǿƞ īƞƒǿřḿȧŧīǿƞ ẇīŧħǿŭŧ ȦƤĪ ŧǿķḗƞ. Ƒīḗŀḓ ẇīŀŀ ƀḗ ŀḗƒŧ ƀŀȧƞķ. ϐǋ靐ϑϕϑ ϖſ ǲϱıΐΐ]</target>
         
       </trans-unit>
       <trans-unit id="label1.Text">
-        <source>Branch</source>
-        <target>[Ɓřȧƞƈħ ΰ靐ϐϵϕǈ]</target>
-        
-      </trans-unit>
-      <trans-unit id="label10.Text">
-        <source>Reviewer (approved)</source>
-        <target>[Řḗṽīḗẇḗř (ȧƥƥřǿṽḗḓ) ϰϐıſϐϕΐǅ ıΐ]</target>
-        
-      </trans-unit>
-      <trans-unit id="label12.Text">
-        <source>Author</source>
-        <target>[Ȧŭŧħǿř ǲǅϖǋΰ鶱]</target>
-        
-      </trans-unit>
-      <trans-unit id="label13.Text">
-        <source>Description</source>
-        <target>[Ḓḗşƈřīƥŧīǿƞ ϵϰΰǈǋ衋鶱ςǋ靐ϐ]</target>
-        
-      </trans-unit>
-      <trans-unit id="label14.Text">
-        <source>Title</source>
-        <target>[Ŧīŧŀḗ ǅẛϖ衋ς]</target>
-        
-      </trans-unit>
-      <trans-unit id="label16.Text">
-        <source>State</source>
-        <target>[Şŧȧŧḗ ǈΰΰǲſ]</target>
-        
-      </trans-unit>
-      <trans-unit id="label17.Text">
-        <source>Repository</source>
-        <target>[Řḗƥǿşīŧǿřẏ ẛǅǲΰϵΐǲǲΰǅ]</target>
-        
-      </trans-unit>
-      <trans-unit id="label18.Text">
-        <source>Branch</source>
-        <target>[Ɓřȧƞƈħ ϰΐǅϰǋϰ]</target>
-        
-      </trans-unit>
-      <trans-unit id="label2.Text">
-        <source>Branch</source>
-        <target>[Ɓřȧƞƈħ ϑϰϖΐΰẛ]</target>
-        
-      </trans-unit>
-      <trans-unit id="label3.Text">
-        <source>Description</source>
-        <target>[Ḓḗşƈřīƥŧīǿƞ ǅǋǲϐϐΐ衋ǲẛς鶱]</target>
+        <source>Examples:
+ - https://dev.azure.com/yourorganization/projectname/
+ - https://yourhost:8080/tfs/collectionname/projectname/
+ - https://yourorganization.visualstudio.com/projectname/</source>
+        <target>[Ḗẋȧḿƥŀḗş:
+ - ħŧŧƥş://ḓḗṽ.ȧzŭřḗ.ƈǿḿ/ẏǿŭřǿřɠȧƞīzȧŧīǿƞ/ƥřǿĵḗƈŧƞȧḿḗ/
+ - ħŧŧƥş://ẏǿŭřħǿşŧ:8080/ŧƒş/ƈǿŀŀḗƈŧīǿƞƞȧḿḗ/ƥřǿĵḗƈŧƞȧḿḗ/
+ - ħŧŧƥş://ẏǿŭřǿřɠȧƞīzȧŧīǿƞ.ṽīşŭȧŀşŧŭḓīǿ.ƈǿḿ/ƥřǿĵḗƈŧƞȧḿḗ/ ϖςϑςϕ靐ǲ衋鶱ẛ 衋 ϰǈϑϵϵϱ衋ǲ靐ϑΰϕǋΐϵϐϕǲǲ]</target>
         
       </trans-unit>
       <trans-unit id="label4.Text">
-        <source>Title</source>
-        <target>[Ŧīŧŀḗ ϐϱϕǲϐ]</target>
+        <source>You need to create a token with the following scopes:
+ - 'Build (read)'
+ - 'Project and team (read)'</source>
+        <target>[Ẏǿŭ ƞḗḗḓ ŧǿ ƈřḗȧŧḗ ȧ ŧǿķḗƞ ẇīŧħ ŧħḗ ƒǿŀŀǿẇīƞɠ şƈǿƥḗş:
+ - 'Ɓŭīŀḓ (řḗȧḓ)'
+ - 'Ƥřǿĵḗƈŧ ȧƞḓ ŧḗȧḿ (řḗȧḓ)' ſ靐ϵ ẛϐ靐ǋ 靐ΐ ſẛϖǋǈẛ ẛ]</target>
         
       </trans-unit>
-      <trans-unit id="label5.Text">
-        <source>Repository</source>
-        <target>[Řḗƥǿşīŧǿřẏ ſ靐ϱ靐ϖǲϕϐǲΰ]</target>
-        
-      </trans-unit>
-      <trans-unit id="label6.Text">
-        <source>Repository</source>
-        <target>[Řḗƥǿşīŧǿřẏ ϖϐǈ衋ǋΰΰϕϖϵ]</target>
-        
-      </trans-unit>
-      <trans-unit id="label8.Text">
-        <source>Repository</source>
-        <target>[Řḗƥǿşīŧǿřẏ 鶱ſϐ鶱ΐ衋衋ıϖϱ]</target>
-        
-      </trans-unit>
-      <trans-unit id="label9.Text">
-        <source>Branch</source>
-        <target>[Ɓřȧƞƈħ ςǅϐı鶱ϖ]</target>
-        
-      </trans-unit>
-      <trans-unit id="lblReviewers.Text">
-        <source>Reviewer(s)</source>
-        <target>[Řḗṽīḗẇḗř(ş) ǅΰẛϖΐςǈϵǅΰ鶱]</target>
-        
-      </trans-unit>
-      <trans-unit id="tabCreate.Text">
-        <source>Create Pull Request</source>
-        <target>[Ƈřḗȧŧḗ Ƥŭŀŀ Řḗɋŭḗşŧ ϖ衋ǈǲ鶱ς 靐靐ϐϑ]</target>
-        
-      </trans-unit>
-      <trans-unit id="tabView.Text">
-        <source>View Pull Requests</source>
-        <target>[Ṽīḗẇ Ƥŭŀŀ Řḗɋŭḗşŧş ϕ靐ǲ靐 衋ϰΰϖ]</target>
+      <trans-unit id="labelRegexError.Text">
+        <source>The 'Build definition name' regular expression is not valid and won't be saved!</source>
+        <target>[Ŧħḗ 'Ɓŭīŀḓ ḓḗƒīƞīŧīǿƞ ƞȧḿḗ' řḗɠŭŀȧř ḗẋƥřḗşşīǿƞ īş ƞǿŧ ṽȧŀīḓ ȧƞḓ ẇǿƞ'ŧ ƀḗ şȧṽḗḓ! ſǋǈ ǲǅϵϖϖϱǋǋıϵϖ]</target>
         
       </trans-unit>
     </body>
   </file>
   <file datatype="plaintext" original="TeamCitySettingsUserControl" source-language="en">
     <body>
-      <trans-unit id="label1.Text">
-        <source>Project name</source>
-        <target>[Ƥřǿĵḗƈŧ ƞȧḿḗ ϐǋΰǋ鶱衋ǲ ΰǅ]</target>
+      <trans-unit id="CheckBoxLogAsGuest.Text">
+        <source>Log as guest to display the build report</source>
+        <target>[Ŀǿɠ ȧş ɠŭḗşŧ ŧǿ ḓīşƥŀȧẏ ŧħḗ ƀŭīŀḓ řḗƥǿřŧ ςϰϖ ϕϖ ϵ鶱衋]</target>
         
       </trans-unit>
-      <trans-unit id="label13.Text">
-        <source>TeamCity server URL</source>
-        <target>[ŦḗȧḿƇīŧẏ şḗřṽḗř ŬŘĿ ϱϱſǲΰϕΐϰ 靐ı]</target>
+      <trans-unit id="_failToExtractDataFromClipboardCaption.Text">
+        <source>Build url not valid</source>
+        <target>[Ɓŭīŀḓ ŭřŀ ƞǿŧ ṽȧŀīḓ 靐ϖı靐ϕ 靐ǋϱ ΐ]</target>
         
       </trans-unit>
-      <trans-unit id="labelBuildFilter.Text">
-        <source>Build Id Filter</source>
-        <target>[Ɓŭīŀḓ Īḓ Ƒīŀŧḗř ıǋϕ衋鶱 ϕϰ ǈ]</target>
+      <trans-unit id="_failToExtractDataFromClipboardMessage.Text">
+        <source>The clipboard doesn't contain a valid build url.
+
+Please copy in the clipboard the url of the build before retrying.
+(Should contain at least the &quot;buildTypeId&quot; parameter)</source>
+        <target>[Ŧħḗ ƈŀīƥƀǿȧřḓ ḓǿḗşƞ'ŧ ƈǿƞŧȧīƞ ȧ ṽȧŀīḓ ƀŭīŀḓ ŭřŀ.
+
+Ƥŀḗȧşḗ ƈǿƥẏ īƞ ŧħḗ ƈŀīƥƀǿȧřḓ ŧħḗ ŭřŀ ǿƒ ŧħḗ ƀŭīŀḓ ƀḗƒǿřḗ řḗŧřẏīƞɠ.
+(Şħǿŭŀḓ ƈǿƞŧȧīƞ ȧŧ ŀḗȧşŧ ŧħḗ &quot;ƀŭīŀḓŦẏƥḗĪḓ&quot; ƥȧřȧḿḗŧḗř) 靐ϖ靐 ǅϰϕϑǅǲı鶱ΐ ẛ鶱ıϕςǅǅϕϰϰϰſ ǅςϵſ靐ϱϑ]</target>
         
       </trans-unit>
-      <trans-unit id="labelBuildIdFilter.Text">
-        <source>Regexp</source>
-        <target>[Řḗɠḗẋƥ ǋϵẛẛǅǋ]</target>
+      <trans-unit id="_failToLoadProjectCaption.Text">
+        <source>Error when loading the projects and build list</source>
+        <target>[Ḗřřǿř ẇħḗƞ ŀǿȧḓīƞɠ ŧħḗ ƥřǿĵḗƈŧş ȧƞḓ ƀŭīŀḓ ŀīşŧ ςϵǋǈϑ ıϰıǲ]</target>
         
       </trans-unit>
-      <trans-unit id="labelProjectNameComment.Text">
-        <source>Several names splitted by | char</source>
-        <target>[Şḗṽḗřȧŀ ƞȧḿḗş şƥŀīŧŧḗḓ ƀẏ | ƈħȧř 衋鶱ǅẛıϑǅ ϖϰı]</target>
+      <trans-unit id="_failToLoadProjectMessage.Text">
+        <source>Failed to load the projects and build list.
+Please verify the server url.</source>
+        <target>[Ƒȧīŀḗḓ ŧǿ ŀǿȧḓ ŧħḗ ƥřǿĵḗƈŧş ȧƞḓ ƀŭīŀḓ ŀīşŧ.
+Ƥŀḗȧşḗ ṽḗřīƒẏ ŧħḗ şḗřṽḗř ŭřŀ. ǋςΰς靐ǈ ϕı ı]</target>
+        
+      </trans-unit>
+      <trans-unit id="labelRegexError.Text">
+        <source>The &quot;Build Id Filter&quot; regular expression is not valid and won't be saved!</source>
+        <target>[Ŧħḗ &quot;Ɓŭīŀḓ Īḓ Ƒīŀŧḗř&quot; řḗɠŭŀȧř ḗẋƥřḗşşīǿƞ īş ƞǿŧ ṽȧŀīḓ ȧƞḓ ẇǿƞ'ŧ ƀḗ şȧṽḗḓ! 衋ẛΰ ǋϱıı靐ıϰΰǲϕ]</target>
+        
+      </trans-unit>
+      <trans-unit id="lnkExtractDataFromBuildUrlCopiedInTheClipboard.Text">
+        <source>Extract the data from the build url copied in the clipboard</source>
+        <target>[Ḗẋŧřȧƈŧ ŧħḗ ḓȧŧȧ ƒřǿḿ ŧħḗ ƀŭīŀḓ ŭřŀ ƈǿƥīḗḓ īƞ ŧħḗ ƈŀīƥƀǿȧřḓ 靐ſΰ衋ẛΐϱ]</target>
         
       </trans-unit>
     </body>
   </file>
   <file datatype="plaintext" original="TfsSettingsUserControl" source-language="en">
     <body>
-      <trans-unit id="label1.Text">
-        <source>Team collection name</source>
-        <target>[Ŧḗȧḿ ƈǿŀŀḗƈŧīǿƞ ƞȧḿḗ 靐ϖǋ鶱 ǅΐϵǈǲǲϕ]</target>
-        
-      </trans-unit>
-      <trans-unit id="label13.Text">
-        <source>Tfs server (Name or URL)</source>
-        <target>[Ŧƒş şḗřṽḗř (Ƞȧḿḗ ǿř ŬŘĿ) ϑıǲ ǋϕϕıϑǈ]</target>
-        
-      </trans-unit>
-      <trans-unit id="label2.Text">
-        <source>Project name</source>
-        <target>[Ƥřǿĵḗƈŧ ƞȧḿḗ ϐẛϖϰςǲ衋 衋ϰ]</target>
-        
-      </trans-unit>
-      <trans-unit id="label3.Text">
-        <source>Build definition name
-(use first found if left empty)</source>
-        <target>[Ɓŭīŀḓ ḓḗƒīƞīŧīǿƞ ƞȧḿḗ
-(ŭşḗ ƒīřşŧ ƒǿŭƞḓ īƒ ŀḗƒŧ ḗḿƥŧẏ) ΰϖϵ衋ϵ 靐]</target>
+      <trans-unit id="labelRegexError.Text">
+        <source>The 'Build definition name' regular expression is not valid and won't be saved!</source>
+        <target>[Ŧħḗ 'Ɓŭīŀḓ ḓḗƒīƞīŧīǿƞ ƞȧḿḗ' řḗɠŭŀȧř ḗẋƥřḗşşīǿƞ īş ƞǿŧ ṽȧŀīḓ ȧƞḓ ẇǿƞ'ŧ ƀḗ şȧṽḗḓ! ϖǅ鶱 ϑϐǋſϑǅ鶱ǈſϐϕ]</target>
         
       </trans-unit>
     </body>

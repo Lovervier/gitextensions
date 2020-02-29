@@ -21,9 +21,9 @@ namespace GitUI.CommandsDialogs
             new TranslationString("You need to enter a mail subject.");
         private readonly TranslationString _wrongSmtpSettingsText =
             new TranslationString("You need to enter a valid smtp in the settings dialog.");
-        private readonly TranslationString _twoRevisionsNeededText =
-            new TranslationString("You need to select two revisions");
-        private readonly TranslationString _twoRevisionsNeededCaption =
+        private readonly TranslationString _revisionsNeededText =
+            new TranslationString("You need to select at least one revision");
+        private readonly TranslationString _revisionsNeededCaption =
             new TranslationString("Patch error");
         private readonly TranslationString _sendMailResult =
             new TranslationString("Send to:");
@@ -33,27 +33,32 @@ namespace GitUI.CommandsDialogs
             new TranslationString("Patch result");
         private readonly TranslationString _noGitMailConfigured =
             new TranslationString("There is no email address configured in the settings dialog.");
+        private readonly TranslationString _failCreatePatch =
+            new TranslationString("Unable to create patch file(s)");
 
+        [Obsolete("For VS designer and translation test only. Do not remove.")]
         private FormFormatPatch()
-            : this(null)
-        {
-        }
-
-        public FormFormatPatch(GitUICommands aCommands)
-            : base(aCommands)
         {
             InitializeComponent();
-            Translate();
-            if (aCommands != null)
-                MailFrom.Text = Module.GetEffectiveSetting(SettingKeyString.UserEmail);
+        }
+
+        public FormFormatPatch(GitUICommands commands)
+            : base(commands)
+        {
+            InitializeComponent();
+            RevisionGrid.ShowUncommittedChangesIfPossible = false;
+            InitializeComplete();
+
+            MailFrom.Text = Module.GetEffectiveSetting(SettingKeyString.UserEmail);
         }
 
         private void Browse_Click(object sender, EventArgs e)
         {
-            using (var dialog = new FolderBrowserDialog())
+            var userSelectedPath = OsShellUtil.PickFolder(this);
+
+            if (userSelectedPath != null)
             {
-                if (dialog.ShowDialog(this) == DialogResult.OK)
-                    OutputPath.Text = dialog.SelectedPath;
+                OutputPath.Text = userSelectedPath;
             }
         }
 
@@ -71,32 +76,34 @@ namespace GitUI.CommandsDialogs
         private void OutputPath_TextChanged(object sender, EventArgs e)
         {
             if (Directory.Exists(OutputPath.Text))
-               AppSettings.LastFormatPatchDir = OutputPath.Text;
+            {
+                AppSettings.LastFormatPatchDir = OutputPath.Text;
+            }
         }
 
         private void FormatPatch_Click(object sender, EventArgs e)
         {
             if (SaveToDir.Checked && string.IsNullOrEmpty(OutputPath.Text))
             {
-                MessageBox.Show(this, _noOutputPathEnteredText.Text);
+                MessageBox.Show(this, _noOutputPathEnteredText.Text, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
             if (!SaveToDir.Checked && string.IsNullOrEmpty(MailTo.Text))
             {
-                MessageBox.Show(this, _noEmailEnteredText.Text);
+                MessageBox.Show(this, _noEmailEnteredText.Text, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
             if (!SaveToDir.Checked && string.IsNullOrEmpty(MailSubject.Text))
             {
-                MessageBox.Show(this, _noSubjectEnteredText.Text);
+                MessageBox.Show(this, _noSubjectEnteredText.Text, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
             if (!SaveToDir.Checked && string.IsNullOrEmpty(AppSettings.SmtpServer))
             {
-                MessageBox.Show(this, _wrongSmtpSettingsText.Text);
+                MessageBox.Show(this, _wrongSmtpSettingsText.Text, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -104,11 +111,13 @@ namespace GitUI.CommandsDialogs
 
             if (!SaveToDir.Checked)
             {
-                savePatchesToDir = Path.Combine(Module.GetGitDirectory(), "PatchesToMail");
+                savePatchesToDir = Path.Combine(Module.WorkingDirGitDir, "PatchesToMail");
                 if (Directory.Exists(savePatchesToDir))
                 {
                     foreach (string file in Directory.GetFiles(savePatchesToDir, "*.patch"))
+                    {
                         File.Delete(file);
+                    }
                 }
                 else
                 {
@@ -120,62 +129,73 @@ namespace GitUI.CommandsDialogs
             string rev2 = "";
             string result = "";
 
-            var revisions = RevisionGrid.GetSelectedRevisions();
+            var revisions = RevisionGrid.GetSelectedRevisions(SortDirection.Descending);
             if (revisions.Count > 0)
             {
                 if (revisions.Count == 1)
                 {
-                    var parents = revisions[0].ParentGuids;
-                    rev1 = parents.Length > 0 ? parents[0] : "";
+                    var parents = revisions[0].ParentIds;
+                    rev1 = parents?.Count > 0 ? parents[0].ToString() : "";
                     rev2 = revisions[0].Guid;
                     result = Module.FormatPatch(rev1, rev2, savePatchesToDir);
                 }
                 else if (revisions.Count == 2)
                 {
-                    var parents = revisions[0].ParentGuids;
-                    rev1 = parents.Length > 0 ? parents[0] : "";
+                    var parents = revisions[0].ParentIds;
+                    rev1 = parents?.Count > 0 ? parents[0].ToString() : "";
                     rev2 = revisions[1].Guid;
                     result = Module.FormatPatch(rev1, rev2, savePatchesToDir);
                 }
-                else if (revisions.Count > 2)
+                else
                 {
                     int n = 0;
                     foreach (GitRevision revision in revisions)
                     {
                         n++;
-                        var parents = revision.ParentGuids;
-                        rev1 = parents.Length > 0 ? parents[0] : "";
+                        var parents = revision.ParentIds;
+                        rev1 = parents?.Count > 0 ? parents[0].ToString() : "";
                         rev2 = revision.Guid;
                         result += Module.FormatPatch(rev1, rev2, savePatchesToDir, n);
                     }
                 }
             }
             else
-                if (string.IsNullOrEmpty(rev1) || string.IsNullOrEmpty(rev2))
-                {
-                    MessageBox.Show(this, _twoRevisionsNeededText.Text, _twoRevisionsNeededCaption.Text);
-                    return;
-                }
+            {
+                MessageBox.Show(this, _revisionsNeededText.Text, _revisionsNeededCaption.Text,  MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
 
             if (!SaveToDir.Checked)
             {
                 result += Environment.NewLine + Environment.NewLine;
                 if (SendMail(savePatchesToDir))
+                {
                     result += _sendMailResult.Text + " " + MailTo.Text;
+                }
                 else
+                {
                     result += _sendMailResultFailed.Text;
+                }
 
-
-                //Clean up
+                // Clean up
                 if (Directory.Exists(savePatchesToDir))
                 {
                     foreach (string file in Directory.GetFiles(savePatchesToDir, "*.patch"))
+                    {
                         File.Delete(file);
+                    }
                 }
             }
 
-            MessageBox.Show(this, result, _patchResultCaption.Text);
-            Close();
+            if (string.IsNullOrEmpty(result))
+            {
+                MessageBox.Show(this, _failCreatePatch.Text, _revisionsNeededCaption.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else
+            {
+                MessageBox.Show(this, result, _patchResultCaption.Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                Close();
+            }
         }
 
         private bool SendMail(string dir)
@@ -185,7 +205,9 @@ namespace GitUI.CommandsDialogs
                 string from = MailFrom.Text;
 
                 if (string.IsNullOrEmpty(from))
-                    MessageBox.Show(this, _noGitMailConfigured.Text);
+                {
+                    MessageBox.Show(this, _noGitMailConfigured.Text, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
 
                 string to = MailTo.Text;
 
@@ -193,31 +215,36 @@ namespace GitUI.CommandsDialogs
                 {
                     foreach (string file in Directory.GetFiles(dir, "*.patch"))
                     {
-                        var attacheMent = new Attachment(file);
-                        mail.Attachments.Add(attacheMent);
+                        var attachment = new Attachment(file);
+                        mail.Attachments.Add(attachment);
                     }
 
-                    var smtpClient = new SmtpClient(AppSettings.SmtpServer);
-                    smtpClient.Port = AppSettings.SmtpPort;
-                    smtpClient.EnableSsl = AppSettings.SmtpUseSsl;
+                    var smtpClient = new SmtpClient(AppSettings.SmtpServer)
+                    {
+                        Port = AppSettings.SmtpPort,
+                        EnableSsl = AppSettings.SmtpUseSsl
+                    };
+
                     using (var credentials = new SmtpCredentials())
                     {
                         credentials.login.Text = from;
-                        if (credentials.ShowDialog(this) == DialogResult.OK)
-                            smtpClient.Credentials = new NetworkCredential(credentials.login.Text, credentials.password.Text);
-                        else
-                            smtpClient.Credentials = CredentialCache.DefaultNetworkCredentials;
+
+                        smtpClient.Credentials = credentials.ShowDialog(this) == DialogResult.OK
+                            ? new NetworkCredential(credentials.login.Text, credentials.password.Text)
+                            : CredentialCache.DefaultNetworkCredentials;
                     }
-                    ServicePointManager.ServerCertificateValidationCallback =
-                        (sender, certificate, chain, errors) => true;
+
+                    ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+
                     smtpClient.Send(mail);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, ex.Message);
+                MessageBox.Show(this, ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
+
             return true;
         }
 

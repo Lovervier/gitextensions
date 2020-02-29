@@ -2,104 +2,416 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitCommands;
+using GitCommands.Git;
+using GitExtUtils.GitUI;
+using GitExtUtils.GitUI.Theming;
 using GitUI.Properties;
 using GitUI.UserControls;
+using GitUIPluginInterfaces;
+using JetBrains.Annotations;
 using ResourceManager;
 
 namespace GitUI
 {
-    using GitItemsWithParents = IDictionary<string, IList<GitItemStatus>>;
+    public delegate string DescribeRevisionDelegate(ObjectId objectId);
 
     public sealed partial class FileStatusList : GitModuleControl
     {
-        private readonly TranslationString _UnsupportedMultiselectAction =
-            new TranslationString("Operation not supported");
-        private readonly TranslationString _DiffWithParent =
-            new TranslationString("Diff with parent");
-        public readonly TranslationString CombinedDiff =
-            new TranslationString("Combined Diff");
-
-        private readonly IDisposable selectedIndexChangeSubscription;
         private static readonly TimeSpan SelectedIndexChangeThrottleDuration = TimeSpan.FromMilliseconds(50);
+        private readonly TranslationString _diffWithParent = new TranslationString("Diff with a/");
+        private readonly TranslationString _diffWithBase = new TranslationString("Diff with BASE a/");
+        public readonly TranslationString CombinedDiff = new TranslationString("Combined Diff");
+        private readonly IGitRevisionTester _revisionTester;
+        private readonly IFullPathResolver _fullPathResolver;
+        private readonly SortDiffListContextMenuItem _sortByContextMenu;
+        private int _nextIndexToSelect = -1;
+        private bool _groupByRevision;
+        private bool _enableSelectedIndexChangeEvent = true;
+        private bool _mouseEntered;
+        private ToolStripItem _openSubmoduleMenuItem;
+        private Rectangle _dragBoxFromMouseDown;
+        private IReadOnlyList<(GitRevision revision, IReadOnlyList<GitItemStatus> statuses)> _itemsWithParent = Array.Empty<(GitRevision, IReadOnlyList<GitItemStatus>)>();
+        private IReadOnlyList<(GitRevision revision, string description, IReadOnlyList<GitItemStatus> statuses)> _itemsWithDescription = Array.Empty<(GitRevision, string, IReadOnlyList<GitItemStatus>)>();
+        [CanBeNull] private IDisposable _selectedIndexChangeSubscription;
+        [CanBeNull] private IDisposable _diffListSortSubscription;
 
-        private const int ImageSize = 16;
+        private bool _updatingColumnWidth;
+
+        public delegate void EnterEventHandler(object sender, EnterEventArgs e);
+
+        public event EventHandler SelectedIndexChanged;
+        public event EventHandler DataSourceChanged;
+
+        public new event EventHandler DoubleClick;
+        public new event KeyEventHandler KeyDown;
+        public new event EnterEventHandler Enter;
 
         public FileStatusList()
         {
-            InitializeComponent(); Translate();
-
-            selectedIndexChangeSubscription = Observable.FromEventPattern(
-                h => FileStatusListView.SelectedIndexChanged += h,
-                h => FileStatusListView.SelectedIndexChanged -= h)
-                .Throttle(SelectedIndexChangeThrottleDuration)
-                .ObserveOn(SynchronizationContext.Current)
-                .Subscribe(_ => FileStatusListView_SelectedIndexChanged());
+            InitializeComponent();
+            InitialiseFiltering();
+            CreateOpenSubmoduleMenuItem();
+            _sortByContextMenu = CreateSortByContextMenuItem();
+            SetupUnifiedDiffListSorting();
+            lblSplitter.Height = DpiUtil.Scale(1);
+            InitializeComplete();
+            FilterVisible = true;
 
             SelectFirstItemOnSetItems = true;
-            _noDiffFilesChangesDefaultText = NoFiles.Text;
-#if !__MonoCS__ // TODO Drag'n'Drop doesn't work on Mono/Linux
-            FileStatusListView.MouseMove += FileStatusListView_MouseMove;
-            FileStatusListView.MouseDown += FileStatusListView_MouseDown;
-#endif
-            if (_images == null)
+
+            FileStatusListView.SmallImageList = CreateImageList();
+            FileStatusListView.LargeImageList = CreateImageList();
+            FileStatusListView.AllowCollapseGroups = true;
+            FileStatusListView.Scroll += FileStatusListView_Scroll;
+
+            HandleVisibility_NoFilesLabel_FilterComboBox(filesPresent: true);
+            Controls.SetChildIndex(NoFiles, 0);
+            NoFiles.Font = new Font(NoFiles.Font, FontStyle.Italic);
+            FilterWatermarkLabel.Font = new Font(FilterWatermarkLabel.Font, FontStyle.Italic);
+            FilterComboBox.Font = new Font(FilterComboBox.Font, FontStyle.Bold);
+
+            _fullPathResolver = new FullPathResolver(() => Module.WorkingDir);
+            _revisionTester = new GitRevisionTester(_fullPathResolver);
+
+            base.Enter += FileStatusList_Enter;
+
+            return;
+
+            ImageList CreateImageList()
             {
-                _images = new ImageList();
-                _images.Images.Add(Resources.Removed); // 0
-                _images.Images.Add(Resources.Added); // 1
-                _images.Images.Add(Resources.Modified); // 2
-                _images.Images.Add(Resources.Renamed); // 3
-                _images.Images.Add(Resources.Copied); // 4
-                _images.Images.Add(Resources.IconSubmoduleDirty); // 5
-                _images.Images.Add(Resources.IconSubmoduleRevisionUp); // 6
-                _images.Images.Add(Resources.IconSubmoduleRevisionUpDirty); // 7
-                _images.Images.Add(Resources.IconSubmoduleRevisionDown); // 8
-                _images.Images.Add(Resources.IconSubmoduleRevisionDownDirty); // 9
-                _images.Images.Add(Resources.IconSubmoduleRevisionSemiUp); // 10
-                _images.Images.Add(Resources.IconSubmoduleRevisionSemiUpDirty); // 11
-                _images.Images.Add(Resources.IconSubmoduleRevisionSemiDown); // 12
-                _images.Images.Add(Resources.IconSubmoduleRevisionSemiDownDirty); // 13
-                _images.Images.Add(Resources.IconFileStatusUnknown); // 14
+                const int rowHeight = 18;
+
+                return new ImageList
+                {
+                    ColorDepth = ColorDepth.Depth32Bit,
+                    ImageSize = DpiUtil.Scale(new Size(16, rowHeight)), // Scale ImageSize and images scale automatically
+                    Images =
+                    {
+                        ScaleHeight(Images.FileStatusRemoved), // 0
+                        ScaleHeight(Images.FileStatusAdded), // 1
+                        ScaleHeight(Images.FileStatusModified), // 2
+                        ScaleHeight(Images.FileStatusRenamed.AdaptLightness()), // 3
+                        ScaleHeight(Images.FileStatusCopied), // 4
+                        ScaleHeight(Images.SubmoduleDirty), // 5
+                        ScaleHeight(Images.SubmoduleRevisionUp), // 6
+                        ScaleHeight(Images.SubmoduleRevisionUpDirty), // 7
+                        ScaleHeight(Images.SubmoduleRevisionDown), // 8
+                        ScaleHeight(Images.SubmoduleRevisionDownDirty), // 9
+                        ScaleHeight(Images.SubmoduleRevisionSemiUp), // 10
+                        ScaleHeight(Images.SubmoduleRevisionSemiUpDirty), // 11
+                        ScaleHeight(Images.SubmoduleRevisionSemiDown), // 12
+                        ScaleHeight(Images.SubmoduleRevisionSemiDownDirty), // 13
+                        ScaleHeight(Images.FileStatusUnknown) // 14
+                    }
+                };
+
+                Bitmap ScaleHeight(Bitmap input)
+                {
+                    Debug.Assert(input.Height < rowHeight, "Can only increase row height");
+                    var scaled = new Bitmap(input.Width, rowHeight, input.PixelFormat);
+                    using (var g = Graphics.FromImage(scaled))
+                    {
+                        g.DrawImageUnscaled(input, 0, (rowHeight - input.Height) / 2);
+                    }
+
+                    return scaled;
+                }
             }
-            FileStatusListView.SmallImageList = _images;
-            FileStatusListView.LargeImageList = _images;
-
-            NoFiles.Visible = false;
-            NoFiles.Font = new Font(SystemFonts.MessageBoxFont, FontStyle.Italic);
         }
 
-        protected override void DisposeCustomResources()
+        private void SetupUnifiedDiffListSorting()
         {
-            selectedIndexChangeSubscription.Dispose();
+            // cleanup the previous subscription if it exists.
+            _diffListSortSubscription?.Dispose();
+
+            _diffListSortSubscription = DiffListSortService.Instance.CurrentAndFutureSorting()
+                .Do(sortingMethod =>
+                {
+                    switch (sortingMethod)
+                    {
+                        case DiffListSortType.FilePath:
+                            SortByFilePath();
+                            break;
+
+                        case DiffListSortType.FileExtension:
+                            SortByFileExtension();
+                            break;
+
+                        case DiffListSortType.FileStatus:
+                            SortByFileStatus();
+                            break;
+
+                        default:
+                            throw new NotSupportedException(sortingMethod.ToString() + " is not a supported sorting method.");
+                    }
+                })
+                .Catch<DiffListSortType, NotSupportedException>(e =>
+                {
+                    // TODO log the error can we display it to the user somehow?
+                    return Observable.Empty<DiffListSortType>();
+                })
+                .Subscribe();
         }
 
-        private static ImageList _images;
-
-        private readonly string _noDiffFilesChangesDefaultText;
-
-        public void SetNoFilesText(string text)
+        private static SortDiffListContextMenuItem CreateSortByContextMenuItem()
         {
-            NoFiles.Text = text;
+            return new SortDiffListContextMenuItem(DiffListSortService.Instance)
+            {
+                Name = "sortListByContextMenuItem"
+            };
         }
 
-        public string GetNoFilesText()
+        // Properties
+
+        [Browsable(false)]
+        public IEnumerable<GitItemStatus> AllItems =>
+            FileStatusListView.ItemTags<GitItemStatus>();
+
+        public int AllItemsCount => FileStatusListView.Items.Count;
+
+        public override ContextMenu ContextMenu
         {
-            return NoFiles.Text;
+            get => FileStatusListView.ContextMenu;
+            set => FileStatusListView.ContextMenu = value;
         }
 
-        public override bool Focused
+        public override ContextMenuStrip ContextMenuStrip
+        {
+            get { return FileStatusListView.ContextMenuStrip; }
+            set
+            {
+                FileStatusListView.ContextMenuStrip = value;
+                if (FileStatusListView.ContextMenuStrip != null)
+                {
+                    FileStatusListView.ContextMenuStrip.Opening += FileStatusListView_ContextMenu_Opening;
+                }
+            }
+        }
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        public DescribeRevisionDelegate DescribeRevision { get; set; }
+
+        public bool FilterFocused => FilterComboBox.Focused;
+
+        public bool ShouldSerializeFilterVisible => FilterVisible != true;
+
+        public bool FilterVisible
+        {
+            get { return _filterVisible; }
+            set
+            {
+                if (value == _filterVisible)
+                {
+                    return;
+                }
+
+                _filterVisible = value;
+                FilterVisibleInternal = value;
+            }
+        }
+
+        private bool FilterVisibleInternal
+        {
+            get => FilterComboBox.Visible;
+            set
+            {
+                FilterComboBox.Visible = value;
+                SetDeleteFilterButtonVisibility();
+                SetFilterWatermarkLabelVisibility();
+
+                int top = value
+                    ? FileStatusListView.Margin.Top + FilterComboBox.Bottom + FilterComboBox.Margin.Bottom
+                    : FileStatusListView.Margin.Top;
+
+                int height = ClientRectangle.Height - FileStatusListView.Margin.Bottom - top;
+
+                FileStatusListView.SetBounds(0, top, 0, height, BoundsSpecified.Y | BoundsSpecified.Height);
+            }
+        }
+
+        public override bool Focused => FileStatusListView.Focused;
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        public IReadOnlyList<GitItemStatus> GitItemFilteredStatuses =>
+            AllItems.AsReadOnlyList();
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        public IReadOnlyList<GitItemStatus> GitItemStatuses
         {
             get
             {
-                return FileStatusListView.Focused;
+                return GitItemStatusesWithParents?.SelectMany(tuple => tuple.statuses).AsReadOnlyList()
+                       ?? Array.Empty<GitItemStatus>();
+            }
+        }
+
+        // Parents is used as the "first selected" (not always the parent) for GitItemStatus
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        public IReadOnlyList<(GitRevision revision, IReadOnlyList<GitItemStatus> statuses)> GitItemStatusesWithParents => _itemsWithParent;
+
+        private IReadOnlyList<(GitRevision revision, string description, IReadOnlyList<GitItemStatus> statuses)> GitItemStatusesWithDescription
+        {
+            get { return _itemsWithDescription; }
+            set
+            {
+                _itemsWithDescription = value ?? throw new ArgumentNullException(nameof(value));
+                _itemsWithParent = _itemsWithDescription
+                    .Select(i => new { i.revision, i.statuses })
+                    .AsEnumerable()
+                    .Select(i => (revision: i.revision, statuses: i.statuses))
+                    .ToList();
+                UpdateFileStatusListView();
+            }
+        }
+
+        public bool GroupByRevision
+        {
+            get => _groupByRevision;
+            set => _groupByRevision = value;
+        }
+
+        [DefaultValue(true)]
+        public bool MultiSelect
+        {
+            get => FileStatusListView.MultiSelect;
+            set => FileStatusListView.MultiSelect = value;
+        }
+
+        [Browsable(false)]
+        [DefaultValue(true)]
+        public bool IsEmpty => GitItemStatuses == null || !GitItemStatuses.Any();
+
+        /// <summary>
+        /// Gets or sets the revision.
+        /// </summary>
+        /// <value>The revision.</value>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        public GitRevision Revision { get; set; }
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        public int SelectedIndex
+        {
+            get
+            {
+                foreach (int i in FileStatusListView.SelectedIndices)
+                {
+                    return i;
+                }
+
+                return -1;
+            }
+            set => SelectItems(item => item.Index == value);
+        }
+
+        [CanBeNull]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        public GitItemStatus SelectedItem
+        {
+            get => FileStatusListView.LastSelectedItem()?.Tag<GitItemStatus>();
+            set
+            {
+                var itemToBeSelected = GetItemByStatus(value);
+                SelectItems(item => item == itemToBeSelected);
+                return;
+
+                ListViewItem GetItemByStatus(GitItemStatus status)
+                {
+                    if (status == null)
+                    {
+                        return null;
+                    }
+
+                    ListViewItem newSelected = null;
+                    foreach (ListViewItem item in FileStatusListView.Items)
+                    {
+                        var gitItemStatus = item.Tag<GitItemStatus>();
+
+                        if (status.CompareTo(gitItemStatus) == 0)
+                        {
+                            if (newSelected == null)
+                            {
+                                newSelected = item;
+                            }
+                            else if (gitItemStatus == status)
+                            {
+                                return item;
+                            }
+                        }
+                    }
+
+                    return newSelected;
+                }
+            }
+        }
+
+        [CanBeNull]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        public GitRevision SelectedItemParent
+            => FileStatusListView.LastSelectedItem()?.Group?.Tag<GitRevision>();
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        public IEnumerable<GitRevision> SelectedItemParents
+            => FileStatusListView.SelectedItems()
+                .Select(i => i.Group?.Tag<GitRevision>())
+                .Where(r => r != null)
+                .Distinct(); // Parents should be distinct to avoid iterating same items
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        public IEnumerable<GitItemStatus> SelectedItems
+        {
+            get => FileStatusListView.SelectedItemTags<GitItemStatus>();
+            set
+            {
+                if (value == null)
+                {
+                    ClearSelected();
+                    return;
+                }
+
+                SelectItems(item => value.Contains(item.Tag<GitItemStatus>()));
+            }
+        }
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        public IEnumerable<GitItemStatusWithParent> SelectedItemsWithParent
+            => FileStatusListView.SelectedItems()
+                .Where(i => i.Group?.Tag is GitRevision)
+                .Select(i => new GitItemStatusWithParent(i.Group.Tag<GitRevision>(), i.Tag<GitItemStatus>()));
+
+        [DefaultValue(true)]
+        public bool SelectFirstItemOnSetItems { get; set; }
+
+        public int UnfilteredItemsCount => GitItemStatusesWithParents?.Sum(tuple => tuple.statuses.Count) ?? 0;
+
+        // Public methods
+
+        public void ClearSelected()
+        {
+            foreach (ListViewItem item in FileStatusListView.SelectedItems)
+            {
+                item.Selected = false;
             }
         }
 
@@ -108,84 +420,808 @@ namespace GitUI
             if (FileStatusListView.Items.Count > 0)
             {
                 if (SelectedItem == null)
+                {
                     SelectedIndex = 0;
+                }
+
                 FileStatusListView.Focus();
             }
         }
 
-        public void BeginUpdate()
+        private static (Image image, string prefix, string text, string suffix, int prefixTextStartX, int textWidth, int textMaxWidth)
+            FormatListViewItem(ListViewItem item, PathFormatter formatter, int itemWidth)
         {
-            FileStatusListView.BeginUpdate();
+            var gitItemStatus = item.Tag<GitItemStatus>();
+            var image = item.Image();
+            int itemLeft = item.Position.X;
+
+            var prefixTextStartX = itemLeft + (image?.Width ?? 0);
+            var textMaxWidth = itemWidth - prefixTextStartX;
+            var (prefix, text, suffix, textWidth) = formatter.FormatTextForDrawing(textMaxWidth, gitItemStatus.Name, gitItemStatus.OldName);
+            text = AppendItemSubmoduleStatus(text, gitItemStatus);
+
+            return (image, prefix, text, suffix, prefixTextStartX, textWidth, textMaxWidth);
         }
 
-        public void EndUpdate()
+        public int GetNextIndex(bool searchBackward, bool loop)
         {
-            FileStatusListView.EndUpdate();
-        }
+            int curIdx = SelectedIndex;
 
-        private string GetItemText(Graphics graphics, GitItemStatus gitItemStatus)
-        {
-            var pathFormatter = new PathFormatter(graphics, FileStatusListView.Font);
-
-            return pathFormatter.FormatTextForDrawing(FileStatusListView.ClientSize.Width - ImageSize,
-                                                      gitItemStatus.Name, gitItemStatus.OldName);
-        }
-
-        private void FileStatusListView_DrawItem(object sender, DrawListViewItemEventArgs e)
-        {
-            if (e.Bounds.Height <= 0 || e.Bounds.Width <= 0 || e.ItemIndex < 0)
-                return;
-
-            e.DrawBackground();
-            Color color;
-            if (e.Item.Selected)
+            if (curIdx < 0)
             {
-                e.Graphics.FillRectangle(SystemBrushes.Highlight, e.Bounds);
-                color = SystemColors.HighlightText;
+                return -1;
+            }
+
+            ListViewItem currentItem = FileStatusListView.Items[curIdx];
+            var currentGroup = currentItem.Group;
+
+            if (searchBackward)
+            {
+                var nextItem = FindPrevItemInGroups();
+                if (nextItem == null)
+                {
+                    return loop ? GetLastIndex() : curIdx;
+                }
+
+                return nextItem.Index;
             }
             else
-                color = SystemColors.WindowText;
-            e.DrawFocusRectangle();
+            {
+                var nextItem = FindNextItemInGroups();
+                if (nextItem == null)
+                {
+                    return loop ? 0 : curIdx;
+                }
 
-            e.Graphics.FillRectangle(Brushes.White, e.Bounds.Left, e.Bounds.Top, ImageSize, e.Bounds.Height);
+                return nextItem.Index;
+            }
 
-            int centeredImageTop = e.Bounds.Top;
-            if ((e.Bounds.Height - ImageSize) > 1)
-                centeredImageTop = e.Bounds.Top + ((e.Bounds.Height - ImageSize) / 2);
+            ListViewItem FindPrevItemInGroups()
+            {
+                var searchInGroups = new List<ListViewGroup>();
+                var foundCurrentGroup = false;
+                for (var i = FileStatusListView.Groups.Count - 1; i >= 0; i--)
+                {
+                    if (FileStatusListView.Groups[i] == currentGroup)
+                    {
+                        foundCurrentGroup = true;
+                    }
 
-            var image = e.Item.ImageList.Images[e.Item.ImageIndex];
+                    if (foundCurrentGroup)
+                    {
+                        searchInGroups.Add(FileStatusListView.Groups[i]);
+                    }
+                }
 
-            if (image != null)
-                e.Graphics.DrawImage(image, e.Bounds.Left, centeredImageTop, ImageSize, ImageSize);
+                var idx = curIdx;
+                foreach (var grp in searchInGroups)
+                {
+                    for (var i = idx - 1; i >= 0; i--)
+                    {
+                        if (FileStatusListView.Items[i].Group == grp)
+                        {
+                            return FileStatusListView.Items[i];
+                        }
+                    }
 
-            GitItemStatus gitItemStatus = (GitItemStatus)e.Item.Tag;
+                    idx = FileStatusListView.Items.Count;
+                }
 
-            string text = GetItemText(e.Graphics, gitItemStatus);
+                return null;
+            }
 
-            if (gitItemStatus.IsSubmodule && gitItemStatus.SubmoduleStatus != null && gitItemStatus.SubmoduleStatus.IsCompleted)
-                text += gitItemStatus.SubmoduleStatus.Result.AddedAndRemovedString();
+            ListViewItem FindNextItemInGroups()
+            {
+                var searchInGroups = new List<ListViewGroup>();
+                var foundCurrentGroup = false;
+                for (var i = 0; i < FileStatusListView.Groups.Count; i++)
+                {
+                    if (FileStatusListView.Groups[i] == currentGroup)
+                    {
+                        foundCurrentGroup = true;
+                    }
 
-            e.Graphics.DrawString(text, e.Item.ListView.Font,
-                                  new SolidBrush(color), e.Bounds.Left + ImageSize, e.Bounds.Top);
+                    if (foundCurrentGroup)
+                    {
+                        searchInGroups.Add(FileStatusListView.Groups[i]);
+                    }
+                }
+
+                var idx = curIdx;
+                foreach (var grp in searchInGroups)
+                {
+                    for (var i = idx + 1; i < FileStatusListView.Items.Count; i++)
+                    {
+                        if (FileStatusListView.Items[i].Group == grp)
+                        {
+                            return FileStatusListView.Items[i];
+                        }
+                    }
+
+                    idx = -1;
+                }
+
+                return null;
+            }
+
+            int GetLastIndex()
+            {
+                if (FileStatusListView.Items.Count == 0)
+                {
+                    return -1;
+                }
+
+                if (FileStatusListView.Groups.Count < 2)
+                {
+                    return FileStatusListView.Items.Count - 1;
+                }
+
+                ListViewGroup lastNonEmptyGroup = null;
+                for (int i = FileStatusListView.Groups.Count - 1; i >= 0; i--)
+                {
+                    if (FileStatusListView.Groups[i].Items.Count > 0)
+                    {
+                        lastNonEmptyGroup = FileStatusListView.Groups[i];
+                        break;
+                    }
+                }
+
+                for (int i = FileStatusListView.Items.Count - 1; i >= 0; i--)
+                {
+                    if (FileStatusListView.Items[i].Group == lastNonEmptyGroup)
+                    {
+                        return i;
+                    }
+                }
+
+                return -1;
+            }
         }
 
-#if !__MonoCS__ // TODO Drag'n'Drop doesnt work on Mono/Linux
-        void FileStatusListView_MouseDown(object sender, MouseEventArgs e)
+        public void SelectAll() => SelectItems(_ => true);
+
+        public void SelectFirstVisibleItem()
         {
-            //SELECT
+            if (FileStatusListView.Items.Count == 0)
+            {
+                return;
+            }
+
+            var group = FileStatusListView.Groups().FirstOrDefault(gr => gr.Items.Count > 0);
+            if (group != null)
+            {
+                ListViewItem sortedFirstGroupItem = FileStatusListView.Items().FirstOrDefault(item => item.Group == group);
+                if (sortedFirstGroupItem != null)
+                {
+                    SelectedIndex = sortedFirstGroupItem.Index;
+                }
+            }
+            else
+            {
+                SelectedIndex = 0;
+            }
+        }
+
+        public void SelectStoredNextIndex(int defaultIndex = -1)
+        {
+            _nextIndexToSelect = Math.Min(_nextIndexToSelect, FileStatusListView.Items.Count - 1);
+            if (_nextIndexToSelect < 0 && defaultIndex > -1)
+            {
+                _nextIndexToSelect = Math.Min(defaultIndex, FileStatusListView.Items.Count - 1);
+            }
+
+            if (_nextIndexToSelect > -1)
+            {
+                SelectedIndex = _nextIndexToSelect;
+            }
+
+            _nextIndexToSelect = -1;
+        }
+
+        public void SetDiffs(IReadOnlyList<GitRevision> revisions, Func<ObjectId, GitRevision> getRevision = null)
+        {
+            Revision = revisions.FirstOrDefault();
+
+            var tuples = new List<(GitRevision revision, string summary, IReadOnlyList<GitItemStatus> statuses)>();
+            ObjectId baseRevGuid = null;
+
+            if (Revision != null)
+            {
+                GitRevision[] parentRevs;
+                if (revisions.Count == 1)
+                {
+                    // Get the parents for the selected revision
+                    parentRevs = Revision.ParentIds?.Select(item => new GitRevision(item)).ToArray();
+                }
+                else if (revisions.Count == 2 || revisions.Count > 4)
+                {
+                    // only first -> selected is interesting
+                    parentRevs = new[] { revisions.Last() };
+                    if (AppSettings.ShowDiffForAllParents)
+                    {
+                        // Get base commit, add as parent if unique
+                        Lazy<ObjectId> head = getRevision != null
+                            ? new Lazy<ObjectId>(() => getRevision(ObjectId.IndexId).FirstParentGuid)
+                            : new Lazy<ObjectId>(() => Module.RevParse("HEAD"));
+                        var revA = parentRevs[0].ObjectId;
+                        var revB = Revision.ObjectId;
+                        baseRevGuid = Module.GetMergeBase(GetRevisionOrHead(revA, head),
+                            GetRevisionOrHead(revB, head));
+                        if (baseRevGuid != null
+                            && baseRevGuid != revA
+                            && baseRevGuid != revB)
+                        {
+                            Array.Resize(ref parentRevs, 2);
+                            parentRevs[1] = new GitRevision(baseRevGuid);
+                        }
+                    }
+                }
+                else
+                {
+                    // Limited selections: Show multi selection
+                    parentRevs = revisions.Skip(1).ToArray();
+                }
+
+                if (parentRevs == null || parentRevs.Length == 0)
+                {
+                    // No parent, will set null as parent
+                    tuples.Add((null, string.Empty, Module.GetTreeFiles(Revision.TreeGuid, full: true)));
+                }
+                else
+                {
+                    if (!AppSettings.ShowDiffForAllParents)
+                    {
+                        parentRevs = new[] { parentRevs[0] };
+                    }
+
+                    foreach (var rev in parentRevs)
+                    {
+                        var desc = (rev.ObjectId != baseRevGuid ? _diffWithParent.Text : _diffWithBase.Text)
+                                   + GetDescriptionForRevision(rev.ObjectId);
+                        var status = Module.GetDiffFilesWithSubmodulesStatus(rev.Guid, Revision.Guid, Revision.ParentIds?.FirstOrDefault()?.ToString());
+                        tuples.Add((rev, desc, status));
+                    }
+
+                    // Show combined (merge conflicts) only when all first (A) are parents to selected (B)
+                    // (a single merge commit is selected with parents explicit or implicit selected)
+                    var isMergeCommit = AppSettings.ShowDiffForAllParents &&
+                                        Revision.ParentIds != null && Revision.ParentIds.Count > 1 &&
+                                        _revisionTester.AllFirstAreParentsToSelected(parentRevs, Revision);
+                    if (isMergeCommit)
+                    {
+                        var conflicts = Module.GetCombinedDiffFileList(Revision.Guid);
+                        if (conflicts.Count != 0)
+                        {
+                            // Create an artificial commit
+                            var desc = CombinedDiff.Text;
+                            tuples.Add((new GitRevision(ObjectId.CombinedDiffId), desc, conflicts));
+                        }
+                    }
+                }
+            }
+
+            GitItemStatusesWithDescription = tuples;
+
+            return;
+
+            ObjectId GetRevisionOrHead(ObjectId rev, Lazy<ObjectId> head)
+            {
+                return rev.IsArtificial ? head.Value : rev;
+            }
+        }
+
+        public void SetDiffs(GitRevision selectedRev = null, GitRevision parentRev = null, IReadOnlyList<GitItemStatus> items = null)
+        {
+            Revision = selectedRev;
+            GitItemStatusesWithDescription = items == null
+                ? Array.Empty<(GitRevision, string, IReadOnlyList<GitItemStatus>)>()
+                : new[] { (parentRev, _diffWithParent.Text + GetDescriptionForRevision(parentRev?.ObjectId), items) };
+        }
+
+        private string GetDescriptionForRevision(ObjectId objectId)
+        {
+            if (DescribeRevision != null)
+            {
+                return DescribeRevision(objectId);
+            }
+
+            return objectId?.ToShortString();
+        }
+
+        public void SetNoFilesText(string text)
+        {
+            NoFiles.Text = text;
+        }
+
+        public void SetSelectedIndex(int idx, bool notify)
+        {
+            _enableSelectedIndexChangeEvent = notify;
+            SelectedIndex = idx;
+            _enableSelectedIndexChangeEvent = true;
+        }
+
+        public int SetSelectionFilter(string selectionFilter)
+        {
+            var regex = RegexForSelecting(selectionFilter);
+            SelectItems(item => regex.IsMatch(item.Name));
+            return FileStatusListView.SelectedIndices.Count;
+
+            Regex RegexForSelecting(string value)
+            {
+                return string.IsNullOrEmpty(value)
+                    ? new Regex("^$", RegexOptions.Compiled)
+                    : new Regex(value, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            }
+        }
+
+        public void StoreNextIndexToSelect()
+        {
+            _nextIndexToSelect = -1;
+            foreach (int idx in FileStatusListView.SelectedIndices)
+            {
+                if (idx > _nextIndexToSelect)
+                {
+                    _nextIndexToSelect = idx;
+                }
+            }
+
+            _nextIndexToSelect = _nextIndexToSelect - FileStatusListView.SelectedIndices.Count + 1;
+        }
+
+        // Protected methods
+
+        protected override void DisposeCustomResources()
+        {
+            _selectedIndexChangeSubscription?.Dispose();
+            _diffListSortSubscription?.Dispose();
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            if (m.Msg == NativeMethods.WM_MOUSEACTIVATE)
+            {
+                _mouseEntered = !Focused;
+            }
+
+            base.WndProc(ref m);
+        }
+
+        // Private methods
+
+        private void CreateOpenSubmoduleMenuItem()
+        {
+            _openSubmoduleMenuItem = new ToolStripMenuItem
+            {
+                Name = "openSubmoduleMenuItem",
+                Tag = "1",
+                Text = "Open with Git Extensions",
+                Image = Images.GitExtensionsLogo16
+            };
+            _openSubmoduleMenuItem.Click += (s, ea) => { ThreadHelper.JoinableTaskFactory.RunAsync(() => OpenSubmoduleAsync()); };
+        }
+
+        private static string AppendItemSubmoduleStatus(string text, GitItemStatus item)
+        {
+            if (item.IsSubmodule &&
+                item.GetSubmoduleStatusAsync() != null &&
+                item.GetSubmoduleStatusAsync().IsCompleted &&
+                item.GetSubmoduleStatusAsync().CompletedResult() != null)
+            {
+                text += item.GetSubmoduleStatusAsync().CompletedResult().AddedAndRemovedString();
+            }
+
+            return text;
+        }
+
+        private async Task OpenSubmoduleAsync()
+        {
+            var submoduleName = SelectedItem.Name;
+
+            var status = await SelectedItem.GetSubmoduleStatusAsync().ConfigureAwait(false);
+
+            var process = new Process
+            {
+                StartInfo =
+                {
+                    FileName = Application.ExecutablePath,
+                    Arguments = "browse -commit=" + status.Commit,
+                    WorkingDirectory = _fullPathResolver.Resolve(submoduleName.EnsureTrailingPathSeparator())
+                }
+            };
+
+            process.Start();
+        }
+
+        private void SelectItems(Func<ListViewItem, bool> predicate)
+        {
+            try
+            {
+                FileStatusListView.BeginUpdate();
+
+                ListViewItem firstSelectedItem = null;
+                foreach (var item in FileStatusListView.Items())
+                {
+                    item.Selected = predicate(item);
+                    if (item.Selected && firstSelectedItem == null)
+                    {
+                        firstSelectedItem = item;
+                    }
+                }
+
+                if (firstSelectedItem != null)
+                {
+                    firstSelectedItem.Focused = true;
+                    firstSelectedItem.EnsureVisible();
+                }
+            }
+            finally
+            {
+                FileStatusListView.EndUpdate();
+            }
+
+            StoreNextIndexToSelect();
+        }
+
+        private void SetDeleteFilterButtonVisibility()
+        {
+            DeleteFilterButton.Visible = FilterVisibleInternal && !FilterComboBox.Text.IsNullOrEmpty();
+        }
+
+        private void SetFilterWatermarkLabelVisibility()
+        {
+            FilterWatermarkLabel.Visible = FilterVisibleInternal && !FilterComboBox.Focused && string.IsNullOrEmpty(FilterComboBox.Text);
+        }
+
+        private void UpdateFileStatusListView(bool updateCausedByFilter = false)
+        {
+            if (!GitItemStatuses.Any())
+            {
+                HandleVisibility_NoFilesLabel_FilterComboBox(filesPresent: false);
+            }
+            else
+            {
+                EnsureSelectedIndexChangeSubscription();
+                HandleVisibility_NoFilesLabel_FilterComboBox(filesPresent: true);
+            }
+
+            HashSet<GitItemStatus> previouslySelectedItems = null;
+
+            if (updateCausedByFilter)
+            {
+                previouslySelectedItems = FileStatusListView.SelectedItems()
+                    .ToHashSet(i => i.Tag<GitItemStatus>());
+
+                DataSourceChanged?.Invoke(this, EventArgs.Empty);
+            }
+
+            FileStatusListView.BeginUpdate();
+            FileStatusListView.ShowGroups = GitItemStatusesWithParents.Count > 1 || _groupByRevision;
+            FileStatusListView.Groups.Clear();
+            FileStatusListView.Items.Clear();
+
+            var list = new List<ListViewItem>();
+            foreach (var (revision, groupName, statuses) in GitItemStatusesWithDescription)
+            {
+                ListViewGroup group = null;
+                if (revision != null)
+                {
+                    group = new ListViewGroup(groupName)
+                    {
+                        Tag = revision
+                    };
+
+                    FileStatusListView.Groups.Add(group);
+                }
+
+                foreach (var item in statuses)
+                {
+                    if (!IsFilterMatch(item))
+                    {
+                        continue;
+                    }
+
+                    var listItem = new ListViewItem(string.Empty, group)
+                    {
+                        ImageIndex = GetItemImageIndex(item)
+                    };
+
+                    if (item.GetSubmoduleStatusAsync() != null && !item.GetSubmoduleStatusAsync().IsCompleted)
+                    {
+                        var capturedItem = item;
+
+                        ThreadHelper.JoinableTaskFactory.RunAsync(
+                            async () =>
+                            {
+                                await capturedItem.GetSubmoduleStatusAsync();
+
+                                await this.SwitchToMainThreadAsync();
+
+                                listItem.ImageIndex = GetItemImageIndex(capturedItem);
+                            });
+                    }
+
+                    if (previouslySelectedItems?.Contains(item) == true)
+                    {
+                        listItem.Selected = true;
+                    }
+
+                    listItem.Tag = item;
+                    list.Add(listItem);
+                }
+            }
+
+            FileStatusListView.Items.AddRange(list.ToArray());
+
+            if (updateCausedByFilter == false)
+            {
+                FileStatusListView_SelectedIndexChanged();
+                DataSourceChanged?.Invoke(this, EventArgs.Empty);
+                if (SelectFirstItemOnSetItems)
+                {
+                    SelectFirstVisibleItem();
+                }
+            }
+
+            FileStatusListView.EndUpdate();
+            UpdateColumnWidth();
+            return;
+
+            void EnsureSelectedIndexChangeSubscription()
+            {
+                if (_selectedIndexChangeSubscription == null)
+                {
+                    _selectedIndexChangeSubscription = Observable.FromEventPattern(
+                            h => FileStatusListView.SelectedIndexChanged += h,
+                            h => FileStatusListView.SelectedIndexChanged -= h)
+                        .Where(x => _enableSelectedIndexChangeEvent)
+                        .Throttle(SelectedIndexChangeThrottleDuration, MainThreadScheduler.Instance)
+                        .ObserveOn(MainThreadScheduler.Instance)
+                        .Subscribe(_ => FileStatusListView_SelectedIndexChanged());
+                }
+            }
+
+            int GetItemImageIndex(GitItemStatus gitItemStatus)
+            {
+                if (gitItemStatus.IsDeleted)
+                {
+                    return 0;
+                }
+
+                if (gitItemStatus.IsNew || (!gitItemStatus.IsTracked && !gitItemStatus.IsSubmodule))
+                {
+                    return 1;
+                }
+
+                if (gitItemStatus.IsChanged || gitItemStatus.IsConflict || gitItemStatus.IsSubmodule)
+                {
+                    if (!gitItemStatus.IsSubmodule || gitItemStatus.GetSubmoduleStatusAsync() == null ||
+                        !gitItemStatus.GetSubmoduleStatusAsync().IsCompleted)
+                    {
+                        return 2;
+                    }
+
+                    var status = gitItemStatus.GetSubmoduleStatusAsync().CompletedResult();
+                    if (status == null)
+                    {
+                        return 2;
+                    }
+
+                    if (status.Status == SubmoduleStatus.FastForward)
+                    {
+                        return 6 + (status.IsDirty ? 1 : 0);
+                    }
+
+                    if (status.Status == SubmoduleStatus.Rewind)
+                    {
+                        return 8 + (status.IsDirty ? 1 : 0);
+                    }
+
+                    if (status.Status == SubmoduleStatus.NewerTime)
+                    {
+                        return 10 + (status.IsDirty ? 1 : 0);
+                    }
+
+                    if (status.Status == SubmoduleStatus.OlderTime)
+                    {
+                        return 12 + (status.IsDirty ? 1 : 0);
+                    }
+
+                    return !status.IsDirty ? 2 : 5;
+                }
+
+                if (gitItemStatus.IsRenamed)
+                {
+                    if (gitItemStatus.RenameCopyPercentage == "100")
+                    {
+                        return 3; // Rename icon
+                    }
+
+                    return 2; // Modified icon
+                }
+
+                if (gitItemStatus.IsCopied)
+                {
+                    return 4;
+                }
+
+                return 14; // icon unknown
+            }
+        }
+
+        private void UpdateColumnWidth()
+        {
+            // prevent infinite recursions such as
+            // ClientSizeChanged -> UpdateColumnWidth -> ScrollBar visibility changed -> ClientSizeChanged
+            if (!_updatingColumnWidth)
+            {
+                _updatingColumnWidth = true;
+                columnHeader.Width = GetWidth();
+                _updatingColumnWidth = false;
+            }
+
+            int GetWidth()
+            {
+                var pathFormatter = new PathFormatter(FileStatusListView.CreateGraphics(), FileStatusListView.Font);
+                var controlWidth = FileStatusListView.ClientSize.Width;
+
+                var contentWidth = FileStatusListView.Items()
+                    .Where(item => item.BoundsOrEmpty().IntersectsWith(FileStatusListView.ClientRectangle))
+                    .Select(item =>
+                    {
+                        (_, _, _, _, int textStart, int textWidth, _) = FormatListViewItem(item, pathFormatter, FileStatusListView.ClientSize.Width);
+                        return textStart + textWidth;
+                    })
+                    .DefaultIfEmpty(controlWidth)
+                    .Max();
+
+                return Math.Max(contentWidth, controlWidth);
+            }
+        }
+
+        private void HandleVisibility_NoFilesLabel_FilterComboBox(bool filesPresent)
+        {
+            NoFiles.Visible = !filesPresent;
+            FilterVisibleInternal = FilterVisible && filesPresent;
+        }
+
+        // Event handlers
+
+        private void FileStatusListView_ClientSizeChanged(object sender, EventArgs e)
+        {
+            UpdateColumnWidth();
+        }
+
+        private void FileStatusListView_ContextMenu_Opening(object sender, CancelEventArgs e)
+        {
+            var cm = (ContextMenuStrip)sender;
+
+            if (!cm.Items.Find(_openSubmoduleMenuItem.Name, true).Any())
+            {
+                cm.Items.Insert(1, _openSubmoduleMenuItem);
+            }
+
+            bool isSubmoduleSelected = SelectedItem != null && SelectedItem.IsSubmodule;
+
+            _openSubmoduleMenuItem.Visible = isSubmoduleSelected;
+
+            if (isSubmoduleSelected)
+            {
+                _openSubmoduleMenuItem.Font = AppSettings.OpenSubmoduleDiffInSeparateWindow ?
+                    new Font(_openSubmoduleMenuItem.Font, FontStyle.Bold) :
+                    new Font(_openSubmoduleMenuItem.Font, FontStyle.Regular);
+            }
+
+            if (!cm.Items.Find(_sortByContextMenu.Name, true).Any())
+            {
+                cm.Items.Add(new ToolStripSeparator());
+                cm.Items.Add(_sortByContextMenu);
+            }
+        }
+
+        private void FileStatusListView_DoubleClick(object sender, EventArgs e)
+        {
+            if (DoubleClick == null)
+            {
+                if (AppSettings.OpenSubmoduleDiffInSeparateWindow && SelectedItem.IsSubmodule)
+                {
+                    ThreadHelper.JoinableTaskFactory.RunAsync(() => OpenSubmoduleAsync());
+                }
+                else
+                {
+                    UICommands.StartFileHistoryDialog(this, SelectedItem.Name, Revision);
+                }
+            }
+            else
+            {
+                DoubleClick?.Invoke(sender, e);
+            }
+        }
+
+        private void FileStatusListView_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
+        {
+            var item = e.Item;
+            var formatter = new PathFormatter(e.Graphics, FileStatusListView.Font);
+
+            var (image, prefix, text, suffix, prefixTextStartX, _, textMaxWidth) = FormatListViewItem(item, formatter, item.Bounds.Width);
+
+            if (image != null)
+            {
+                e.Graphics.DrawImageUnscaled(image, item.Position.X, item.Position.Y);
+            }
+
+            if (!string.IsNullOrEmpty(text))
+            {
+                var textRect = new Rectangle(prefixTextStartX, item.Bounds.Top, textMaxWidth, item.Bounds.Height);
+
+                if (!string.IsNullOrEmpty(prefix))
+                {
+                    DrawString(textRect, prefix, SystemColors.GrayText);
+                    var prefixSize = formatter.MeasureString(prefix);
+                    textRect.Offset(prefixSize.Width, 0);
+                }
+
+                DrawString(textRect, text, SystemColors.ControlText);
+
+                if (!string.IsNullOrEmpty(suffix))
+                {
+                    var textSize = formatter.MeasureString(text);
+                    textRect.Offset(textSize.Width, 0);
+                    DrawString(textRect, suffix, SystemColors.GrayText);
+                }
+            }
+
+            void DrawString(Rectangle rect, string s, Color color)
+            {
+                rect.Intersect(Rectangle.Round(e.Graphics.ClipBounds));
+                if (rect.Width != 0 && rect.Height != 0)
+                {
+                    formatter.DrawString(s, rect, color);
+                }
+            }
+        }
+
+        private void FileStatusListView_GroupMouseDown(object sender, ListViewGroupMouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                // prevent selecting all sub-items when left-clicking group
+                e.Handled = true;
+            }
+        }
+
+        private void FileStatusListView_KeyDown(object sender, KeyEventArgs e)
+        {
+            switch (e.KeyData)
+            {
+                case Keys.Control | Keys.A:
+                    {
+                        SelectAll();
+                        e.Handled = true;
+                        break;
+                    }
+
+                default:
+                    {
+                        KeyDown?.Invoke(sender, e);
+                        break;
+                    }
+            }
+        }
+
+        private void FileStatusListView_MouseDown(object sender, MouseEventArgs e)
+        {
+            // SELECT
             if (e.Button == MouseButtons.Right)
             {
                 var hover = FileStatusListView.HitTest(e.Location);
 
                 if (hover.Item != null && !hover.Item.Selected)
                 {
-                    ClearSelected();
-
-                    hover.Item.Selected = true;
+                    SelectedIndex = hover.Item.Index;
                 }
             }
 
-            //DRAG
+            // DRAG
             if (e.Button == MouseButtons.Left)
             {
                 if (SelectedItems.Any())
@@ -197,596 +1233,376 @@ namespace GitUI
 
                     // Create a rectangle using the DragSize, with the mouse position being
                     // at the center of the rectangle.
-                    dragBoxFromMouseDown = new Rectangle(new Point(e.X - (dragSize.Width / 2),
-                                                                   e.Y - (dragSize.Height / 2)),
-                                                            dragSize);
+                    _dragBoxFromMouseDown = new Rectangle(
+                        new Point(
+                            e.X - (dragSize.Width / 2),
+                            e.Y - (dragSize.Height / 2)),
+                        dragSize);
                 }
                 else
+                {
                     // Reset the rectangle if the mouse is not over an item in the ListView.
-                    dragBoxFromMouseDown = Rectangle.Empty;
-            }
-        }
-#endif
-
-        public override ContextMenuStrip ContextMenuStrip
-        {
-            get
-            {
-                return FileStatusListView.ContextMenuStrip;
-            }
-            set
-            {
-                FileStatusListView.ContextMenuStrip = value;
+                    _dragBoxFromMouseDown = Rectangle.Empty;
+                }
             }
         }
 
-        public override ContextMenu ContextMenu
-        {
-            get
-            {
-                return FileStatusListView.ContextMenu;
-            }
-            set
-            {
-                FileStatusListView.ContextMenu = value;
-            }
-        }
-
-#if !__MonoCS__ // TODO Drag'n'Drop doesnt work on Mono/Linux
-        private Rectangle dragBoxFromMouseDown;
-
-        void FileStatusListView_MouseMove(object sender, MouseEventArgs e)
+        private void FileStatusListView_MouseMove(object sender, MouseEventArgs e)
         {
             ListView listView = sender as ListView;
 
-            //DRAG
+            // DRAG
             // If the mouse moves outside the rectangle, start the drag.
-            if (dragBoxFromMouseDown != Rectangle.Empty &&
-                !dragBoxFromMouseDown.Contains(e.X, e.Y))
+            if (_dragBoxFromMouseDown != Rectangle.Empty &&
+                !_dragBoxFromMouseDown.Contains(e.X, e.Y))
             {
                 if (SelectedItems.Any())
                 {
-                    StringCollection fileList = new StringCollection();
+                    var fileList = new StringCollection();
 
                     foreach (GitItemStatus item in SelectedItems)
                     {
-                        string fileName = Path.Combine(Module.WorkingDir, item.Name);
+                        string fileName = _fullPathResolver.Resolve(item.Name);
 
-                        fileList.Add(fileName.Replace('/', '\\'));
+                        fileList.Add(fileName.ToNativePath());
                     }
 
-                    DataObject obj = new DataObject();
+                    var obj = new DataObject();
                     obj.SetFileDropList(fileList);
 
                     // Proceed with the drag and drop, passing in the list item.
                     DoDragDrop(obj, DragDropEffects.Copy);
-                    dragBoxFromMouseDown = Rectangle.Empty;
+                    _dragBoxFromMouseDown = Rectangle.Empty;
                 }
             }
 
-            //TOOLTIP
+            // TOOLTIP
             if (listView != null)
             {
-                var point = new Point(e.X, e.Y);
-                var hover = listView.HitTest(point);
-                if (hover.Item != null)
+                ListViewItem hoveredItem;
+                try
                 {
-                    var gitItemStatus = (GitItemStatus)hover.Item.Tag;
+                    var point = new Point(e.X, e.Y);
+                    hoveredItem = listView.HitTest(point).Item;
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    hoveredItem = null;
+                }
 
+                var gitItemStatus = hoveredItem?.Tag<GitItemStatus>();
+
+                if (gitItemStatus != null)
+                {
                     string text;
                     if (gitItemStatus.IsRenamed || gitItemStatus.IsCopied)
+                    {
                         text = string.Concat(gitItemStatus.Name, " (", gitItemStatus.OldName, ")");
+                    }
                     else
+                    {
                         text = gitItemStatus.Name;
+                    }
 
-                    float fTextWidth = listView.CreateGraphics().MeasureString(text, listView.Font).Width + 17;
-
-                    //Use width-itemheight because the icon drawn in front of the text is the itemheight
-                    if (fTextWidth > (FileStatusListView.Width - FileStatusListView.GetItemRect(hover.Item.Index).Height))
+                    float textWidth;
+                    using (var graphics = listView.CreateGraphics())
                     {
-                        if (!hover.Item.ToolTipText.Equals(gitItemStatus.ToString()))
-                            hover.Item.ToolTipText = gitItemStatus.ToString();
+                        textWidth = graphics.MeasureString(text, listView.Font).Width + 17;
+                    }
+
+                    // Use width-itemheight because the icon drawn in front of the text is the itemheight
+                    if (textWidth > (FileStatusListView.Width - FileStatusListView.GetItemRect(hoveredItem.Index).Height))
+                    {
+                        if (hoveredItem.ToolTipText != gitItemStatus.ToString())
+                        {
+                            hoveredItem.ToolTipText = gitItemStatus.ToString();
+                        }
                     }
                     else
-                        hover.Item.ToolTipText = "";
-                }
-            }
-        }
-#endif
-
-        [Browsable(false)]
-        public IEnumerable<GitItemStatus> AllItems
-        {
-            get
-            {
-                return (FileStatusListView.Items.Cast<ListViewItem>().
-                    Select(selectedItem => (GitItemStatus) selectedItem.Tag));
-            }
-        }
-
-        [Browsable(false)]
-        public IEnumerable<GitItemStatus> SelectedItems
-        {
-            get
-            {
-                return FileStatusListView.SelectedItems.Cast<ListViewItem>().
-                    Select(i => (GitItemStatus)i.Tag);
-            }
-            set
-            {
-                ClearSelected();
-                if (value == null)
-                    return;
-
-                foreach (var item in FileStatusListView.Items.Cast<ListViewItem>()
-                    .Where(i => value.Contains((GitItemStatus)i.Tag)))
-                {
-                    item.Selected = true;
-                }
-                var first = FileStatusListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault(x => x.Selected);
-                if (first != null)
-                    first.EnsureVisible();
-                StoreNextIndexToSelect();
-            }
-        }
-
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [Browsable(false)]
-        public GitItemStatus SelectedItem
-        {
-            get
-            {
-                if (FileStatusListView.SelectedItems.Count > 0)
-                {
-                    ListViewItem item = FileStatusListView.SelectedItems[0];
-                    return (GitItemStatus) item.Tag;
-                }
-                return null;
-            }
-            set
-            {
-                ClearSelected();
-                if (value == null)
-                    return;
-                foreach (ListViewItem item in FileStatusListView.Items)
-                    if (value.CompareTo((GitItemStatus)item.Tag) == 0)
                     {
-                        item.Selected = true;
-                        item.EnsureVisible();
-                        return;
+                        hoveredItem.ToolTipText = "";
                     }
-            }
-        }
-
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [Browsable(false)]
-        public string SelectedItemParent
-        {
-            get
-            {
-                foreach (ListViewItem item in FileStatusListView.SelectedItems)
-                    return item.Group != null ? (string)item.Group.Tag : null;
-                return null;
-            }
-        }
-
-        public void ClearSelected()
-        {
-            foreach (ListViewItem item in FileStatusListView.SelectedItems)
-                item.Selected = false;
-        }
-
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [Browsable(false)]
-        public int SelectedIndex
-        {
-            get
-            {
-                foreach (int i in FileStatusListView.SelectedIndices)
-                    return i;
-                return -1;
-            }
-            set
-            {
-                ClearSelected();
-                if (value >= 0)
-                {
-                    FileStatusListView.Items[value].Selected = true;
-                    FileStatusListView.Items[value].Focused = true;
-                    FileStatusListView.Items[value].EnsureVisible();
                 }
             }
         }
 
-        private int _nextIndexToSelect = -1;
-
-        public void StoreNextIndexToSelect()
+        private void FileStatusListView_SelectedIndexChanged()
         {
-            _nextIndexToSelect = -1;
-            foreach (int idx in FileStatusListView.SelectedIndices)
-                if (idx > _nextIndexToSelect)
-                    _nextIndexToSelect = idx;
-            _nextIndexToSelect = _nextIndexToSelect - FileStatusListView.SelectedIndices.Count + 1;
+            SelectedIndexChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        public void SelectStoredNextIndex(int defaultIndex = -1)
+        private void FileStatusListView_Scroll(object sender, ScrollEventArgs e)
         {
-            _nextIndexToSelect = Math.Min(_nextIndexToSelect, FileStatusListView.Items.Count - 1);
-            if (_nextIndexToSelect < 0 && defaultIndex > -1)
-                _nextIndexToSelect = Math.Min(defaultIndex, FileStatusListView.Items.Count - 1);
-            if (_nextIndexToSelect > -1)
-                SelectedIndex = _nextIndexToSelect;
-            _nextIndexToSelect = -1;
-        }
-
-        public event EventHandler SelectedIndexChanged;
-        public event EventHandler DataSourceChanged;
-
-        public new event EventHandler DoubleClick;
-        public new event KeyEventHandler KeyDown;
-
-        void FileStatusListView_DoubleClick(object sender, EventArgs e)
-        {
-            if (DoubleClick == null)
-                UICommands.StartFileHistoryDialog(this, SelectedItem.Name, Revision);
-            else
-                DoubleClick(sender, e);
-        }
-
-        void FileStatusListView_SelectedIndexChanged()
-        {
-            if (SelectedIndexChanged != null)
-                SelectedIndexChanged(this, EventArgs.Empty);
-        }
-
-        private static int GetItemImageIndex(GitItemStatus gitItemStatus)
-        {
-            if (gitItemStatus.IsDeleted)
-                return 0;
-            if (gitItemStatus.IsNew || !gitItemStatus.IsTracked)
-                return 1;
-            if (gitItemStatus.IsChanged || gitItemStatus.IsConflict)
+            if (e.Type == ScrollEventType.ThumbTrack)
             {
-                if (!gitItemStatus.IsSubmodule || gitItemStatus.SubmoduleStatus == null ||
-                    !gitItemStatus.SubmoduleStatus.IsCompleted)
-                    return 2;
-
-                var status = gitItemStatus.SubmoduleStatus.Result;
-                if (status == null)
-                    return 2;
-                if (status.Status == SubmoduleStatus.FastForward)
-                    return 6 + (status.IsDirty ? 1 : 0);
-                if (status.Status == SubmoduleStatus.Rewind)
-                    return 8 + (status.IsDirty ? 1 : 0);
-                if (status.Status == SubmoduleStatus.NewerTime)
-                    return 10 + (status.IsDirty ? 1 : 0);
-                if (status.Status == SubmoduleStatus.OlderTime)
-                    return 12 + (status.IsDirty ? 1 : 0);
-                return !status.IsDirty ? 2 : 5;
-            }
-            if (gitItemStatus.IsRenamed)
-                return 3;
-            if (gitItemStatus.IsCopied)
-                return 4;
-            return 14;//icon unknown
-        }
-
-        [Browsable(false)]
-        [DefaultValue(true)]
-        public bool IsEmpty
-        {
-            get { return GitItemStatuses == null || !GitItemStatuses.Any(); }
-        }
-
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [Browsable(false)]
-        public IList<GitItemStatus> GitItemStatuses
-        {
-            get
-            {
-                var result = new List<GitItemStatus>();
-                var data = GitItemStatusesWithParents;
-                if (data != null)
-                    foreach (var plist in data.Values)
-                        result.AddAll(plist);
-
-                return result;
-            }
-            set
-            {
-                if (value == null)
-                    GitItemStatusesWithParents = null;
-                else
-                    SetGitItemStatuses(null, value);
-            }
-        }
-
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [Browsable(false)]
-        public string GitFirstParent
-        {
-            get
-            {
-                var data = GitItemStatusesWithParents;
-                if (data != null && data.Count > 0)
-                    return data.ElementAt(0).Key;
-                return null;
-            }
-        }
-
-        public void SetGitItemStatuses(string parentRev, IList<GitItemStatus> items)
-        {
-            var dictionary = new Dictionary<string, IList<GitItemStatus>> {{parentRev ?? "", items}};
-            GitItemStatusesWithParents = dictionary;
-        }
-
-        private GitItemsWithParents _itemsDictionary = new Dictionary<string, IList<GitItemStatus>>();
-        private bool _itemsChanging = false;
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [Browsable(false)]
-        public GitItemsWithParents GitItemStatusesWithParents
-        {
-            get
-            {
-                return _itemsDictionary;
-            }
-            set
-            {
-                _itemsChanging = true;
-                if (value == null || !value.Any())
-                    NoFiles.Visible = true;
-                else
-                    NoFiles.Visible = false;
-
-                bool empty = FileStatusListView.Items.Count == 0;
-                FileStatusListView.ShowGroups = value != null && value.Count > 1;
-                FileStatusListView.Groups.Clear();
-                FileStatusListView.Items.Clear();
-                _itemsDictionary = new Dictionary<string, IList<GitItemStatus>>();
-                if (value == null || value.All(pair => pair.Value.Count == 0))
-                {
-                    if (!empty)
-                    {
-                        //bug in the ListView control where supplying an empty list will not trigger a SelectedIndexChanged event, so we force it to trigger
-                        FileStatusListView_SelectedIndexChanged();
-                    }
-                    return;
-                }
-                FileStatusListView.BeginUpdate();
-                var list = new List<ListViewItem>();
-                foreach (var pair in value)
-                {
-                    ListViewGroup group = null;
-                    if (!String.IsNullOrEmpty(pair.Key))
-                    {
-                        var groupName = "";
-                        if (pair.Key == CombinedDiff.Text)
-                        {
-                            groupName = CombinedDiff.Text;
-                        }
-                        else
-                        {
-                            string shortHash = pair.Key.Length > 8 ? pair.Key.Substring(0, 8) : pair.Key;
-                            groupName = _DiffWithParent.Text + " " + shortHash;
-                        }
-
-                        group = new ListViewGroup(groupName);
-                        group.Tag = pair.Key;
-                        FileStatusListView.Groups.Add(group);
-                    }
-                    foreach (var item in pair.Value)
-                    {
-                        var listItem = new ListViewItem(item.Name, group);
-                        listItem.ImageIndex = GetItemImageIndex(item);
-                        if (item.SubmoduleStatus != null && !item.SubmoduleStatus.IsCompleted)
-                        {
-                            var capturedItem = item;
-                            item.SubmoduleStatus.ContinueWith((task) => listItem.ImageIndex = GetItemImageIndex(capturedItem),
-                                                              CancellationToken.None,
-                                                              TaskContinuationOptions.OnlyOnRanToCompletion,
-                                                              TaskScheduler.FromCurrentSynchronizationContext());
-                        }
-                        listItem.Tag = item;
-                        list.Add(listItem);
-                    };
-                }
-                FileStatusListView.Items.AddRange(list.ToArray());
-                _itemsChanging = false;
-                FileStatusListView_SizeChanged(null, null);
-                foreach (ListViewItem item in FileStatusListView.Items)
-                {
-                    string parentRev = item.Group != null ? item.Group.Tag as string : "";
-                    if (!_itemsDictionary.ContainsKey(parentRev))
-                        _itemsDictionary.Add(parentRev, new List<GitItemStatus>());
-                    _itemsDictionary[parentRev].Add((GitItemStatus)item.Tag);
-                }
-                FileStatusListView.EndUpdate();
-                FileStatusListView.SetGroupState(ListViewGroupState.Collapsible);
-                if (DataSourceChanged != null)
-                    DataSourceChanged(this, new EventArgs());
-                if (SelectFirstItemOnSetItems)
-                    SelectFirstVisibleItem();
-            }
-        }
-
-        [DefaultValue(true)]
-        public bool SelectFirstItemOnSetItems { get; set; }
-
-        public void SelectFirstVisibleItem()
-        {
-            if (FileStatusListView.Items.Count == 0)
                 return;
-            var group = FileStatusListView.Groups.Cast<ListViewGroup>().
-                FirstOrDefault(gr => gr.Items.Count > 0);
-            if (group != null)
-            {
-                ListViewItem sortedFirstGroupItem = FileStatusListView.Items.Cast<ListViewItem>().
-                    FirstOrDefault(item => item.Group == group);
-                if (sortedFirstGroupItem != null)
-                    sortedFirstGroupItem.Selected = true;
             }
-            else if (FileStatusListView.Items.Count > 0)
-                FileStatusListView.Items[0].Selected = true;
+
+            UpdateColumnWidth();
         }
 
-        /// <summary>
-        /// Gets or sets the revision.
-        /// </summary>
-        /// <value>The revision.</value>
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [Browsable(false)]
-        public GitRevision Revision { get; set; }
-
-        private void FileStatusListView_SizeChanged(object sender, EventArgs e)
+        private void FileStatusList_Enter(object sender, EventArgs e)
         {
-            if (_itemsChanging)
-                return;
-
-            NoFiles.Location = new Point(5, 5);
-            NoFiles.Size = new Size(Size.Width - 10, Size.Height - 10);
-            Refresh();
-            FileStatusListView.BeginUpdate();
-
-            FileStatusListView.AutoResizeColumn(0,
-                ColumnHeaderAutoResizeStyle.HeaderSize);
-            FileStatusListView.EndUpdate();
+            Enter?.Invoke(this, new EnterEventArgs(_mouseEntered));
+            _mouseEntered = false;
         }
 
-        private void FileStatusListView_KeyDown(object sender, KeyEventArgs e)
+        #region Filtering
+
+        private string _toolTipText = "";
+        private readonly Subject<string> _filterSubject = new Subject<string>();
+        [CanBeNull] private Regex _filter;
+        private bool _filterVisible = false;
+
+        public void SetFilter(string value)
         {
-            switch (e.KeyCode)
+            FilterComboBox.Text = value;
+            FilterFiles(value);
+        }
+
+        private void DeleteFilterButton_Click(object sender, EventArgs e)
+        {
+            SetFilter(string.Empty);
+        }
+
+        private int FilterFiles(string value)
+        {
+            StoreFilter(value);
+
+            UpdateFileStatusListView(updateCausedByFilter: true);
+            return FileStatusListView.Items.Count;
+        }
+
+        private bool IsFilterMatch(GitItemStatus item)
+        {
+            if (_filter == null)
             {
-                case Keys.A:
+                return true;
+            }
+
+            string name = item.Name.TrimEnd(PathUtil.PosixDirectorySeparatorChar);
+            string oldName = item.OldName;
+
+            if (AppSettings.TruncatePathMethod == TruncatePathMethod.FileNameOnly)
+            {
+                name = Path.GetFileName(name);
+                oldName = Path.GetFileName(oldName);
+            }
+
+            if (_filter.IsMatch(name))
+            {
+                return true;
+            }
+
+            return oldName != null && _filter.IsMatch(oldName);
+        }
+
+        private void InitialiseFiltering()
+        {
+            // TODO this code is very similar to code in FormCommit
+            _filterSubject
+                .Throttle(TimeSpan.FromMilliseconds(250))
+                .ObserveOn(SynchronizationContext.Current)
+                .Subscribe(
+                    filterText =>
+                    {
+                        _toolTipText = "";
+                        var fileCount = 0;
+                        try
+                        {
+                            fileCount = FilterFiles(filterText);
+                        }
+                        catch (ArgumentException ae)
+                        {
+                            _toolTipText = ae.Message;
+                        }
+
+                        if (fileCount > 0)
+                        {
+                            AddToSelectionFilter(filterText);
+                        }
+                    });
+
+            void AddToSelectionFilter(string filter)
+            {
+                if (FilterComboBox.Items.Cast<string>().Any(candidate => candidate == filter))
                 {
-                    if (!e.Control)
-                        break;
-                    FileStatusListView.BeginUpdate();
-                    try
-                    {
-                        for (var i = 0; i < FileStatusListView.Items.Count; i++)
-                            FileStatusListView.Items[i].Selected = true;
-                        e.Handled = true;
-                    }
-                    finally
-                    {
-                        FileStatusListView.EndUpdate();
-                    }
-                    break;
+                    return;
                 }
-                default:
-                    if (KeyDown != null)
-                        KeyDown(sender, e);
-                    break;
+
+                const int SelectionFilterMaxLength = 10;
+                if (FilterComboBox.Items.Count == SelectionFilterMaxLength)
+                {
+                    FilterComboBox.Items.RemoveAt(SelectionFilterMaxLength - 1);
+                }
+
+                FilterComboBox.Items.Insert(0, filter);
             }
         }
 
-        public int SetSelectionFilter(string filter)
+        private void FilterComboBox_TextUpdate(object sender, EventArgs e)
         {
-            return FilterFiles(RegexFor(filter));
+            // show DeleteFilterButton at once
+            SetDeleteFilterButtonVisibility();
+
+            string filterText = FilterComboBox.Text;
+
+            // workaround for text getting selected if it matches the start of the combobox items
+            if (FilterComboBox.SelectionLength == filterText.Length && FilterComboBox.SelectionStart == 0)
+            {
+                FilterComboBox.SelectionLength = 0;
+                FilterComboBox.SelectionStart = filterText.Length;
+            }
+
+            _filterSubject.OnNext(filterText);
         }
 
-        private static Regex RegexFor(string value)
+        private void FilterComboBox_MouseEnter(object sender, EventArgs e)
         {
-            return string.IsNullOrEmpty(value)
-                ? new Regex("^$", RegexOptions.Compiled)
-                : new Regex(value, RegexOptions.Compiled);
+            FilterToolTip.SetToolTip(FilterComboBox, _toolTipText);
         }
 
-        private int FilterFiles(Regex filter)
+        private void FilterComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
+            FilterFiles(FilterComboBox.Text);
+        }
+
+        private void FilterComboBox_GotFocus(object sender, EventArgs e)
+        {
+            SetFilterWatermarkLabelVisibility();
+        }
+
+        private void FilterComboBox_LostFocus(object sender, EventArgs e)
+        {
+            SetFilterWatermarkLabelVisibility();
+        }
+
+        private void FilterWatermarkLabel_Click(object sender, EventArgs e)
+        {
+            FilterComboBox.Focus();
+        }
+
+        private void FilterComboBox_SizeChanged(object sender, EventArgs e)
+        {
+            // strangely it does not invalidate itself on resize so its look becomes distorted
+            FilterComboBox.Invalidate();
+        }
+
+        private void SortByFilePath()
+        {
+            FileStatusListView.ListViewItemSorter = new GitStatusListSorter(Comparer<GitItemStatus>.Default);
+            FileStatusListView.Sort();
+        }
+
+        private void SortByFileExtension()
+        {
+            FileStatusListView.ListViewItemSorter = new GitStatusListSorter(new GitItemStatusFileExtensionComparer());
+            FileStatusListView.Sort();
+        }
+
+        private void SortByFileStatus()
+        {
+            FileStatusListView.ListViewItemSorter = new ImageIndexListSorter();
+            FileStatusListView.Sort();
+        }
+
+        private void StoreFilter(string value)
+        {
+            SetDeleteFilterButtonVisibility();
+            if (string.IsNullOrEmpty(value))
+            {
+                FilterComboBox.BackColor = SystemColors.Window;
+                _filter = null;
+                return;
+            }
+
             try
             {
-                SuspendLayout();
-
-                var items = AllItems;
-                int i = 0;
-                foreach (var item in items)
-                {
-                    FileStatusListView.Items[i].Selected = filter.IsMatch(item.Name);
-                    i++;
-                }
-
-                return FileStatusListView.SelectedIndices.Count;
+                _filter = new Regex(value, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                FilterComboBox.BackColor = _activeInputColor;
             }
-            finally
+            catch
             {
-                ResumeLayout(true);
+                FilterComboBox.BackColor = _invalidInputColor;
+                throw;
             }
         }
 
-        public void SetDiffs(List<GitRevision> revisions)
+        private class GitStatusListSorter : Comparer<ListViewItem>
         {
-            switch (revisions.Count)
+            public IComparer<GitItemStatus> StatusComparer { get; }
+
+            public GitStatusListSorter(IComparer<GitItemStatus> gitStatusItemSorter = null)
             {
-                case 0:
-                    NoFiles.Text = _noDiffFilesChangesDefaultText;
-                    GitItemStatuses = null;
-                    break;
+                StatusComparer = gitStatusItemSorter ?? Comparer<GitItemStatus>.Default;
+            }
 
-                case 1: // diff "parent" --> "selected revision"
-                    SetDiff(revisions[0]);
-                    break;
-
-                case 2: // diff "first clicked revision" --> "second clicked revision"
-                    NoFiles.Text = _noDiffFilesChangesDefaultText;
-                    bool artificialRevSelected = revisions[0].IsArtificial() || revisions[1].IsArtificial();
-                    if (artificialRevSelected)
-                    {
-                        NoFiles.Text = _UnsupportedMultiselectAction.Text;
-                        GitItemStatuses = null;
-                    }
-                    else
-                        SetGitItemStatuses(revisions[1].Guid, Module.GetDiffFilesWithSubmodulesStatus(revisions[0].Guid, revisions[1].Guid));
-                    break;
-
-                default: // more than 2 revisions selected => no diff
-                    NoFiles.Text = _UnsupportedMultiselectAction.Text;
-                    GitItemStatuses = null;
-                    break;
+            public override int Compare(ListViewItem x, ListViewItem y)
+            {
+                return StatusComparer.Compare(x.Tag as GitItemStatus, y.Tag as GitItemStatus);
             }
         }
 
-        public void SetDiff(GitRevision revision)
+        private class ImageIndexListSorter : Comparer<ListViewItem>
         {
-            NoFiles.Text = _noDiffFilesChangesDefaultText;
+            /// <summary>
+            /// Secondary sort should be by file path.
+            /// </summary>
+            private static readonly GitStatusListSorter ThenBy = new GitStatusListSorter(Comparer<GitItemStatus>.Default);
 
-            Revision = revision;
-
-            if (revision == null)
-                GitItemStatuses = null;
-            else if (revision.ParentGuids == null || revision.ParentGuids.Length == 0)
-                GitItemStatuses = Module.GetTreeFiles(revision.TreeGuid, true);
-            else
+            public override int Compare(ListViewItem x, ListViewItem y)
             {
-                if (revision.Guid == GitRevision.UnstagedGuid) //working directory changes
-                    GitItemStatuses = Module.GetUnstagedFilesWithSubmodulesStatus();
-                else if (revision.Guid == GitRevision.IndexGuid) //index
-                    GitItemStatuses = Module.GetStagedFilesWithSubmodulesStatus();
-                else
+                if (ReferenceEquals(x, y))
                 {
-                    GitItemsWithParents dictionary = new Dictionary<string, IList<GitItemStatus>>();
-                    var isMergeCommit = revision.ParentGuids.Count() == 2;
-                    if (isMergeCommit)
-                    {
-                        var conflicts = Module.GetCombinedDiffFileList(revision.Guid);
-                        if (conflicts.Any())
-                        {
-                            dictionary.Add(CombinedDiff.Text, conflicts);
-                        }
-                    }
-                    foreach (var parentRev in revision.ParentGuids)
-                    {
-                        dictionary.Add(parentRev, Module.GetDiffFilesWithSubmodulesStatus(revision.Guid, parentRev));
-
-                        //Only add the first parent to the dictionary if the setting to show diffs
-                        //for app parents is disabled
-                        if (!AppSettings.ShowDiffForAllParents)
-                            break;
-                    }
-                    GitItemStatusesWithParents = dictionary;
+                    return 0;
                 }
+                else if (x == null)
+                {
+                    return -1;
+                }
+                else if (y == null)
+                {
+                    return 1;
+                }
+
+                var statusResult = x.ImageIndex.CompareTo(y.ImageIndex);
+
+                if (statusResult == 0)
+                {
+                    return ThenBy.Compare(x, y);
+                }
+
+                return statusResult;
             }
+        }
+
+        #endregion
+
+        #region private Color constants
+        //// Do not declare the colors "static" because Color.FromArgb() will not work at their initialization.
+        private readonly Color _activeInputColor = Color.FromArgb(0xC8, 0xFF, 0xC8).AdaptBackColor();
+        private readonly Color _invalidInputColor = Color.FromArgb(0xFF, 0xC8, 0xC8).AdaptBackColor();
+        #endregion
+
+        internal TestAccessor GetTestAccessor() => new TestAccessor(this);
+
+        internal readonly struct TestAccessor
+        {
+            private readonly FileStatusList _fileStatusList;
+
+            internal TestAccessor(FileStatusList fileStatusList)
+            {
+                _fileStatusList = fileStatusList;
+            }
+
+            internal Color ActiveInputColor => _fileStatusList._activeInputColor;
+            internal Color InvalidInputColor => _fileStatusList._invalidInputColor;
+            internal Label DeleteFilterButton => _fileStatusList.DeleteFilterButton;
+            internal ListView FileStatusListView => _fileStatusList.FileStatusListView;
+            internal ComboBox FilterComboBox => _fileStatusList.FilterComboBox;
+            internal Regex Filter => _fileStatusList._filter;
+            internal bool FilterWatermarkLabelVisible => _fileStatusList.FilterWatermarkLabel.Visible;
+            internal void StoreFilter(string value) => _fileStatusList.StoreFilter(value);
         }
     }
-
 }

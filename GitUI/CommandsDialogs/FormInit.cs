@@ -2,7 +2,9 @@
 using System.IO;
 using System.Windows.Forms;
 using GitCommands;
-using GitCommands.Repository;
+using GitCommands.Git;
+using GitCommands.UserRepositoryHistory;
+using GitExtUtils;
 using ResourceManager;
 
 namespace GitUI.CommandsDialogs
@@ -24,66 +26,108 @@ namespace GitUI.CommandsDialogs
         private readonly TranslationString _initMsgBoxCaption =
             new TranslationString("Create new repository");
 
-        private readonly EventHandler<GitModuleEventArgs> GitModuleChanged;
+        private readonly EventHandler<GitModuleEventArgs> _gitModuleChanged;
 
-        public FormInit(string dir, EventHandler<GitModuleEventArgs> GitModuleChanged)
+        public FormInit(string dir, EventHandler<GitModuleEventArgs> gitModuleChanged)
         {
-            this.GitModuleChanged = GitModuleChanged;
+            _gitModuleChanged = gitModuleChanged;
             InitializeComponent();
-            Translate();
+            InitializeComplete();
 
-            if (string.IsNullOrEmpty(dir))
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
             {
-                Directory.Text = AppSettings.DefaultCloneDestinationPath;
-            }
-            else
-            {
-                Directory.Text = dir;
-            }
-        }
+                var repositoryHistory = await RepositoryHistoryManager.Locals.LoadRecentHistoryAsync();
 
-        private void DirectoryDropDown(object sender, EventArgs e)
-        {
-            Directory.DataSource = Repositories.RepositoryHistory.Repositories;
-            Directory.DisplayMember = "Path";
+                await this.SwitchToMainThreadAsync();
+                _NO_TRANSLATE_Directory.DataSource = repositoryHistory;
+                _NO_TRANSLATE_Directory.DisplayMember = nameof(Repository.Path);
+            });
+
+            _NO_TRANSLATE_Directory.SelectedIndex = -1;
+            _NO_TRANSLATE_Directory.Text = string.IsNullOrEmpty(dir) ? AppSettings.DefaultCloneDestinationPath : dir;
         }
 
         private void InitClick(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(Directory.Text))
+            var directoryPath = _NO_TRANSLATE_Directory.Text;
+
+            if (!IsRootedDirectoryPath(directoryPath))
             {
-                MessageBox.Show(this, _chooseDirectory.Text,_chooseDirectoryCaption.Text);
+                MessageBox.Show(this, _chooseDirectory.Text, _chooseDirectoryCaption.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
-            if (File.Exists(Directory.Text))
+            if (File.Exists(directoryPath))
             {
-                MessageBox.Show(this, _chooseDirectoryNotFile.Text,_chooseDirectoryNotFileCaption.Text);
+                MessageBox.Show(this, _chooseDirectoryNotFile.Text, _chooseDirectoryNotFileCaption.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
-            GitModule module = new GitModule(Directory.Text);
+            var module = new GitModule(directoryPath);
 
             if (!System.IO.Directory.Exists(module.WorkingDir))
+            {
                 System.IO.Directory.CreateDirectory(module.WorkingDir);
+            }
 
-            MessageBox.Show(this, module.Init(Central.Checked, Central.Checked), _initMsgBoxCaption.Text);
+            MessageBox.Show(this, module.Init(Central.Checked, Central.Checked), _initMsgBoxCaption.Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-            if (GitModuleChanged != null)
-                GitModuleChanged(this, new GitModuleEventArgs(module));
+            _gitModuleChanged?.Invoke(this, new GitModuleEventArgs(module));
 
-            Repositories.AddMostRecentRepository(Directory.Text);
-
+            ThreadHelper.JoinableTaskFactory.Run(() => RepositoryHistoryManager.Locals.AddAsMostRecentAsync(directoryPath));
             Close();
+        }
+
+        private static bool IsRootedDirectoryPath(string path)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(path))
+                {
+                    return false;
+                }
+
+                // this is going to throw if it's an invalid path (e.g. contains special chars)
+                var info = new DirectoryInfo(path);
+
+                return Path.IsPathRooted(path.Trim());
+            }
+            catch (Exception)
+            {
+                // The code in the try block is expected to throw when the input is not a valid directory path
+                // OR when the user does not have the required permission.
+                // In both cases we return "false" since the path is not representing a valid "usable" directory.
+                // This is also the reason why we are catching all kind of exception here and not IO-related ones.
+                return false;
+            }
         }
 
         private void BrowseClick(object sender, EventArgs e)
         {
-            using (var browseDialog = new FolderBrowserDialog())
-            {
+            var userSelectedPath = OsShellUtil.PickFolder(this);
 
-                if (browseDialog.ShowDialog(this) == DialogResult.OK)
-                    Directory.Text = browseDialog.SelectedPath;
+            if (userSelectedPath != null)
+            {
+                _NO_TRANSLATE_Directory.Text = userSelectedPath;
+            }
+        }
+
+        internal TestAccessor GetTestAccessor() => new TestAccessor(this);
+
+        internal readonly struct TestAccessor
+        {
+            private readonly FormInit _form;
+
+            public TestAccessor(FormInit form)
+            {
+                _form = form;
+            }
+
+            public ComboBox DirectoryCombo => _form._NO_TRANSLATE_Directory;
+
+            public bool IsRootedDirectoryPath(string path)
+            {
+                return FormInit.IsRootedDirectoryPath(path);
             }
         }
     }

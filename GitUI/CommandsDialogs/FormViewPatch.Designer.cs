@@ -44,9 +44,9 @@ namespace GitUI.CommandsDialogs
             this.changedFileBindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
-#if !__MonoCS__ || Mono212Released //waiting for mono 2.12
+
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
-#endif
+
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -101,30 +101,25 @@ namespace GitUI.CommandsDialogs
             // FileNameA
             // 
             this.FileNameA.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.FileNameA.DataPropertyName = "FileNameA";
             this.FileNameA.HeaderText = "Filename";
             this.FileNameA.Name = "FileNameA";
             this.FileNameA.ReadOnly = true;
             // 
             // typeDataGridViewTextBoxColumn
             // 
-            this.typeDataGridViewTextBoxColumn.DataPropertyName = "Type";
             this.typeDataGridViewTextBoxColumn.HeaderText = "Change";
             this.typeDataGridViewTextBoxColumn.Name = "typeDataGridViewTextBoxColumn";
             this.typeDataGridViewTextBoxColumn.ReadOnly = true;
-            this.typeDataGridViewTextBoxColumn.Width = 70;
             // 
             // File
             // 
-            this.File.DataPropertyName = "File";
             this.File.HeaderText = "Type";
             this.File.Name = "File";
             this.File.ReadOnly = true;
-            this.File.Width = 50;
             // 
             // patchBindingSource
             // 
-            this.patchBindingSource.DataSource = typeof(PatchApply.Patch);
+            this.patchBindingSource.DataSource = typeof(GitCommands.Patches.Patch);
             // 
             // ChangesList
             // 
@@ -155,7 +150,6 @@ namespace GitUI.CommandsDialogs
             this.PatchFileNameEdit.Name = "PatchFileNameEdit";
             this.PatchFileNameEdit.Size = new System.Drawing.Size(528, 23);
             this.PatchFileNameEdit.TabIndex = 3;
-            this.PatchFileNameEdit.TextChanged += new System.EventHandler(this.PatchFileNameEdit_TextChanged);
             // 
             // labelPatch
             // 
@@ -209,12 +203,11 @@ namespace GitUI.CommandsDialogs
             this.Name = "FormViewPatch";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "View patch file";
-            this.Load += new System.EventHandler(this.ViewPatch_Load);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
-#if !__MonoCS__ || Mono212Released //waiting for mono 2.12
+
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
-#endif
+
             this.splitContainer1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.GridChangedFiles)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.patchBindingSource)).EndInit();
